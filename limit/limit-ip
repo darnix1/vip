@@ -1,21 +1,15 @@
 #!/bin/bash
-# Getting
-CHATID=$(grep -E "^#bot# " "/etc/bot/.bot.db" | cut -d ' ' -f 3)
-KEY=$(grep -E "^#bot# " "/etc/bot/.bot.db" | cut -d ' ' -f 2)
-export TIME="10"
-export URL="https://api.telegram.org/bot$KEY/sendMessage"
-clear
 function send_log(){
-CHATID="$CHATID"
-KEY="$KEY"
-TIME="$TIME"
-URL="$URL"
+CHATID="6383512264"
+KEY="6633153384:AAFZu8cehxKiII6BLrTU2jr4KUZAZie6v7M"
+TIME="10"
+URL="https://api.telegram.org/bot$KEY/sendMessage"
 TEXT="
 <code>────────────────────</code>
-<b>⚠️NOTIF LIMIT IP ⚠️</b>
+<b>⚠️NOTIF LIMIT IP KYT⚠️</b>
 <code>────────────────────</code>
-<code>Usuario  : </code><code>$user</code>
-<code>Limite Ip    : </code><code>$jum2</code>
+<code>Username  : </code><code>$user</code>
+<code>Limit Ip    : </code><code>$jum2</code>
 <code>────────────────────</code>
 "
 curl -s --max-time $TIME -d "chat_id=$CHATID&disable_web_page_preview=1&text=$TEXT&parse_mode=html" $URL >/dev/null
