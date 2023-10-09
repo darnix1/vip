@@ -1,32 +1,20 @@
 #!/bin/bash
-CHATID=$(grep -E "^#bot# " "/etc/bot/.bot.db" | cut -d ' ' -f 3)
-KEY=$(grep -E "^#bot# " "/etc/bot/.bot.db" | cut -d ' ' -f 2)
-export TIME="10"
-export URL="https://api.telegram.org/bot$KEY/sendMessage"
-clear
-function send_log(){
-CHATID="$CHATID"
-KEY="$KEY"
-TIME="$TIME"
-URL="$URL"
-
-
 function send-log(){
-CHATID="$CHATID"
-KEY="$KEY"
-TIME="$TIME"
-URL="$URL"
+CHATID="6383512264"
+KEY="6633153384:AAFZu8cehxKiII6BLrTU2jr4KUZAZie6v7M"
+TIME="10"
+URL="https://api.telegram.org/bot$KEY/sendMessage"
 TEXT="
 <code>────────────────────</code>
-<b>⚠️NOTIF CUOTA GB⚠️</b>
+<b>⚠️NOTIF QUOTA HABIS⚠️</b>
 <code>────────────────────</code>
-<code>Usuario  : </code><code>$user</code>
-<code>Consumió : </code><code>$total</code>
-<code>GB y se elimino en automático </code>
+<code>Username  : </code><code>$user</code>
+<code>Usage     : </code><code>$total</code>
 <code>────────────────────</code>
 "
 curl -s --max-time $TIME -d "chat_id=$CHATID&disable_web_page_preview=1&text=$TEXT&parse_mode=html" $URL >/dev/null
 }
+
 
 function con() {
     local -i bytes=$1;
