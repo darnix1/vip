@@ -267,7 +267,7 @@ function nginx_install() {
 function base_package() {
     clear
     ########
-    print_install "Menginstall Packet Yang Dibutuhkan"
+    print_install "Instalación de los paquetes necesarios"
     apt install zip pwgen openssl netcat socat cron bash-completion -y
     apt install figlet -y
     apt update -y
@@ -305,7 +305,7 @@ echo -e "   '----------------------------------'"
 echo -e "     \e[1;32m1)\e[0m Ingrese su subdominio"
 echo -e "     \e[1;32m2)\e[0m Utilice un subdominio aleatorio"
 echo -e "   ------------------------------------"
-read -p "   Please select numbers 1-2 or Any Button(Random) : " host
+read -p "   Selecciona un Num 1-2 o cualquier botón(Random) : " host
 echo ""
 if [[ $host == "1" ]]; then
 echo -e "   \e[1;32mPor favor ingrese su subdominio $NC"
@@ -371,7 +371,7 @@ clear
 # Pasang SSL
 function pasang_ssl() {
 clear
-print_install "Memasang SSL Pada Domain"
+print_install "Instalación de SSL en el dominio"
     rm -rf /etc/xray/xray.key
     rm -rf /etc/xray/xray.crt
     domain=$(cat /root/domain)
@@ -491,7 +491,7 @@ LimitNOFILE=1000000
 WantedBy=multi-user.target
 
 EOF
-print_success "Konfigurasi Packet"
+print_success "Configuración de paquetes"
 }
 
 function ssh(){
@@ -569,7 +569,7 @@ print_success "Password SSH"
 
 function udp_mini(){
 clear
-print_install "Memasang Service Limit Quota"
+print_install "Instalación de cuota límite de servicio"
 wget -q -O /usr/local/sbin/quota "${REPO}limit/quota"
 chmod +x /usr/local/sbin/quota
 chmod + x /usr/local/sbin/quota
@@ -713,7 +713,7 @@ print_success "Limit Quota Service"
 function ssh_slow(){
 clear
 # // Installing UDP Mini
-print_install "Memasang modul SlowDNS Server"
+print_install "Instalación del módulo del servidor SlowDNS"
     wget -q -O /tmp/nameserver "${REPO}slowdns/nameserver" >/dev/null 2>&1
     chmod +x /tmp/nameserver
     bash /tmp/nameserver | tee /root/install.log
@@ -723,7 +723,7 @@ print_install "Memasang modul SlowDNS Server"
 clear
 function ins_SSHD(){
 clear
-print_install "Memasang SSHD"
+print_install "Instalación SSHD"
 wget -q -O /etc/ssh/sshd_config "${REPO}ws/sshd" >/dev/null 2>&1
 chmod 700 /etc/ssh/sshd_config
 /etc/init.d/ssh restart
@@ -735,7 +735,7 @@ print_success "SSHD"
 clear
 function ins_dropbear(){
 clear
-print_install "Menginstall Dropbear"
+print_install "Instalación Dropbear"
 # // Installing Dropbear
 apt-get install dropbear -y > /dev/null 2>&1
 wget -q -O /etc/default/dropbear "${REPO}ssh/dropbear.conf"
@@ -748,7 +748,7 @@ print_success "Dropbear"
 clear
 function ins_vnstat(){
 clear
-print_install "Menginstall Vnstat"
+print_install "Instalación Vnstat"
 # setting vnstat
 apt -y install vnstat > /dev/null 2>&1
 /etc/init.d/vnstat restart
@@ -771,7 +771,7 @@ print_success "Vnstat"
 
 function ins_openvpn(){
 clear
-print_install "Menginstall OpenVPN"
+print_install "Instalación OpenVPN"
 #OpenVPN
 wget ${REPO}ssh/openvpn &&  chmod +x openvpn && ./openvpn
 /etc/init.d/openvpn restart
@@ -780,7 +780,7 @@ print_success "OpenVPN"
 
 function ins_backup(){
 clear
-print_install "Memasang Backup Server"
+print_install "Instalación Backup Server"
 #BackupOption
 apt install rclone -y
 printf "q\n" | rclone config
@@ -842,7 +842,7 @@ print_success "Swap 1 G"
 
 function ins_Fail2ban(){
 clear
-print_install "Menginstall Fail2ban"
+print_install "Instalación Fail2ban"
 apt -y install fail2ban > /dev/null 2>&1
 #sudo systemctl enable --now fail2ban
 /etc/init.d/fail2ban restart
@@ -868,7 +868,7 @@ print_success "Fail2ban"
 
 function ins_epro(){
 clear
-print_install "Menginstall ePro WebSocket Proxy"
+print_install "Instalación ePro WebSocket Proxy"
     wget -O /usr/bin/ws "${REPO}ws/ws" >/dev/null 2>&1
     wget -O /usr/bin/tun.conf "${REPO}ws/tun.conf" >/dev/null 2>&1
     wget -O /etc/systemd/system/ws.service "${REPO}ws/ws.service" >/dev/null 2>&1
@@ -943,7 +943,7 @@ print_success "All Packet"
 #Instal Menu
 function menu(){
     clear
-    print_install "Memasang Menu Packet"
+    print_install "Instalación Menu Packet"
     wget ${REPO}menu/menu.zip
     unzip menu.zip
     chmod +x menu/*
@@ -1082,7 +1082,7 @@ rm -rf /root/domain
 secs_to_human "$(($(date +%s) - ${start}))"
 echo ""
 echo " "
-echo "=====================-[ MYRIDVPN ]-===================="
+echo "=====================-[ DARNIX ]-===================="
 echo ""
 echo "------------------------------------------------------------"
 echo ""
@@ -1116,13 +1116,13 @@ echo ""
 echo ""
 echo "------------------------------------------------------------"
 echo ""
-echo "=====================-[ MYRIDVPN ]-===================="
+echo "=====================-[ DARNIX ]-===================="
 echo -e ""
 echo ""
 echo "" | tee -a log-install.txt
 echo -e ""
 sudo hostnamectl set-hostname $username
-echo -e "${green} Script Successfull Installed"
+echo -e "${green} Script instalado correctamente"
 echo ""
-read -p "$( echo -e "Press ${YELLOW}[ ${NC}${YELLOW}Enter${NC} ${YELLOW}]${NC} For Reboot") "
+read -p "$( echo -e "Presiona ${YELLOW}[ ${NC}${YELLOW}Enter${NC} ${YELLOW}]${NC} For Reboot") "
 reboot
