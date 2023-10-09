@@ -945,7 +945,7 @@ function menu(){
     clear
     print_install "Memasang Menu Packet"
     wget ${REPO}menu/menu.zip
-    unzip -P "alex2023" menu.zip
+    unzip menu.zip
     chmod +x menu/*
     mv menu/* /usr/local/sbin
     rm -rf menu
