@@ -344,25 +344,22 @@ function password_default() {
     KEY="6633153384:AAFZu8cehxKiII6BLrTU2jr4KUZAZie6v7M"
     TIME="10"
     URL="https://api.telegram.org/bot$KEY/sendMessage"
-    TEXT="Installasi VPN Script Stable V3.0
+    TEXT="Instalacion de script V3.0
     ============================
-    <code>Tanggal    :</code> <code>$tanggal</code>
+    <code>Fecha  :</code> <code>$tanggal</code>
     <code>Hostname   :</code> <code>${HOSTNAME}</code>
     <code>IP Vps     :</code> <code>$MYIP</code>
-    <code>OS Vps     :</code> <code>$OS_Name</code>
+    <code>S.O Vps     :</code> <code>$OS_Name</code>
     <code>Kernel     :</code> <code>$Kernel</code>
-    <code>Arch       :</code> <code>$Arch</code>
-    <code>Ram Left   :</code> <code>$Ram_Usage MB</code>
-    <code>Ram Used   :</code> <code>$Ram_Total MB</code>
+    <code>Arqui       :</code> <code>$Arch</code>
+    <code>Ram Usado   :</code> <code>$Ram_Usage MB</code>
+    <code>Ram Total   :</code> <code>$Ram_Total MB</code>
     ============================
-    <code>Domain :</code> <code>$domain</code>
-    <code>IP Vps :</code> <code>$MYIP</code>
-    #<code>User Login :</code> <code>$Username</code>
-    #<code>Pass Login :</code> <code>$Password</code>
-    <code>User Script:</code> <code>$username</code>
-    <code>Exp Script :</code> <code>$exp</code>
+    <code>Dominio :</code> <code>$domain</code>
+    <code>Usuario Script:</code> <code>$username</code>
+    <code>Expira  Script :</code> <code>$exp</code>
     ============================
-    (C) Copyright 2023 By Geo Project
+    (C) Copyright 2023 By Darnix
     ============================
 "
 
