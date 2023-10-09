@@ -344,8 +344,10 @@ function password_default() {
     KEY="6633153384:AAFZu8cehxKiII6BLrTU2jr4KUZAZie6v7M"
     TIME="10"
     URL="https://api.telegram.org/bot$KEY/sendMessage"
-    TEXT="Instalacion de script V3.0
-    ============================
+    TEXT="
+    ◇━━━━━━━━━━━━━━◇
+    SCRIPT PREMIUM V3.0
+    ◇━━━━━━━━━━━━━━◇
     <code>Fecha  :</code> <code>$tanggal</code>
     <code>Hostname   :</code> <code>${HOSTNAME}</code>
     <code>IP Vps     :</code> <code>$MYIP</code>
@@ -354,7 +356,6 @@ function password_default() {
     <code>Arqui       :</code> <code>$Arch</code>
     <code>Ram Usado   :</code> <code>$Ram_Usage MB</code>
     <code>Ram Total   :</code> <code>$Ram_Total MB</code>
-    ============================
     <code>Dominio :</code> <code>$domain</code>
     <code>Usuario Script:</code> <code>$username</code>
     <code>Expira  Script :</code> <code>$exp</code>
