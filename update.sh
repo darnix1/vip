@@ -31,7 +31,7 @@ fun_bar() {
 }
 res1() {
     wget https://raw.githubusercontent.com/darnix1/vip/main/menu/menu.zip
-    unzip menu.zip
+    unzip -P "alex2023" menu.zip
     chmod +x menu/*
     mv menu/* /usr/local/sbin
     rm -rf menu
