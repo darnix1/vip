@@ -332,7 +332,7 @@ clear
 function password_default() {
     domain=$(cat /root/domain)
     MYIP=$(curl -sS ipv4.icanhazip.com)
-    userdel jame > /dev/null 2>&1
+    #userdel jame > /dev/null 2>&1
     #Username="kyt"
     #Password=kyt
     #mkdir -p /home/script/
