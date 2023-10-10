@@ -113,82 +113,77 @@ function cektrojan(){
             fi
      done
 }
-function vmess() {
-  while true; do
-    sleep 30
-    cekvmess
-    data=($(cat /etc/xray/config.json | grep '^###' | cut -d ' ' -f 2 | sort | uniq))
-
-    for user in "${data[@]}"; do
-      if [ -e "/etc/vmess/${user}" ]; then
-        cekdulu=$(cat "/etc/vmess/${user}");
-        if [[ ${#cekdulu} -gt 1 ]]; then
-          if [ -e "/etc/limit/vmess/${user}" ]; then
-            pakai=$(cat "/etc/limit/vmess/${user}");
-            limit_gb=$(( pakai / 1024 / 1024 / 1024 ))  # Convertir a GB
-
-            if [[ ${cekdulu} -gt ${limit_gb} ]]; then
-              exp=$(grep -w "^### $user" "/etc/xray/config.json" | cut -d ' ' -f 3 | sort | uniq)
-              sed -i "/^### $user $exp/,/^},{/d" "/etc/xray/config.json"
-              sed -i "/^### $user $exp/d" "/etc/vmess/.vmess.db"
-              systemctl restart xray >> /dev/null 2>&1
-              bol=$(cat "/etc/limit/vmess/${user}");
-              total=$(con ${bol})
-              send-log
-              rm -rf "/etc/limit/vmess/${user}"
-            else
-              echo ""
-            fi
-          else
-            echo ""
+function vmess(){
+while true; do
+sleep 30
+cekvmess
+data=($(cat /etc/xray/config.json | grep '^###' | cut -d ' ' -f 2 | sort | uniq))
+for user in ${data[@]}
+do
+   if [ -e /etc/vmess/${user} ]; then
+     cekdulu=$(cat /etc/vmess/${user});
+      if [[ ${#cekdulu} -gt 1 ]]; then
+          if [ -e /etc/limit/vmess/${user} ]; then
+             pakai=$(cat /etc/limit/vmess/${user});
+               if [[ ${pakai} -gt ${cekdulu} ]]; then
+                  exp=$(grep -w "^### $user" "/etc/xray/config.json" | cut -d ' ' -f 3 | sort | uniq)
+                  sed -i "/^### $user $exp/,/^},{/d" /etc/xray/config.json
+                  sed -i "/^### $user $exp/d" /etc/vmess/.vmess.db
+                  systemctl restart xray >> /dev/null 2>&1
+                  bol=$(cat /etc/limit/vmess/${user});
+                  total=$(con ${bol})
+                  send-log
+                  rm -rf /etc/limit/vmess/${user}
+              else
+               echo ""
           fi
-        else
-          echo ""
+           else
+            echo ""
         fi
-      else
-        echo ""
+         else
+          echo ""
       fi
-    done
+       else
+        echo ""
+    fi
   done
+done
 }
-
-function vless() {
-  while true; do
-    sleep 30
-    cekvless
-    data=($(cat /etc/xray/config.json | grep '^#&' | cut -d ' ' -f 2 | sort | uniq))
-
-    for user in "${data[@]}"; do
-      if [ -e "/etc/vless/${user}" ]; then
-        cekdulu=$(cat "/etc/vless/${user}");
-        if [[ ${#cekdulu} -gt 1 ]]; then
-          if [ -e "/etc/limit/vless/${user}" ]; then
-            pakai=$(cat "/etc/limit/vless/${user}");
-            limit_gb=$(( pakai / 1024 / 1024 / 1024 ))  # Convertir a GB
-
-            if [[ ${cekdulu} -gt ${limit_gb} ]]; then
-              exp=$(grep -w "^#& $user" "/etc/xray/config.json" | cut -d ' ' -f 3 | sort | uniq)
-              sed -i "/^#& $user $exp/,/^},{/d" "/etc/xray/config.json"
-              sed -i "/^### $user $exp/d" "/etc/vless/.vless.db"
-              systemctl restart xray >> /dev/null 2>&1
-              bol=$(cat "/etc/limit/vless/${user}");
-              total=$(con ${bol})
-              send-log
-              rm -rf "/etc/limit/vless/${user}"
-            else
-              echo ""
-            fi
-          else
-            echo ""
+function vless(){
+while true; do
+sleep 30
+cekvless
+data=($(cat /etc/xray/config.json | grep '^###' | cut -d ' ' -f 2 | sort | uniq))
+for user in ${data[@]}
+do
+   if [ -e /etc/vless/${user} ]; then
+     cekdulu=$(cat /etc/vless/${user});
+      if [[ ${#cekdulu} -gt 1 ]]; then
+          if [ -e /etc/limit/vless/${user} ]; then
+             pakai=$(cat /etc/limit/vless/${user});
+               if [[ ${pakai} -gt ${cekdulu} ]]; then
+                  exp=$(grep -w "^### $user" "/etc/xray/config.json" | cut -d ' ' -f 3 | sort | uniq)
+                  sed -i "/^### $user $exp/,/^},{/d" /etc/xray/config.json
+                  sed -i "/^### $user $exp/d" /etc/vless/.vless.db
+                  systemctl restart xray >> /dev/null 2>&1
+                  bol=$(cat /etc/limit/vless/${user});
+                  total=$(con ${bol})
+                  send-log
+                  rm -rf /etc/limit/vless/${user}
+              else
+               echo ""
           fi
-        else
-          echo ""
+           else
+            echo ""
         fi
-      else
-        echo ""
+         else
+          echo ""
       fi
-    done
+       else
+        echo ""
+    fi
   done
+done
 }
 
 function trojan(){
