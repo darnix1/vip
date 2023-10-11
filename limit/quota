@@ -44,24 +44,30 @@ function cekvmess(){
     inb=$(echo "$data" | sed -n 1p)
     outb=$(echo "$data" | sed -n 2p) 
     
-    # Convertir los datos de bytes a GB y sumar los GB consumidos
-    quota0=$(printf "%.2f" "$(echo "scale=2; ($inb + $outb) / 1073741824" | bc -l)")
+    # Convertir los datos de bytes a GB
+    quota0=$(echo "($inb + $outb) / 1073741824" | bc)
+    
+    # Verificar si la parte decimal es .00 y mostrar solo la parte entera
+    if [[ $quota0 == *".00"* ]]; then
+      quota0=$(echo "$quota0" | cut -d '.' -f 1)
+    fi
     
     if [ -e "/etc/limit/vmess/${user}" ]; then
       quota1=$(cat "/etc/limit/vmess/${user}")
       if [[ ${#quota1} -gt 0 ]]; then
-        quota2=$(printf "%.2f" "$(echo "scale=2; $quota0 + $quota1" | bc -l)")
-        echo "${quota2}" > "/etc/limit/vmess/${user}"
+        quota2=$((quota0 + quota1))
+        echo "${quota2} GB" > "/etc/limit/vmess/${user}"
       else
-        echo "${quota0}" > "/etc/limit/vmess/${user}"
+        echo "${quota0} GB" > "/etc/limit/vmess/${user}"
       fi
     else
-      echo "${quota0}" > "/etc/limit/vmess/${user}"
+      echo "${quota0} GB" > "/etc/limit/vmess/${user}"
     fi
     
     xray api stats --server=127.0.0.1:10000 -name "user>>>${user}>>>traffic>>>downlink" -reset > /dev/null 2>&1
   done
 }
+
 
 
 function cekvless(){
