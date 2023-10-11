@@ -17,17 +17,19 @@ curl -s --max-time $TIME -d "chat_id=$CHATID&disable_web_page_preview=1&text=$TE
 
 
 function con() {
-    local bytes=$1;
+    local -i bytes=$1
     if [[ $bytes -lt 1024 ]]; then
         echo "${bytes}B"
     elif [[ $bytes -lt 1048576 ]]; then
-        echo "$(echo "scale=2; $bytes/1024" | bc)KB"
+        echo "$(( (bytes + 1023) / 1024 ))KB"
     elif [[ $bytes -lt 1073741824 ]]; then
-        echo "$(echo "scale=2; $bytes/1048576" | bc)MB"
+        echo "$(( (bytes + 1048575) / 1048576 ))MB"
     else
-        echo "$(echo "scale=2; $bytes/1073741824" | bc)GB"
+        echo "$(( bytes / 1073741824 ))GB"
     fi
 }
+
+
 
 
 function cekvmess(){
@@ -35,62 +37,79 @@ function cekvmess(){
   if [[ ! -e /etc/limit/vmess ]]; then
     mkdir -p /etc/limit/vmess
   fi
-  for user in ${data[@]}
+  for user in "${data[@]}"
   do
     mkdir -p /tmp/quota
-    data=$(xray api statsquery --server=127.0.0.1:10000 | grep -C 2 $user | sed '/}/d; /{/d' | grep value | awk '{print $2}' | sed 's/,//g; s/"//g' | sort)
+    data=$(xray api statsquery --server=127.0.0.1:10000 | grep -C 2 "$user" | sed '/}/d; /{/d' | grep value | awk '{print $2}' | sed 's/,//g; s/"//g' | sort)
     inb=$(echo "$data" | sed -n 1p)
-    outb=$(echo "$data" | sed -n 2p)
-    quota0=$(echo "scale=2; ($inb + $outb)" | bc)
-    quota_display=$(con $(echo "scale=0; $quota0 * 1073741824 / 1" | bc))
-
+    outb=$(echo "$data" | sed -n 2p) 
+    
+    # Convertir los datos de bytes a GB
+    quota0=$(echo "($inb + $outb) / 1073741824" | bc)
+    
+    # Verificar si la parte decimal es .00 y mostrar solo la parte entera
+    if [[ $quota0 == *".00"* ]]; then
+      quota0=$(echo "$quota0" | cut -d '.' -f 1)
+    fi
+    
     if [ -e "/etc/limit/vmess/${user}" ]; then
       quota1=$(cat "/etc/limit/vmess/${user}")
       if [[ ${#quota1} -gt 0 ]]; then
-        quota2=$(echo "scale=2; ($quota_display + $quota1)" | bc)
-        
+        quota2=$((quota0 + quota1))
         echo "${quota2}" > "/etc/limit/vmess/${user}"
-      else
-        
-        echo "${quota_display}" > "/etc/limit/vmess/${user}"
-      fi
+        xray api stats --server=127.0.0.1:10000 -name "user>>>${user}>>>traffic>>>downlink" -reset > /dev/null 2>&1
+ 
     else
-      
-      echo "${quota_display}" > "/etc/limit/vmess/${user}"
+        echo "${quota0}" > "/etc/limit/vmess/${user}"
+        xray api stats --server=127.0.0.1:10000 -name "user>>>${user}>>>traffic>>>downlink" -reset > /dev/null 2>&1
+ 
     fi
+    else
+      echo "${quota0}" > "/etc/limit/vmess/${user}"
+      xray api stats --server=127.0.0.1:10000 -name "user>>>${user}>>>traffic>>>downlink" -reset > /dev/null 2>&1
 
-    xray api stats --server=127.0.0.1:10000 -name "user>>>${user}>>>traffic>>>downlink" -reset > /dev/null 2>&1
-  done
+fi
+        
+done
 }
+
 
 
 function cekvless(){
   data=($(cat /etc/xray/config.json | grep '^#&' | cut -d ' ' -f 2 | sort | uniq))
   if [[ ! -e /etc/limit/vless ]]; then
-  mkdir -p /etc/limit/vless
+    mkdir -p /etc/limit/vless
   fi
-  for user in ${data[@]}
+  for user in "${data[@]}"
   do
-  mkdir -p /tmp/quota
-  data=$(xray api statsquery --server=127.0.0.1:10000 | grep -C 2 $user | sed /"}"/d | sed /"{"/d | grep value | awk '{print $2}' | sed 's/,//g; s/"//g' | sort)
-  inb=$(echo "$data" | sed -n 1p)
-  outb=$(echo "$data" | sed -n 2p) 
-  quota0=$(echo "scale=2; ($inb + $outb) / 1073741824" | bc)
-        if [ -e /etc/limit/vless/${user} ]; then
-        quota1=$(cat /etc/limit/vless/${user});
-             if [[ ${#quota1} -gt 0 ]]; then
-                quota2=$(( ${quota0} + ${quota1} ));
-                echo "${quota2}" > /etc/limit/vless/"${user}"
-                xray api stats --server=127.0.0.1:10000 -name "user>>>${user}>>>traffic>>>downlink" -reset > /dev/null 2>&1
-              else
-                  echo "${quota0}" > /etc/limit/vless/"${user}"
-                  xray api stats --server=127.0.0.1:10000 -name "user>>>${user}>>>traffic>>>downlink" -reset > /dev/null 2>&1
-                fi
-           else
-               echo "${quota0}" > /etc/limit/vless/"${user}"
-               xray api stats --server=127.0.0.1:10000 -name "user>>>${user}>>>traffic>>>downlink" -reset > /dev/null 2>&1
-            fi
-     done
+    mkdir -p /tmp/quota
+    data=$(xray api statsquery --server=127.0.0.1:10000 | grep -C 2 "$user" | sed '/}/d; /{/d' | grep value | awk '{print $2}' | sed 's/,//g; s/"//g' | sort)
+    inb=$(echo "$data" | sed -n 1p)
+    outb=$(echo "$data" | sed -n 2p) 
+
+    # Convertir los datos de bytes a GB
+    quota0=$(echo "($inb + $outb) / 1073741824" | bc)
+
+    # Verificar si la parte decimal es .00 y mostrar solo la parte entera
+    if [[ $quota0 == *".00"* ]]; then
+      quota0=$(echo "$quota0" | cut -d '.' -f 1)
+    fi
+    
+    if [ -e "/etc/limit/vless/${user}" ]; then
+      quota1=$(cat "/etc/limit/vless/${user}")
+      if [[ ${#quota1} -gt 0 ]]; then
+        quota2=$((quota0 + quota1))
+        echo "${quota2}" > "/etc/limit/vless/${user}"
+        xray api stats --server=127.0.0.1:10000 -name "user>>>${user}>>>traffic>>>downlink" -reset > /dev/null 2>&1
+      else
+        echo "${quota0}" > "/etc/limit/vless/${user}"
+        xray api stats --server=127.0.0.1:10000 -name "user>>>${user}>>>traffic>>>downlink" -reset > /dev/null 2>&1
+      fi
+    else
+      echo "${quota0}" > "/etc/limit/vless/${user}"
+      xray api stats --server=127.0.0.1:10000 -name "user>>>${user}>>>traffic>>>downlink" -reset > /dev/null 2>&1
+    fi
+  done
 }
 
 function cektrojan(){
