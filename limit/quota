@@ -57,15 +57,20 @@ function cekvmess(){
       if [[ ${#quota1} -gt 0 ]]; then
         quota2=$((quota0 + quota1))
         echo "${quota2} GB" > "/etc/limit/vmess/${user}"
-      else
+        xray api stats --server=127.0.0.1:10000 -name "user>>>${user}>>>traffic>>>downlink" -reset > /dev/null 2>&1
+ 
+    else
         echo "${quota0} GB" > "/etc/limit/vmess/${user}"
-      fi
+        xray api stats --server=127.0.0.1:10000 -name "user>>>${user}>>>traffic>>>downlink" -reset > /dev/null 2>&1
+ 
+    fi
     else
       echo "${quota0} GB" > "/etc/limit/vmess/${user}"
-    fi
-    
-    xray api stats --server=127.0.0.1:10000 -name "user>>>${user}>>>traffic>>>downlink" -reset > /dev/null 2>&1
-  done
+      xray api stats --server=127.0.0.1:10000 -name "user>>>${user}>>>traffic>>>downlink" -reset > /dev/null 2>&1
+
+fi
+        
+done
 }
 
 
