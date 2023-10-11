@@ -55,13 +55,14 @@ function cekvmess(){
         echo "${quota_display}" > "/etc/limit/vmess/${user}"
       fi
     else
-      echo "Consumo de ${user}: $(con $quota_display)"
       
+      echo "${quota_display}" > "/etc/limit/vmess/${user}"
     fi
 
     xray api stats --server=127.0.0.1:10000 -name "user>>>${user}>>>traffic>>>downlink" -reset > /dev/null 2>&1
   done
 }
+
 
 function cekvless(){
   data=($(cat /etc/xray/config.json | grep '^#&' | cut -d ' ' -f 2 | sort | uniq))
