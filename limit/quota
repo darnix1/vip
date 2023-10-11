@@ -15,23 +15,6 @@ TEXT="
 curl -s --max-time $TIME -d "chat_id=$CHATID&disable_web_page_preview=1&text=$TEXT&parse_mode=html" $URL >/dev/null
 }
 
-
-function con() {
-    local -i bytes=$1
-    if [[ $bytes -lt 1024 ]]; then
-        echo "${bytes}B"
-    elif [[ $bytes -lt 1048576 ]]; then
-        echo "$(( (bytes + 1023) / 1024 ))KB"
-    elif [[ $bytes -lt 1073741824 ]]; then
-        echo "$(( (bytes + 1048575) / 1048576 ))MB"
-    else
-        echo "$(( bytes / 1073741824 ))GB"
-    fi
-}
-
-
-
-
 function con() {
     local -i bytes=$1;
     if [[ $bytes -lt 1024 ]]; then
