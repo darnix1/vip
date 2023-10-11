@@ -33,44 +33,33 @@ function con() {
 }
 
 
-function cekvmess() {
-    data=($(cat /etc/xray/config.json | grep '^###' | cut -d ' ' -f 2 | sort | uniq))
-
-    if [[ ! -e /etc/limit/vmess ]]; then
-        mkdir -p /etc/limit/vmess
-    fi
-
-    for user in "${data[@]}"; do
-        mkdir -p /tmp/quota
-
-        # Obtain traffic data for the user
-        data=$(xray api statsquery --server=127.0.0.1:10000 | grep -C 2 "$user" | grep value | awk '{print $2}' | sed 's/,//g; s/"//g' | sort)
-
-        # Obtain incoming and outgoing bytes
-        inb=$(echo "$data" | awk 'NR==1 {print $2}')
-        outb=$(echo "$data" | awk 'NR==2 {print $2}')
-
-        # Update the quota only if there is actual traffic
-        if [[ $inb -gt 0 || $outb -gt 0 ]]; then
-            # Calculate total gigabytes of traffic
-            quota0=$((inb + outb))
-
-            if [ -e "/etc/limit/vmess/${user}" ]; then
-                quota1=$(cat "/etc/limit/vmess/${user}")
-                if [[ ${#quota1} -gt 0 ]]; then
-                    quota2=$((quota0 + quota1))
-                    echo "${quota2}" > "/etc/limit/vmess/${user}"
-                else
-                    echo "${quota0}" > "/etc/limit/vmess/${user}"
+function cekvmess(){
+  data=($(cat /etc/xray/config.json | grep '^###' | cut -d ' ' -f 2 | sort | uniq))
+  if [[ ! -e /etc/limit/vmess ]]; then
+  mkdir -p /etc/limit/vmess
+  fi
+  for user in ${data[@]}
+  do
+  mkdir -p /tmp/quota
+  data=$(xray api statsquery --server=127.0.0.1:10000 | grep -C 2 $user | sed /"}"/d | sed /"{"/d | grep value | awk '{print $2}' | sed 's/,//g; s/"//g' | sort)
+  inb=$(echo "$data" | sed -n 1p)
+  outb=$(echo "$data" | sed -n 2p) 
+  quota0=$(echo -e "$[ $inb + $outb ]")
+        if [ -e /etc/limit/vmess/${user} ]; then
+        quota1=$(cat /etc/limit/vmess/${user});
+             if [[ ${#quota1} -gt 0 ]]; then
+                quota2=$(( ${quota0} + ${quota1} ));
+                echo "${quota2}" > /etc/limit/vmess/"${user}"
+                xray api stats --server=127.0.0.1:10000 -name "user>>>${user}>>>traffic>>>downlink" -reset > /dev/null 2>&1
+              else
+                  echo "${quota0}" > /etc/limit/vmess/"${user}"
+                  xray api stats --server=127.0.0.1:10000 -name "user>>>${user}>>>traffic>>>downlink" -reset > /dev/null 2>&1
                 fi
-            else
-                echo "${quota0}" > "/etc/limit/vmess/${user}"
+           else
+               echo "${quota0}" > /etc/limit/vmess/"${user}"
+               xray api stats --server=127.0.0.1:10000 -name "user>>>${user}>>>traffic>>>downlink" -reset > /dev/null 2>&1
             fi
-
-            # Reset the traffic counter
-            xray api stats --server=127.0.0.1:10000 -name "user>>>${user}>>>traffic>>>downlink" -reset > /dev/null 2>&1
-        fi
-    done
+     done
 }
 
 
