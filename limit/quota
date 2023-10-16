@@ -21,13 +21,17 @@ function con() {
     if ((bytes < 1024)); then
         echo "${bytes}B"
     elif ((bytes < 1048576)); then
-        echo "$((bytes / 1024))KB"
+        # Convertir a MB con dos decimales
+        echo "$(bc <<< "scale=2; $bytes / 1024")KB"
     elif ((bytes < 1073741824)); then
-        echo "$((bytes / 1048576))MB"
+        # Convertir a MB con dos decimales
+        echo "$(bc <<< "scale=2; $bytes / 1048576")MB"
     else
-        echo "$((bytes / 1073741824))GB"
+        # Convertir a GB con dos decimales
+        echo "$(bc <<< "scale=2; $bytes / 1073741824")GB"
     fi
 }
+
 
 
 
