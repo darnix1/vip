@@ -18,17 +18,14 @@ curl -s --max-time $TIME -d "chat_id=$CHATID&disable_web_page_preview=1&text=$TE
 
 function con() {
     local -i bytes=$1;
-    if ((bytes < 1024)); then
+    if  $bytes -lt 1024 ; then
         echo "${bytes}B"
-    elif ((bytes < 1048576)); then
-        # Convertir a MB con dos decimales
-        echo "$(bc <<< "scale=2; $bytes / 1024")KB"
-    elif ((bytes < 1073741824)); then
-        # Convertir a MB con dos decimales
-        echo "$(bc <<< "scale=2; $bytes / 1048576")MB"
+    elif  $bytes -lt 1048576 ; then
+        echo "$(( (bytes + 1023)/1024 ))KB"
+    elif  $bytes -lt 1073741824 ; then
+        echo "$(( (bytes + 1048575)/1048576 ))MB"
     else
-        # Convertir a GB con dos decimales
-        echo "$(bc <<< "scale=2; $bytes / 1073741824")GB"
+        echo "$(( (bytes + 1073741823)/1073741824 ))GB"
     fi
 }
 
