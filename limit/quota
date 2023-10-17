@@ -138,9 +138,8 @@ do
                   sed -i "/^### $user $exp/d" /etc/vmess/.vmess.db
                   systemctl restart xray >> /dev/null 2>&1
                   bol=$(cat /etc/limit/vmess/${user});
-                  display_quota=$((${bol} - 1))  # Restar 1 GB solo para mostrar
-                 total=$(con "${display_quota}")  # Utilizar el valor mostrado
-                 send-log  # Llamar a send-log
+                  total=$(con ${bol})
+                  send-log
                   rm -rf /etc/limit/vmess/${user}
               else
                echo ""
@@ -175,9 +174,8 @@ do
                   sed -i "/^### $user $exp/d" /etc/vless/.vless.db
                   systemctl restart xray >> /dev/null 2>&1
                   bol=$(cat /etc/limit/vless/${user});
-                  display_quota=$((${bol} - 1))  # Restar 1 GB solo para mostrar
-                 total=$(con "${display_quota}")  # Utilizar el valor mostrado
-                 send-log  # Llamar a send-log
+                  total=$(con ${bol})
+                  send-log
                   rm -rf /etc/limit/vless/${user}
               else
                echo ""
@@ -213,9 +211,8 @@ do
                   sed -i "/^### $user $exp/d" /etc/trojan/.trojan.db
                   systemctl restart xray >> /dev/null 2>&1
                   bol=$(cat /etc/limit/trojan/${user});
-                  display_quota=$((${bol} - 1))  # Restar 1 GB solo para mostrar
-                 total=$(con "${display_quota}")  # Utilizar el valor mostrado
-                 send-log  # Llamar a send-log
+                  total=$(con ${bol})
+                  send-log
                   rm -rf /etc/limit/trojan/${user}
               else
                echo ""
