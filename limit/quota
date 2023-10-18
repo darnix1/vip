@@ -1,27 +1,18 @@
 #!/bin/bash
 
 function send-log(){
-
-CHATID="6383512264"
-
-KEY="6633153384:AAFZu8cehxKiII6BLrTU2jr4KUZAZie6v7M"
-
-TIME="10"
-
-URL="https://api.telegram.org/bot$KEY/sendMessage"
-
+CHATID=$(grep -E "^#bot# " "/etc/bot/.bot.db" | cut -d ' ' -f 3)
+KEY=$(grep -E "^#bot# " "/etc/bot/.bot.db" | cut -d ' ' -f 2)
+export TIME="10"
+export URL="https://api.telegram.org/bot$KEY/sendMessage"
 TEXT="
-
 <code>────────────────────</code>
-
-<b>⚠️NOTIF CUOTA USUARIO⚠️</b>
-
+<b>⚠️NOTIFICACION CUOTA DE USUARIO⚠️</b>
 <code>────────────────────</code>
-
 <code>Username  : </code><code>$user</code>
-
-<code>Usado     : </code><code>$total</code>
-
+<code>Consumo de GB superado</code>
+<code>────────────────────</code>
+<b>⚠️SE ELIMINO EL USER EN AUTOMATICO⚠️</b>
 <code>────────────────────</code>
 
 "
