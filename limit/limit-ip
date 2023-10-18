@@ -1,15 +1,18 @@
 #!/bin/bash
 function send_log(){
-CHATID="6383512264"
-KEY="6633153384:AAFZu8cehxKiII6BLrTU2jr4KUZAZie6v7M"
-TIME="10"
-URL="https://api.telegram.org/bot$KEY/sendMessage"
+CHATID=$(grep -E "^#bot# " "/etc/bot/.bot.db" | cut -d ' ' -f 3)
+KEY=$(grep -E "^#bot# " "/etc/bot/.bot.db" | cut -d ' ' -f 2)
+export TIME="10"
+export URL="https://api.telegram.org/bot$KEY/sendMessage"
 TEXT="
 <code>────────────────────</code>
-<b>⚠️NOTIF LIMIT IP KYT⚠️</b>
+<b>⚠️NOTIFICACION MULTILOGIN USER⚠️</b>
 <code>────────────────────</code>
-<code>Username  : </code><code>$user</code>
-<code>Limit Ip    : </code><code>$jum2</code>
+<code>Usuario  : </code><code>$user</code>
+<code>Login Ip    : </code><code>$cekcek</code>
+<code>Limite Ip    : </code><code>$iplimit</code>
+<code>────────────────────</code>
+<b>⚠️SE ELIMINO EL MULTILOGIN⚠️</b>
 <code>────────────────────</code>
 "
 curl -s --max-time $TIME -d "chat_id=$CHATID&disable_web_page_preview=1&text=$TEXT&parse_mode=html" $URL >/dev/null
