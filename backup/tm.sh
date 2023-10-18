@@ -27,7 +27,7 @@ BG : \E[40;1;46m
 TEXT : \033[0;36m
 EOF
 cat <<EOF>> /etc/julak/theme/color.conf
-magenta
+red
 EOF
 clear
 exit
