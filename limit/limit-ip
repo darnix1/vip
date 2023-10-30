@@ -1,5 +1,5 @@
 #!/bin/bash
-source /etc/adminbot/var.txt
+
 domain=$(cat /etc/xray/domain)
 MYIP=$(wget -qO- icanhazip.com)
 timenow=$(date +%T)
