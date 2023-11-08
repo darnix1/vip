@@ -66,13 +66,13 @@ echo ""
 echo -e "\e[1;31mComprobando la nueva versión, espere...!\e[m"; fun_prog
 sleep 5
 clear
-echo -e "\e[1;31mActualización no disponible\e[m"
+echo -e "\e[1;31mNo hay ninguna actualización disponible\e[m"
 echo ""
 clear
 sleep 1
 echo -e "\e[1;36mTienes la última versión\e[m"
-echo -e "\e[1;31mThankyou.\e[0m"
-sleep 3
+echo -e "\e[1;31mRegresando al menu principal.\e[0m"
+sleep 4
 menu
 fi
 clear
@@ -82,7 +82,7 @@ sleep 2
 echo -e "\e[1;36mInicie la actualización para la nueva versión, espere..\e[m"
 sleep 2
 clear
-echo -e "\e[0;32mObtener una nueva versión del script..\e[0m"; fun_prog
+echo -e "\e[0;32mObteniendo la nueva versión del script..\e[0m"; fun_prog
 sleep 1
 echo ""
 # UPDATE RUN-UPDATE
@@ -109,12 +109,12 @@ echo -e ""
 echo -e "\e[0;32mDescargado exitosamente!\e[0m"
 echo ""
 ver=$( curl https://raw.githubusercontent.com/darnix1/vip/main/version.conf )
-sleep 1
+sleep 3
 echo -e "\e[0;32mParchando nueva actualización, espere...\e[0m"
 echo ""
-sleep 2
+sleep 4
 echo -e "\e[0;32mParchado... OK!\e[0m"
-sleep 1
+sleep 3
 echo ""
 echo -e "\e[0;32mScript de actualización exitosa para la nueva versión\e[0m"
 cd
@@ -123,10 +123,11 @@ rm -f update.sh
 clear
 echo ""
 echo -e "\033[0;34m----------------------------------------\033[0m"
-echo -e "\E[44;1;39m            SCRIPT UPDATED              \E[0m"
+echo -e "\E[44;1;39m            SCRIPT ACTUALIZADO             \E[0m"
 echo -e "\033[0;34m----------------------------------------\033[0m"
 echo ""
-read -n 1 -s -r -p "Press any key to back on menu"
+rm -rf /root/update.sh
+read -n 1 -s -r -p "Presione cualquier tecla para el menu"
 menu
 ;;
 x)
@@ -139,8 +140,8 @@ menu
 ;;
 *)
 clear
-echo -e "\e[1;31mPlease Enter Option 1-2 or x & y Only..,Try again, Thank You..\e[0m"
+echo -e "\e[1;31mVolviendo al menu..\e[0m"
 sleep 2
-run-update
+menu
 ;;
 esac
