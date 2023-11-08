@@ -4,16 +4,15 @@ echo ""
 version=$(cat /home/ver)
 ver=$( curl https://raw.githubusercontent.com/darnix1/vip/main/version.conf )
 clear
-# LINE COLOUR
-line=$(cat /etc/line)
-# TEXT COLOUR BELOW
-below=$(cat /etc/below)
-# BACKGROUND TEXT COLOUR
-back_text=$(cat /etc/back)
-# NUMBER COLOUR
-number=$(cat /etc/number)
-# TEXT ON BOX COLOUR
-box=$(cat /etc/box)
+###########- COLOR CODE -##############
+colornow=$(cat /etc/julak/theme/color.conf)
+NC="\e[0m"
+RED="\033[0;31m"
+COLOR1="$(cat /etc/julak/theme/$colornow | grep -w "TEXT" | cut -d: -f2|sed 's/ //g')"
+COLBG1="$(cat /etc/julak/theme/$colornow | grep -w "BG" | cut -d: -f2|sed 's/ //g')"
+WH='\033[1;37m'
+###########- END COLOR CODE -##########
+
 # CEK UPDATE
 Green_font_prefix="\033[32m" && Red_font_prefix="\033[31m" && Green_background_prefix="\033[42;37m" && Red_background_prefix="\033[41;37m" && Font_color_suffix="\033[0m"
 Info1="${Green_font_prefix}($version)${Font_color_suffix}"
@@ -30,22 +29,19 @@ stl="${Error}"
 fi
 clear
 echo ""
-echo -e "   \e[$line--------------------------------------------------------\e[m"
-echo -e "   \e[$back_text                 \e[30m[\e[$box CHECK NEW UPDATE\e[30m ]                   \e[m"
-echo -e "   \e[$line--------------------------------------------------------\e[m"
-echo -e "   \e[$below      VERSION ACTUAL >> $Info1"
-echo -e "   \e[$below      ESTDADO ACTUAL >> $sts"
+echo -e "$COLOR1┌─────────────────────────────────────────────────┐${NC}"
+echo -e "$COLOR1 ${NC} ${COLBG1}             ${WH}• PANEL ACTUALIZACION•              ${NC} $COLOR1 $NC"
+echo -e "$COLOR1└─────────────────────────────────────────────────┘${NC}"
+echo -e "$COLOR1 VERSION ACTUAL >> $Info1  ${NC}"
+echo -e "$COLOR1 ESTDADO ACTUAL >> $sts  ${NC}"
+echo -e "$COLOR1┌─────────────────────────────────────────────────┐${NC}"
+echo -e " $COLOR1 $NC ${WH}[${COLOR1}01${WH}]${NC} ${COLOR1}• ${WH} ACTUALIZAR $COLOR1 ${NC}"
+echo -e " $COLOR1 $NC                                              ${NC} $COLOR1 $NC"
+echo -e " $COLOR1 $NC ${WH}[${COLOR1}02${WH}]${NC} ${COLOR1}• ${WH}MENU $COLOR1 $NC"
+echo -e " $COLOR1 $NC   
+echo -e "$COLOR1└─────────────────────────────────────────────────┘${NC}"
 echo -e ""
-echo -e "       \e[1;31m¿Quieres continuar?\e[0m"
-echo ""
-echo -e "            \e[0;32m[  Seleciona una Opcion ]\033[0m"
-echo -e "     \e[$number [1]\e[m \e[$below  >\e[m"
-echo -e "     \e[$number [1]\e[m \e[$below     Actualizar\e[m"
-echo -e "     \e[$number [y]\e[m \e[$below     Menu\e[m"
-echo -e ""
-echo -e "   \e[$line--------------------------------------------------------\e[m"
-echo -e "\e[$line"
-read -p "      Escoge 1, x , y : " option2
+read -p "  Escoge 1, x , y : " option2
 case $option2 in
 1)
 version=$(cat /home/ver)
