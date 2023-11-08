@@ -33,12 +33,12 @@ echo -e "$COLOR1┌────────────────────�
 echo -e "$COLOR1 ${NC} ${COLBG1}             ${WH}• PANEL ACTUALIZACION•              ${NC} $COLOR1 $NC"
 echo -e "$COLOR1└─────────────────────────────────────────────────┘${NC}"
 echo -e "$COLOR1 VERSION ACTUAL >> $Info1  ${NC}"
-echo -e "$COLOR1 ESTDADO ACTUAL >> $sts  ${NC}"
+echo -e "$COLOR1 ESTDADO ACTUAL >> $stl  ${NC}"
 echo -e "$COLOR1┌─────────────────────────────────────────────────┐${NC}"
 echo -e " $COLOR1 $NC ${WH}[${COLOR1}01${WH}]${NC} ${COLOR1}• ${WH} ACTUALIZAR $COLOR1 ${NC}"
-echo -e " $COLOR1 $NC                                              ${NC} $COLOR1 $NC"
+echo -e " $COLOR1 $NC                                              ${NC} $COLOR1 $NC"                                            ${NC} $COLOR1 $NC"
 echo -e " $COLOR1 $NC ${WH}[${COLOR1}02${WH}]${NC} ${COLOR1}• ${WH}MENU $COLOR1 $NC"
-echo -e " $COLOR1 $NC   
+echo -e " $COLOR1 $NC                                              ${NC} $COLOR1 $NC" 
 echo -e "$COLOR1└─────────────────────────────────────────────────┘${NC}"
 echo -e ""
 read -p "  Escoge 1, x , y : " option2
