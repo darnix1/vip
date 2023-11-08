@@ -64,7 +64,7 @@ if [ $version = $new_version ]; then
 clear
 echo ""
 echo -e "\e[1;31mComprobando la nueva versión, espere...!\e[m"; fun_prog
-sleep 3
+sleep 5
 clear
 echo -e "\e[1;31mActualización no disponible\e[m"
 echo ""
@@ -82,14 +82,14 @@ sleep 2
 echo -e "\e[1;36mInicie la actualización para la nueva versión, espere..\e[m"
 sleep 2
 clear
-echo -e "\e[0;32mObtener una nueva versión del script..\e[0m"
+echo -e "\e[0;32mObtener una nueva versión del script..\e[0m"; fun_prog
 sleep 1
 echo ""
 # UPDATE RUN-UPDATE
 
 echo ""
 clear
-echo -e "\e[0;32mEspere por favor...!\e[0m"
+echo -e "\e[0;32mEspere por favor...!\e[0m"; fun_prog
 sleep 6
 clear
 echo ""
