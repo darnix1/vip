@@ -12,7 +12,23 @@ COLOR1="$(cat /etc/julak/theme/$colornow | grep -w "TEXT" | cut -d: -f2|sed 's/ 
 COLBG1="$(cat /etc/julak/theme/$colornow | grep -w "BG" | cut -d: -f2|sed 's/ //g')"
 WH='\033[1;37m'
 ###########- END COLOR CODE -##########
-
+fun_prog ()
+{
+	comando[0]="$1" 
+    ${comando[0]}  > /dev/null 2>&1 & 
+	tput civis
+	echo -ne "\033[1;32m.\033[1;33m.\033[1;31m. \033[1;32m"
+    while [ -d /proc/$! ]
+	do
+		for i in / - \\ \|
+		do
+			sleep .1
+			echo -ne "\e[1D$i"
+		done
+	done
+	tput cnorm
+	echo -e "\e[1DOK"
+}
 # CEK UPDATE
 Green_font_prefix="\033[32m" && Red_font_prefix="\033[31m" && Green_background_prefix="\033[42;37m" && Red_background_prefix="\033[41;37m" && Font_color_suffix="\033[0m"
 Info1="${Green_font_prefix}($version)${Font_color_suffix}"
@@ -30,16 +46,16 @@ fi
 clear
 echo ""
 echo -e "$COLOR1┌─────────────────────────────────────────────────┐${NC}"
-echo -e "$COLOR1 ${NC} ${COLBG1}             ${WH}• PANEL ACTUALIZACION•              ${NC} $COLOR1 $NC"
+echo -e "$COLOR1 ${NC} ${COLBG1}            ${WH}• PANEL ACTUALIZACION•              ${NC} $COLOR1 $NC"
 echo -e "$COLOR1└─────────────────────────────────────────────────┘${NC}"
 echo -e "$COLOR1 VERSION ACTUAL >> $Info1  ${NC}"
 echo -e "$COLOR1 ESTDADO ACTUAL >> $stl  ${NC}"
 echo -e "$COLOR1┌─────────────────────────────────────────────────┐${NC}"
 echo -e " $COLOR1 $NC ${WH}[${COLOR1}01${WH}]${NC} ${COLOR1}• ${WH} ACTUALIZAR $COLOR1 ${NC}"
-echo -e " $COLOR1 $NC ${WH}[${COLOR1}01${WH}]${NC} ${COLOR1}• ${WH} MENU $COLOR1 ${NC}"
+echo -e " $COLOR1 $NC ${WH}[${COLOR1}x${WH}]${NC} ${COLOR1}• ${WH} MENU $COLOR1 ${NC}"
 echo -e "$COLOR1└─────────────────────────────────────────────────┘${NC}"
 echo -e ""
-read -p "  Escoge 1, x , y : " option2
+read -p "  Escoge 1 o x: " option2
 case $option2 in
 1)
 version=$(cat /home/ver)
@@ -47,7 +63,7 @@ new_version=$( curl https://raw.githubusercontent.com/darnix1/vip/main/version.c
 if [ $version = $new_version ]; then
 clear
 echo ""
-echo -e "\e[1;31mComprobando la nueva versión, espere...!\e[m"
+echo -e "\e[1;31mComprobando la nueva versión, espere...!\e[m"; fun_prog
 sleep 3
 clear
 echo -e "\e[1;31mActualización no disponible\e[m"
