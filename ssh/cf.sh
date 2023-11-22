@@ -6,11 +6,11 @@
 MYIP=$(wget -qO- ipinfo.io/ip);
 clear
 apt install jq curl -y >/dev/null 2>&1
-read -rp "Sub Domain (Contoh: Myrid112): " -e sub
-DOMAIN=ridwanvpn.games
-SUB_DOMAIN=${sub}.ridwanvpn.games
-CF_ID=ziexyuan@gmail.com
-CF_KEY=2fbf0739b65e1e4b6de396b11a9693fc6aa56
+read -rp "Sub Domain (Contoh: driw): " -e sub
+DOMAIN=driwvpnmurah.tech
+SUB_DOMAIN=${sub}.driwvpnmurah.tech
+CF_ID=andrisupriatnatxb@gmail.com
+CF_KEY=cce1f3c74f307edec74139110061bdceb6a4f
 set -euo pipefail
 IP=$(wget -qO- ifconfig.me/ip);
 echo "Updating DNS for ${SUB_DOMAIN}..."
