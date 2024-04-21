@@ -1,157 +1,413 @@
-msg() { ##-->> COLORES, TITULO, BARRAS
-  ##-->> ACTULIZADOR Y VERCION
-  [[ ! -e /etc/SCRIPT-LATAM/temp/version_instalacion ]] && printf '1\n' >/etc/SCRIPT-LATAM/temp/version_instalacion
-  v11=$(cat /etc/SCRIPT-LATAM/temp/version_actual)
-  v22=$(cat /etc/SCRIPT-LATAM/temp/version_instalacion)
-  if [[ $v11 = $v22 ]]; then
-    vesaoSCT="\e[1;31m[\033[1;37m Ver.\033[1;32m $v22 \033[1;31m]"
-  else
-    vesaoSCT="\e[1;31m[\e[31m ACTUALIZAR \e[25m\033[1;31m]"
-  fi
-  ##-->> COLORES
-  local colors="/etc/SCRIPT-LATAM/colors"
-  if [[ ! -e $colors ]]; then
-    COLOR[0]='\033[1;37m' #GRIS='\033[1;37m'
-    COLOR[1]='\e[31m'     #ROJO='\e[31m'
-    COLOR[2]='\e[32m'     #VERDE='\e[32m'
-    COLOR[3]='\e[33m'     #AMARILLO='\e[33m'
-    COLOR[4]='\e[34m'     #AZUL='\e[34m'
-    COLOR[5]='\e[91m'     #ROJO-NEON='\e[91m'
-    COLOR[6]='\033[1;97m' #BALNCO='\033[1;97m'
+module="$(pwd)/module"
+rm -rf ${module}
+wget -O ${module} "https://gitlab.com/fdarnix/chukkmod-files/-/raw/main/source/colores" &>/dev/null
+[[ ! -e ${module} ]] && exit
+chmod +x ${module} &>/dev/null
+source ${module}
 
-  else
-    local COL=0
-    for number in $(cat $colors); do
-      case $number in
-      1) COLOR[$COL]='\033[1;37m' ;;
-      2) COLOR[$COL]='\e[31m' ;;
-      3) COLOR[$COL]='\e[32m' ;;
-      4) COLOR[$COL]='\e[33m' ;;
-      5) COLOR[$COL]='\e[34m' ;;
-      6) COLOR[$COL]='\e[35m' ;;
-      7) COLOR[$COL]='\033[1;36m' ;;
-      esac
-      let COL++
+proto_ssl() {
+  clear
+  clear
+  declare -A cor=([0]="\033[1;37m" [1]="\033[1;34m" [2]="\033[1;31m" [3]="\033[1;33m" [4]="\033[1;32m")
+  mportas() {
+    unset portas
+    portas_var=$(lsof -V -i tcp -P -n | grep -v "ESTABLISHED" | grep -v "COMMAND" | grep "LISTEN")
+    while read port; do
+      var1=$(echo $port | awk '{print $1}') && var2=$(echo $port | awk '{print $9}' | awk -F ":" '{print $2}')
+      [[ "$(echo -e $portas | grep "$var1 $var2")" ]] || portas+="$var1 $var2\n"
+    done <<<"$portas_var"
+    i=1
+    echo -e "$portas"
+  }
+  ssl_stunel() {
+    clear
+    clear
+    [[ $(mportas | grep stunnel4 | head -1) ]] && {
+      msg -bar
+      echo -e "\033[1;31m                 DESINSTALANDO SSL"
+      msg -bar
+      service stunnel4 stop >/dev/null 2>&1
+      fun_bar "apt-get purge  stunnel4 -y"
+      msg -bar
+      echo -e "\033[1;32m        >> SSL DESINSTALADO  CON EXITO <<"
+      msg -bar
+      return 0
+    }
+    msg -bar
+    msg -tit
+    msg -bar
+    echo -e "\033[1;93m             INSTALADOR SSL SCRIPT LATAM"
+    msg -bar
+    echo -e "\033[1;97m Seleccione un puerto de anclaje."
+    echo -e "\033[1;97m Puede ser un SSH/DROPBEAR/SQUID/OPENVPN/WEBSOCKET"
+    msg -bar
+    while true; do
+      echo -ne "\033[1;97m Puerto-Local:\033[1;32m" && read -p " " -e -i "22" portx
+      if [[ ! -z $portx ]]; then
+        if [[ $(echo $portx | grep "[0-9]") ]]; then
+          [[ $(mportas | grep $portx | awk '{print $2}' | head -1) ]] && break || echo -e "\033[1;31m Puerto Invalido - Reintente con otro Activo"
+        fi
+      fi
     done
-  fi
-  NEGRITO='\e[1m'
-  SINCOLOR='\e[0m'
-  case $1 in
-  -ne) cor="${COLOR[1]}${NEGRITO}" && echo -ne "${cor}${2}${SINCOLOR}" ;;
-  -ama) cor="${COLOR[3]}${NEGRITO}" && echo -e "${cor}${2}${SINCOLOR}" ;;
-  -verm) cor="${COLOR[3]}${NEGRITO}[!] ${COLOR[1]}" && echo -e "${cor}${2}${SINCOLOR}" ;;
-  -verm2) cor="${COLOR[1]}${NEGRITO}" && echo -e "${cor}${2}${SINCOLOR}" ;;
-  -azu) cor="${COLOR[6]}${NEGRITO}" && echo -e "${cor}${2}${SINCOLOR}" ;;
-  -verd) cor="${COLOR[2]}${NEGRITO}" && echo -e "${cor}${2}${SINCOLOR}" ;;
-  -bra) cor="${COLOR[0]}${SINCOLOR}" && echo -e "${cor}${2}${SINCOLOR}" ;;
-  "-bar2" | "-bar") cor="${COLOR[1]}════════════════════════════════════════════════════" && echo -e "${SINCOLOR}${cor}${SINCOLOR}" ;;
-  # Centrar texto
-  -tit) echo -e " \e[48;5;214m\e[38;5;0m   💻 𝙎 𝘾 𝙍 𝙄 𝙋 𝙏 | 𝙇 𝘼 𝙏 𝘼 𝙈 💻   \e[0m  $vesaoSCT" ;;
+    msg -bar
+    DPORT="$(mportas | grep $portx | awk '{print $2}' | head -1)"
+    echo -e "\033[1;33m             Ahora Que Puerto sera SSL"
+    msg -bar
+    while true; do
+      echo -ne "\033[1;97m Puerto para SSL:\033[1;32m" && read -p " " -e -i "443" SSLPORT
+      [[ $(mportas | grep -w "$SSLPORT") ]] || break
+      echo -e "\033[1;33m Este Puerto esta en Uso"
+      unset SSLPORT
+    done
+    msg -bar
+    echo -e "\033[1;32m                 Instalando SSL"
+    msg -bar
+    fun_bar "apt-get install stunnel4 -y"
+    apt-get install stunnel4 -y >/dev/null 2>&1
+    msg -bar
+    echo -e "\033[1;97m A continuacion se le pediran datos de su crt si\n desconoce que datos lleva presione puro ENTER"
+    msg -bar
+    sleep 5s
+    echo -e "client = no\n[SSL]\ncert = /etc/stunnel/stunnel.pem\naccept = ${SSLPORT}\nconnect = 127.0.0.1:${portx}" >/etc/stunnel/stunnel.conf
+    ####Coreccion2.0#####
+    openssl genrsa -out stunnel.key 2048 >/dev/null 2>&1
+    # (echo "mx" ; echo "mx" ; echo "mx" ; echo "mx" ; echo "mx" ; echo "mx" ; echo "@vpsmx" )|openssl req -new -key stunnel.key -x509 -days 1000 -out stunnel.crt > /dev/null 2>&1
+    openssl req -new -key stunnel.key -x509 -days 1000 -out stunnel.crt
+    cat stunnel.crt stunnel.key >stunnel.pem
+    mv stunnel.pem /etc/stunnel/
+    ##-->> AutoInicio
+    sed -i '/ENABLED=[01]/d' /etc/default/stunnel4
+    echo "ENABLED=1" >>/etc/default/stunnel4
+    service stunnel4 restart >/dev/null 2>&1
+    msg -bar
+    echo -e "\033[1;32m          >> SSL INSTALADO CON EXITO <<"
+    msg -bar
+    rm -rf /etc/SCRIPT-LATAM/stunnel.crt >/dev/null 2>&1
+    rm -rf /etc/SCRIPT-LATAM/stunnel.key >/dev/null 2>&1
+    rm -rf /root/stunnel.crt >/dev/null 2>&1
+    rm -rf /root/stunnel.key >/dev/null 2>&1
+    return 0
+  }
+  ssl_stunel_2() {
+    clear
+    clear
+    msg -bar
+    msg -tit
+    msg -bar
+    echo -e "\033[1;93m              AGREGAR MAS PUESRTOS SSL"
+    msg -bar
+    echo -e "\033[1;97m Seleccione un puerto de anclaje."
+    echo -e "\033[1;97m Puede ser un SSH/DROPBEAR/SQUID/OPENVPN/SSL/PY"
+    msg -bar
+    while true; do
+      echo -ne "\033[1;97m Puerto-Local: \033[1;32m" && read portx
+      if [[ ! -z $portx ]]; then
+        if [[ $(echo $portx | grep "[0-9]") ]]; then
+          [[ $(mportas | grep $portx | head -1) ]] && break || echo -e "\033[1;31m Puerto Invalido - Reintente con otro Activo"
+        fi
+      fi
+    done
+    msg -bar
+    DPORT="$(mportas | grep $portx | awk '{print $2}' | head -1)"
+    echo -e "\033[1;33m             Ahora Que Puerto sera SSL"
+    msg -bar
+    while true; do
+      echo -ne "\033[97m Puerto-SSL: \033[1;32m" && read SSLPORT
+      [[ $(mportas | grep -w "$SSLPORT") ]] || break
+      echo -e "\033[1;33m Este Puerto esta en Uso"
+      unset SSLPORT
+    done
+    msg -bar
+    echo -e "client = no\n[SSL+]\ncert = /etc/stunnel/stunnel.pem\naccept = ${SSLPORT}\nconnect = 127.0.0.1:${portx}" >>/etc/stunnel/stunnel.conf
+    ##-->> AutoInicio
+    sed -i '/ENABLED=[01]/d' /etc/default/stunnel4
+    echo "ENABLED=1" >>/etc/default/stunnel4
+    service stunnel4 restart >/dev/null 2>&1
+    echo -e "\033[1;32m            PUERTO AGREGADO CON EXITO"
+    msg -bar
+    rm -rf /etc/SCRIPT-LATAM/stunnel.crt >/dev/null 2>&1
+    rm -rf /etc/SCRIPT-LATAM/stunnel.key >/dev/null 2>&1
+    rm -rf /root/stunnel.crt >/dev/null 2>&1
+    rm -rf /root/stunnel.key >/dev/null 2>&1
+    return 0
+  }
+  cert_ssl() {
+    clear && clear
+    msg -bar
+    msg -tit
+    msg -bar
+    echo -e "\033[1;93m             AGREGAR CERTIFICADO MANUAL"
+    msg -bar
+    echo -e "\033[1;97m Tenga ya su SSL activo y configurado Previamente"
+    echo -e "\033[1;93m >> Suba su certificado en zip a Dropbox"
+    msg -bar
+    echo -ne "\033[1;97m Pegue el link Abajo:\e[1;96m\n  " && read linkd
+    wget $linkd -O /etc/stunnel/certificado.zip &>/dev/null
+    cd /etc/stunnel/
+    unzip -o certificado.zip &>/dev/null
+    cat private.key certificate.crt ca_bundle.crt >stunnel.pem
+    ##-->> AutoInicio
+    sed -i '/ENABLED=[01]/d' /etc/default/stunnel4
+    echo "ENABLED=1" >>/etc/default/stunnel4
+    systemctl start stunnel4 &>/dev/null
+    systemctl start stunnel &>/dev/null
+    systemctl restart stunnel4 &>/dev/null
+    systemctl restart stunnel &>/dev/null
+    cd
+    msg -bar
+    echo -e "\e[1;32m         >> CERTIFICADO INSTALADO CON EXITO <<"
+    msg -bar
+
+  }
+
+  certificadom() {
+
+    if [ -f /etc/stunnel/stunnel.conf ]; then
+      insapa2() {
+        for pid in $(pgrep python); do
+          kill $pid
+        done
+        for pid in $(pgrep apache2); do
+          kill $pid
+        done
+        service dropbear stop
+        apt install apache2 -y
+        echo "Listen 80
+
+<IfModule ssl_module>
+        Listen 443
+</IfModule>
+
+<IfModule mod_gnutls.c>
+        Listen 443
+</IfModule> " >/etc/apache2/ports.conf
+        service apache2 restart
+      }
+      clear && clear
+      msg -bar
+      msg -tit
+      msg -bar
+      echo -e "\033[1;93m             AGREGAR CERTIFICADO ZEROSSL"
+      msg -bar
+      echo -e "\e[1;37m Verificar dominio.......... \e[0m\n"
+      echo -e "\e[1;37m TIENES QUE MODIFICAR EL ARCHIVO DESCARGADO\n EJEMPLO: 530DDCDC3 comodoca.com 7bac5e210\e[0m"
+      msg -bar
+      read -p " LLAVE > Nombre Del Archivo: " keyy
+      msg -bar
+      read -p " DATOS > De La LLAVE: " dat2w
+      [[ ! -d /var/www/html/.well-known ]] && mkdir /var/www/html/.well-known
+      [[ ! -d /var/www/html/.well-known/pki-validation ]] && mkdir /var/www/html/.well-known/pki-validation
+      datfr1=$(echo "$dat2w" | awk '{print $1}')
+      datfr2=$(echo "$dat2w" | awk '{print $2}')
+      datfr3=$(echo "$dat2w" | awk '{print $3}')
+      echo -ne "${datfr1}\n${datfr2}\n${datfr3}" >/var/www/html/.well-known/pki-validation/$keyy.txt
+      msg -bar
+      echo -e "\e[1;37m VERIFIQUE EN LA PÁGINA ZEROSSL \e[0m"
+      msg -bar
+      read -p " ENTER PARA CONTINUAR"
+      clear
+      msg -bar
+      echo -e "\e[1;33m👇 LINK DEL CERTIFICADO 👇       \n     \e[0m"
+      echo -e "\e[1;36m LINK\e[37m: \e[34m"
+      read link
+      incertis() {
+        wget $link -O /etc/stunnel/certificado.zip
+        cd /etc/stunnel/
+        unzip certificado.zip
+        cat private.key certificate.crt ca_bundle.crt >stunnel.pem
+        ##-->> AutoInicio
+        sed -i '/ENABLED=[01]/d' /etc/default/stunnel4
+        echo "ENABLED=1" >>/etc/default/stunnel4
+        systemctl start stunnel4 &>/dev/null
+        systemctl start stunnel &>/dev/null
+        systemctl restart stunnel4 &>/dev/null
+        systemctl restart stunnel &>/dev/null
+      }
+      incertis &>/dev/null && echo -e " \e[1;33mEXTRAYENDO CERTIFICADO " | pv -qL 10
+      msg -bar
+      echo -e "${cor[4]} CERTIFICADO INSTALADO \e[0m"
+      msg -bar
+
+      for pid in $(pgrep apache2); do
+        kill $pid
+      done
+      apt install apache2 -y &>/dev/null
+      echo "Listen 81
+
+<IfModule ssl_module>
+        Listen 443
+</IfModule>
+
+<IfModule mod_gnutls.c>
+        Listen 443
+</IfModule> " >/etc/apache2/ports.conf
+      service apache2 restart &>/dev/null
+      service dropbear start &>/dev/null
+      service dropbear restart &>/dev/null
+      for port in $(cat /etc/SCRIPT-LATAM/PortM/PDirect.log | grep -v "nobody" | cut -d' ' -f1); do
+        PIDVRF3="$(ps aux | grep pid-"$port" | grep -v grep | awk '{print $2}')"
+        Portd="$(cat /etc/SCRIPT-LATAM/PortM/PDirect.log | grep -v "nobody" | cut -d' ' -f1)"
+        if [[ -z ${Portd} ]]; then
+          # systemctl start python.PD &>/dev/null
+          screen -dmS pydic-"$port" python /etc/SCRIPT-LATAM/filespy/PDirect-8081.py
+        else
+          # systemctl start python.PD &>/dev/null
+          screen -dmS pydic-"$port" python /etc/SCRIPT-LATAM/filespy/PDirect-8081.py
+        fi
+      done
+    else
+      msg -bar
+      echo -e "${cor[3]} SSL/TLS NO INSTALADO \e[0m"
+      msg -bar
+    fi
+  }
+
+  gerar_cert() {
+    clear
+    case $1 in
+    1)
+      msg -bar
+      msg -ama "Generador De Certificado Let's Encrypt"
+      msg -bar
+      ;;
+    2)
+      msg -bar
+      msg -ama "Generador De Certificado Zerossl"
+      msg -bar
+      ;;
+    esac
+    msg -ama "Requiere ingresar un dominio."
+    msg -ama "el mismo solo deve resolver DNS, y apuntar"
+    msg -ama "a la direccion ip de este servidor."
+    msg -bar
+    msg -ama "Temporalmente requiere tener"
+    msg -ama "los puertos 80 y 443 libres."
+    if [[ $1 = 2 ]]; then
+      msg -bar
+      msg -ama "Requiere tener una cuenta Zerossl."
+    fi
+    msg -bar
+    msg -ne " Continuar [S/N]: "
+    read opcion
+    [[ $opcion != @(s|S|y|Y) ]] && return 1
+
+    if [[ $1 = 2 ]]; then
+      while [[ -z $mail ]]; do
+        clear
+        msg -bar
+        msg -ama "ingresa tu correo usado en Zerossl"
+        msg -bar3
+        msg -ne " >>> "
+        read mail
+      done
+    fi
+
+    if [[ -e ${tmp_crt}/dominio.txt ]]; then
+      domain=$(cat ${tmp_crt}/dominio.txt)
+      [[ $domain = "multi-domain" ]] && unset domain
+      if [[ ! -z $domain ]]; then
+        clear
+        msg -bar
+        msg -azu "Dominio asociado a esta ip"
+        msg -bar
+        echo -e "$(msg -verm2 " >>> ") $(msg -ama "$domain")"
+        msg -ne "Continuar, usando este dominio? [S/N]: "
+        read opcion
+        tput cuu1 && tput dl1
+        [[ $opcion != @(S|s|Y|y) ]] && unset domain
+      fi
+    fi
+
+    while [[ -z $domain ]]; do
+      clear
+      msg -bar
+      msg -ama "ingresa tu dominio"
+      msg -bar
+      msg -ne " >>> "
+      read domain
+    done
+    msg -bar
+    msg -ama " Comprovando direccion IP ..."
+    local_ip=$(wget -qO- ipv4.icanhazip.com)
+    domain_ip=$(ping "${domain}" -c 1 | sed '1{s/[^(]*(//;s/).*//;q}')
+    sleep 1
+    [[ -z "${domain_ip}" ]] && domain_ip="ip no encontrada"
+    if [[ $(echo "${local_ip}" | tr '.' '+' | bc) -ne $(echo "${domain_ip}" | tr '.' '+' | bc) ]]; then
+      clear
+      msg -bar
+      msg -verm2 "ERROR DE DIRECCION IP"
+      msg -bar
+      msg -ama " La direccion ip de su dominio\n no coincide con la de su servidor."
+      msg -bar
+      echo -e " $(msg -azu "IP dominio:  ")$(msg -verm2 "${domain_ip}")"
+      echo -e " $(msg -azu "IP servidor: ")$(msg -verm2 "${local_ip}")"
+      msg -bar
+      msg -ama " Verifique su dominio, e intente de nuevo."
+      msg -bar
+
+    fi
+
+    stop_port
+    acme_install
+    echo "$domain" >${tmp_crt}/dominio.txt
+
+  }
+
+  clear && clear
+  msg -bar
+
+  #msg -tit
+  msg -bar
+  echo -e "\e[1;93m    INSTALADOR MONO Y MULTI SSL | SCRIPT LATAM"
+  msg -bar
+  echo -ne " \e[1;93m [\e[1;32m1\e[1;93m]\033[1;31m > \e[1;97m INSTALAR | PARAR SSL \e[97m \n"
+  echo -ne " \e[1;93m [\e[1;32m2\e[1;93m]\033[1;31m > \033[1;97m AGREGAR PUERTOS SSL EXTRA \e[97m \n"
+  echo -ne " \e[1;93m [\e[1;32m3\e[1;93m]\033[1;31m > \033[1;97m AGREGAR CERTIFICADO MANUAL (zip) \e[97m \n"
+  echo -ne " \e[1;93m [\e[1;32m4\e[1;93m]\033[1;31m > \033[1;97m AGREGAR CERTIFICADO ZEROSSL \e[97m \n"
+  echo -ne " \e[1;93m [\e[1;32m5\e[1;93m]\033[1;31m > \033[1;97m AGREGAR CERTIFICADO SSL (Let's Encript) \e[97m \n"
+  echo -ne " \e[1;93m [\e[1;32m5\e[1;93m]\033[1;31m > \033[1;97m AGREGAR CERTIFICADO SSL (Zerossl Directo) \e[97m \n"
+  msg -bar
+  echo -ne " \e[1;93m [\e[1;32m0\e[1;93m]\033[1;31m > \033[1;97m" && msg -bra "  \e[97m\033[1;41m VOLVER \033[1;37m"
+  msg -bar
+  echo -ne "\033[1;97mDigite solo el numero segun su respuesta:\e[32m "
+  read opcao
+  case $opcao in
+  1)
+    msg -bar
+    ssl_stunel
+    read -t 60 -n 1 -rsp $'\033[1;39m       << Presiona enter para Continuar >>\n'
+    proto_ssl
+    ;;
+  2)
+    msg -bar
+    ssl_stunel_2
+    read -t 60 -n 1 -rsp $'\033[1;39m       << Presiona enter para Continuar >>\n'
+    proto_ssl
+    ;;
+  3)
+    msg -bar
+    cert_ssl
+    read -t 60 -n 1 -rsp $'\033[1;39m       << Presiona enter para Continuar >>\n'
+    proto_ssl
+    ;;
+  4)
+    msg -bar
+    certificadom
+    read -t 60 -n 1 -rsp $'\033[1;39m       << Presiona enter para Continuar >>\n'
+    proto_ssl
+    ;;
+  5)
+    msg -bar
+    gerar_cert 1
+    read -t 60 -n 1 -rsp $'\033[1;39m       << Presiona enter para Continuar >>\n'
+    proto_ssl
+    ;;
+  6)
+    msg -bar
+    gerar_cert 2
+    read -t 60 -n 1 -rsp $'\033[1;39m       << Presiona enter para Continuar >>\n'
+    proto_ssl
+    ;;
   esac
+  menu_inst
 }
-
-clear && clear
-  msg -bar
-  msg -tit
-  msg -bar
-  echo -e "\033[1;93m           INFORMACION DE PUERTOS ACTIVOS"
-  msg -bar2
-  local portasVAR=$(lsof -V -i tcp -P -n | grep -v "ESTABLISHED" | grep -v "COMMAND" | grep "LISTEN")
-  local NOREPEAT
-  local reQ
-  local Port
-  while read port; do
-    reQ=$(echo ${port} | awk '{print $1}')
-    Port=$(echo {$port} | awk '{print $9}' | awk -F ":" '{print $2}')
-    [[ $(echo -e $NOREPEAT | grep -w "$Port") ]] && continue
-    NOREPEAT+="$Port\n"
-    case ${reQ} in
-    squid | squid3)
-      [[ -z $SQD ]] && local SQD="\033[1;31m SQUID: \033[1;32m"
-      SQD+="$Port "
-      ;;
-    apache | apache2)
-      [[ -z $APC ]] && local APC="\033[1;31m APACHE: \033[1;32m"
-      APC+="$Port "
-      ;;
-    ssh | sshd)
-      [[ -z $SSH ]] && local SSH="\033[1;31m SSH: \033[1;32m"
-      SSH+="$Port "
-      ;;
-    dropbear)
-      [[ -z $DPB ]] && local DPB="\033[1;31m DROPBEAR: \033[1;32m"
-      DPB+="$Port "
-      ;;
-    ssserver | ss-server)
-      [[ -z $SSV ]] && local SSV="\033[1;31m SHADOWSOCKS: \033[1;32m"
-      SSV+="$Port "
-      ;;
-    openvpn)
-      [[ -z $OVPN ]] && local OVPN="\033[1;31m OPENVPN-TCP: \033[1;32m"
-      OVPN+="$Port "
-      ;;
-    stunnel4 | stunnel)
-      [[ -z $SSL ]] && local SSL="\033[1;31m SSL: \033[1;32m"
-      SSL+="$Port "
-      ;;
-    sshl | sslh)
-      [[ -z $SSLH ]] && local SSLH="\033[1;31m SSLH: \033[1;32m"
-      SSLH+="$Port "
-      ;;
-    python | python3)
-      [[ -z $PY3 ]] && local PY3="\033[1;31m PYTHON|WEBSOCKET|SSR: \033[1;32m"
-      PY3+="$Port "
-      ;;
-    v2ray)
-      [[ -z $V2R ]] && local V2R="\033[1;31m V2RAY: \033[1;32m"
-      V2R+="$Port "
-      ;;
-    badvpn-ud)
-      [[ -z $BAD ]] && local BAD="\033[1;31m BADVPN: \033[1;32m"
-      BAD+="$Port "
-      ;;
-    psiphond)
-      [[ -z $PSI ]] && local PSI="\033[1;31m PSIPHOND: \033[1;32m"
-      PSI+="$Port "
-      ;;
-    esac
-  done <<<"${portasVAR}"
-  #UDP
-  local portasVAR=$(lsof -V -i -P -n | grep -v "ESTABLISHED" | grep -v "COMMAND")
-  local NOREPEAT
-  local reQ
-  local Port
-  while read port; do
-    reQ=$(echo ${port} | awk '{print $1}')
-    Port=$(echo ${port} | awk '{print $9}' | awk -F ":" '{print $2}')
-    [[ $(echo -e $NOREPEAT | grep -w "$Port") ]] && continue
-    NOREPEAT+="$Port\n"
-    case ${reQ} in
-    openvpn)
-      [[ -z $OVPN ]] && local OVPN="\033[0;36m OPENVPN-UDP: \033[1;32m"
-      OVPN+="$Port "
-      ;;
-    udpServer)
-      [[ -z $UDPSER ]] && local UDPSER="\033[0;36m UDP-SERVER \033[1;32m"
-      UDPSER+="$Port "
-      ;;
-    esac
-  done <<<"${portasVAR}"
-  [[ ! -z $SSH ]] && echo -e $SSH
-  [[ ! -z $SSL ]] && echo -e $SSL
-  [[ ! -z $SSLH ]] && echo -e $SSLH
-  [[ ! -z $DPB ]] && echo -e $DPB
-  [[ ! -z $SQD ]] && echo -e $SQD
-  [[ ! -z $PY3 ]] && echo -e $PY3
-  [[ ! -z $SSV ]] && echo -e $SSV
-  [[ ! -z $V2R ]] && echo -e $V2R
-  [[ ! -z $APC ]] && echo -e $APC
-  [[ ! -z $OVPN ]] && echo -e $OVPN
-  [[ ! -z $BAD ]] && echo -e $BAD
-  [[ ! -z $PSI ]] && echo -e $PSI
-  port=$(cat /etc/systemd/system/UDPserver.service 2>/dev/null | grep 'exclude' 2>/dev/null)
-  port2=$(echo $port | awk '{print $4}' | cut -d '=' -f2 2>/dev/null | sed 's/,/ /g' 2>/dev/null)
-  [[ ! -z $UDPSER ]] && echo -e "$UDPSER<--> $port2 "
-  msg -bar2
-  read -t 120 -n 1 -rsp $'\033[1;39m       << Presiona enter para Continuar >>\n'
-
