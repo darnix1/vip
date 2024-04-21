@@ -1,53 +1,483 @@
 #!/bin/bash
-# pewarna hidup
-red='\e[1;31m'
-green="\033[1;97m"
-blue="\033[1;96m"
+Green="\e[92;1m"
+RED="\033[31m"
+YELLOW="\033[33m"
+BLUE="\033[36m"
+FONT="\033[0m"
+GREENBG="\033[42;37m"
+NS=$( cat /etc/xray/dns )
+PUB=$( cat /etc/slowdns/server.pub )
+REDBG="\033[41;37m"
+OK="${Green}--->${FONT}"
+ERROR="${RED}[ERROR]${FONT}"
+GRAY="\e[1;30m"
 NC='\e[0m'
+red='\e[1;31m'
+green='\e[0;32m'
+DF='\e[39m'
+Bold='\e[1m'
+Blink='\e[5m'
+yell='\e[33m'
+red='\e[31m'
+green='\e[32m'
+blue='\e[34m'
+PURPLE='\e[35m'
+cyan='\e[36m'
+Lred='\e[91m'
+Lgreen='\e[92m'
+Lyellow='\e[93m'
+NC='\e[0m'
+GREEN='\033[0;32m'
+ORANGE='\033[0;33m'
+LIGHT='\033[0;37m'
+grenbo="\e[92;1m"
+red() { echo -e "\\033[32;1m${*}\\033[0m"; }
+# Getting notif
+CHATID=$(grep -E "^#bot# " "/etc/bot/.bot.db" | cut -d ' ' -f 3)
+KEY=$(grep -E "^#bot# " "/etc/bot/.bot.db" | cut -d ' ' -f 2)
+export TIME="10"
+export URL="https://api.telegram.org/bot$KEY/sendMessage"
+
+# getting notif trx
+CHATID2=$(grep -E "^#bot# " "/etc/bottrx/.bot.db" | cut -d ' ' -f 3)
+KEY2=$(grep -E "^#bot# " "/etc/bottrx/.bot.db" | cut -d ' ' -f 2)
+export TIME="10"
+export URL2="https://api.telegram.org/bot$KEY2/sendMessage"
+clear
+
+# detail server
+IP=$(curl -sS ipv4.icanhazip.com)
+ISP=$(curl -s ipinfo.io/org | cut -d " " -f 2-10 )
+CITY=$(curl -s ipinfo.io/city )
+domain=$(cat /etc/xray/domain)
+err_fun() {
+    case $1 in
+    1)
+      echo -e "\e[1;37;41mUsuario Invalido\e[0m"
+      sleep 3s
+      tput cuu1
+      tput dl1
+      tput cuu1
+      tput dl1
+      ;;
+    2)
+      echo -e "\e[1;37;41mNombre Corto 5, Mínimo 5 Letras\e[0m"
+      sleep 2s
+      tput cuu1
+      tput dl1
+      tput cuu1
+      tput dl1
+      ;;
+    3)
+      echo -e "\e[1;37;41mNombre Demasiado Grande\e[0m"
+      echo -e "\e[1;37;41mMaximo 15 Letras\e[0m"
+      sleep 2s
+      tput cuu1
+      tput dl1
+      tput cuu1
+      tput dl1
+      ;;
+    4)
+      echo -e "\e[1;37;41mContraseña Inválido\e[0m"
+      sleep 2s
+      tput cuu1
+      tput dl1
+      tput cuu1
+      tput dl1
+      ;;
+    5)
+      echo -e "\e[1;37;41mContraseña Corto 5, Mínimo 5 Letras\e[0m"
+      sleep 2s
+      tput cuu1
+      tput dl1
+      tput cuu1
+      tput dl1
+      ;;
+    6)
+      echo -e "\e[1;37;41mContraseña Demasiado Grande\e[0m"
+      echo -e "\e[1;37;41mMaximo 15 Letras\e[0m"
+      sleep 2s
+      tput cuu1
+      tput dl1
+      tput cuu1
+      tput dl1
+      ;;
+    7)
+      echo -e "\e[1;37;41mDuracion Invalido\e[0m"
+      sleep 3s
+      tput cuu1
+      tput dl1
+      tput cuu1
+      tput dl1
+      ;;
+    8)
+      echo -e "\e[1;37;41mDuracion Invalido use solo num\e[0m"
+      sleep 3s
+      tput cuu1
+      tput dl1
+      tput cuu1
+      tput dl1
+      ;;
+    9)
+      echo -e "\e[1;37;41mTiempo maximo 1 año\e[0m"
+      sleep 3s
+      tput cuu1
+      tput dl1
+      tput cuu1
+      tput dl1
+      ;;
+    11)
+      echo -e "\e[1;37;41mLimite Invalido\e[0m"
+      sleep 3s
+      tput cuu1
+      tput dl1
+      tput cuu1
+      tput dl1
+      ;;
+    12)
+      echo -e "\e[1;37;41mLimite Invalido solo números\e[0m"
+      sleep 3s
+      tput cuu1
+      tput dl1
+      tput cuu1
+      tput dl1
+      ;;
+    13)
+      echo -e "\e[1;37;41mConexion Maxima 999\e[0m"
+      sleep 3s
+      tput cuu1
+      tput dl1
+      tput cuu1
+      tput dl1
+      ;;
+    14)
+      echo -e "\e[1;37;41mUse solo números\e[0m"
+      sleep 3s
+      tput cuu1
+      tput dl1
+      tput cuu1
+      tput dl1
+      ;;
+    15)
+      msg -verm "HWID/Nombre Nulo (8-10 Caracteres)"
+      sleep 2s
+      tput cuu1
+      tput dl1
+      tput cuu1
+      tput dl1
+      ;;
+    16)
+      msg -verm "HWID Ya Existe"
+      sleep 2s
+      tput cuu1
+      tput dl1
+      tput cuu1
+      tput dl1
+      ;;
+    17)
+      msg -verm "TOKEN/Nombre Nulo (8-10 Caracteres)"
+      sleep 2s
+      tput cuu1
+      tput dl1
+      tput cuu1
+      tput dl1
+      ;;
+    18)
+      msg -verm "TOKEN Ya Existe"
+      sleep 2s
+      tput cuu1
+      tput dl1
+      tput cuu1
+      tput dl1
+      ;;
+    19)
+      msg -verm "User o Pass ya Ocupado reintente con Otro"
+      sleep 3s
+      tput cuu1
+      tput dl1
+      tput cuu1
+      tput dl1
+      ;;
+    20)
+     echo -e "\e[1;37;41mNo usar el mismo pass y user\e[0m"
+      sleep 2s
+      tput cuu1
+      tput dl1
+      tput cuu1
+      tput dl1
+      ;;
+    esac
+  }
+  
+  
+clear
+# // color
+grs="\033[1;93m"
+bg="\033[42m"
+gr="\e[92;1m"
+NC='\033[0m'
 clear
 echo -e "\e[38;5;239m════════════════════════════════════════════════════"
 echo -e "         \033[45m \033[103m \033[107m\033[30m SCRIPT DARNIX OPTIMIZADO \033[103m \033[45m \e[0m"
 echo -e ""
 echo -e "\033[38;5;239m══════════════════\e[48;5;1m\e[38;5;230m  MENU SSH  \e[0m\e[38;5;239m════════════════════"
 echo -e ""
-echo -e "\E[1;41;97m        CUENTAS SSH BLOQUEADAS               \E[0m"
-echo -e "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" | lolcat    
-echo "USERNAME          EXP DATE          STATUS"
-echo -e "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" | lolcat
-while read expired
-do
-    AKUN="$(echo $expired | cut -d: -f1)"
-    ID="$(echo $expired | grep -v nobody | cut -d: -f3)"
-    exp="$(chage -l $AKUN | grep "Account expires" | awk -F": " '{print $2}')"
-    status="$(passwd -S $AKUN | awk '{print $2}' )"
-    if [[ $ID -ge 1000 ]]; then
-        if [[ "$status" = "L" ]]; then
-            printf "%-17s %2s %-17s %2s \n" "$AKUN" "$exp     " "LOCKED"
-        else
-            printf "%-17s %2s %-17s %2s \n" "$AKUN" "$exp     " "UNLOCKED"
+echo -e "${grs}┌───────────────────────────────────────────────┐${NC}"
+echo -e "${grs}│${bg}                 CREAR CUENTA SSH               ${NC}${grs}│${NC}"
+echo -e "${grs}└───────────────────────────────────────────────┘${NC}"
+echo -e ""
+while true; do
+        echo -ne "Agregar Nuevo Usuario: " && read Login
+        Login="$(echo $Login | sed -e 's/[^a-z0-9 -]//ig')"
+        if [[ -z $Login ]]; then
+          err_fun 1 && continue
+        elif [[ "${#Login}" -lt "5" ]]; then
+          err_fun 2 && continue
+        elif [[ "${#Login}" -gt "20" ]]; then
+          err_fun 3 && continue
+      
         fi
-    fi
-done < /etc/passwd
-echo -e "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" | lolcat
-echo ""
-read -p "Ingrese el usuario : " username
-if [ -z "$username" ]; then
-echo -e "   \e[97m\033[1;41m ENTER SIN RESPUESTA REGRESANDO.. \033[0;97m"
-read -n 1 -s -r -p "Presione Enter para continuar..."
-clear
-m-sshws
+        break
+      done
+
+while true; do
+        echo -ne "Nueva Contraseña para $Login:" && read Pass
+        if [[ -z $Pass ]]; then
+          err_fun 4 && continue
+        elif [[ "${#Pass}" -lt "5" ]]; then
+          err_fun 5 && continue
+        elif [[ "${#Pass}" -gt "20" ]]; then
+          err_fun 6 && continue
+        elif [[ "${#Pass}" -eq "${#Login}" ]]; then
+          err_fun 20 && continue
+        fi
+        break
+      done
+
+while true; do
+        echo -ne "Conexiones maximas (IP):" && read iplimit
+        if [[ -z "$iplimit" ]]; then
+          err_fun 11 && continue
+        elif [[ "$iplimit" != +([0-9]) ]]; then
+          err_fun 12 && continue
+        elif [[ "$iplimit" -gt "999" ]]; then
+          err_fun 13 && continue
+        fi
+        break
+      done
+
+while true; do
+        echo -ne "Agregue los Dias:" && read masaaktif
+        if [[ -z "$masaaktif" ]]; then
+          err_fun 7 && continue
+        elif [[ "$masaaktif" != +([0-9]) ]]; then
+          err_fun 8 && continue
+        elif [[ "$masaaktif" -gt "360" ]]; then
+          err_fun 9 && continue
+        fi
+        break
+      done
+while true; do
+        echo -ne "Nombre de usuario telegram:" && read pembeli
+        if [[ "$Quota" != +([0-9]) ]]; then
+          err_fun 12 && continue
+        
+        fi
+        break
+      done
+#limitip
+#limitip
+if [[ $iplimit -gt 0 ]]; then
+mkdir -p /etc/kyt/limit/ssh/ip
+echo -e "$iplimit" > /etc/kyt/limit/ssh/ip/$Login
 else
-egrep "^$username" /etc/passwd >/dev/null
-passwd -l $username
-clear
-echo " "
-echo " "
-echo -e "\033[0;34m───────────────────\033[0m"
-echo -e "Usuario ${blue}$username${NC} se a ${red}BlOQUEADO !${NC}."
-echo -e "Nombre de usuario ${blue}$username${NC} Ha sido bloqueado."
-echo -e "\033[0;34m───────────────────\033[0m"
-systemctl restart ws
-echo ""
-read -n 1 -s -r -p "Enter para volver al Menu"
-m-sshws
+echo > /dev/null
 fi
+clear
+clear
+tgl=$(date -d "$masaaktif days" +"%d")
+bln=$(date -d "$masaaktif days" +"%b")
+thn=$(date -d "$masaaktif days" +"%Y")
+expe="$tgl $bln, $thn"
+tgl2=$(date +"%d")
+bln2=$(date +"%b")
+thn2=$(date +"%Y")
+tnggl="$tgl2 $bln2, $thn2"
+useradd -e `date -d "$masaaktif days" +"%Y-%m-%d"` -s /bin/false -M $Login
+expi="$(chage -l $Login | grep "Account expires" | awk -F": " '{print $2}')"
+echo -e "$Pass\n$Pass\n"|passwd $Login &> /dev/null
+hariini=`date -d "0 days" +"%Y-%m-%d"`
+expi=`date -d "$masaaktif days" +"%Y-%m-%d"`
+
+if [ ! -e /etc/ssh ]; then
+  mkdir -p /etc/ssh
+fi
+
+if [ -z ${Quota} ]; then
+  Quota="0"
+fi
+
+c=$(echo "${Quota}" | sed 's/[^0-9]*//g')
+d=$((${c} * 1024 * 1024 * 1024))
+
+if [[ ${c} != "0" ]]; then
+  echo "${d}" >/etc/ssh/${Login}
+fi
+DATADB=$(cat /etc/ssh/.ssh.db | grep "^#ssh#" | grep -w "${Login}" | awk '{print $2}')
+if [[ "${DATADB}" != '' ]]; then
+  sed -i "/\b${Login}\b/d" /etc/ssh/.ssh.db
+fi
+echo "#ssh# ${Login} ${Pass} ${Quota} ${iplimit} ${expe}" >>/etc/ssh/.ssh.db
+clear
+
+cat > /var/www/html/ssh-$Login.txt <<-END
+◇━━━━━━━━━━━━━━━━━◇
+Format SSH OVPN Account
+◇━━━━━━━━━━━━━━━━━◇
+Username         : $Login
+Password         : $Pass
+◇━━━━━━━━━━━━━━━━━◇
+Host             : $domain
+Port OpenSSH     : 443, 80, 22
+Port Dropbear    : 443, 109
+Port Dropbear WS : 443, 109
+Port SSH UDP     : 1-65535
+Port SSH WS      : 80, 8080, 8081-9999
+Port SSH SSL WS  : 443
+Port SSL/TLS     : 400-900
+Port OVPN WS SSL : 443
+Port OVPN SSL    : 443
+Port OVPN TCP    : 1194
+Port OVPN UDP    : 2200
+BadVPN UDP       : 7100, 7300, 7300
+◇━━━━━━━━━━━━━━━━━◇
+SSH UDP VIRAL : $domain:1-65535@$Login:$Pass
+◇━━━━━━━━━━━━━━━━━◇
+HTTP COSTUM : $domain:80@$Login:$Pass
+◇━━━━━━━━━━━━━━━━━◇
+Payload WSS: GET wss://BUG.COM/ HTTP/1.1[crlf]Host: $domain[crlf]Upgrade: websocket[crlf][crlf] 
+◇━━━━━━━━━━━━━━━━━◇
+OVPN Download : https://$domain:81/
+◇━━━━━━━━━━━━━━━━━◇
+Dibuat Pada      : $tnggl
+Berakhir Pada    : $expe
+◇━━━━━━━━━━━━━━━━━◇
+END
+
+# Function to send notification to Telegram Bot
+function notiftelebot() {
+    sleep 0
+    CHATID="$CHATID"
+KEY="$KEY"
+TIME="$TIME"
+URL="$URL"
+TEXT="
+◇━━━━━━━━━━━━━━━━━━━━━━━◇
+<b>    Succes Create SSH Ovpn Account</b>
+◇━━━━━━━━━━━━━━━━━━━━━━━◇
+<code>Usuario    :</code> <code>$Login</code>
+<code>Contrasena :</code> <code>$Pass</code>
+<code>Host       :</code> <code>$domain</code>
+◇━━━━━━━━━━━━━━━━━━━━━━━◇
+<b>                 PUERTOS ABIERTOS</b>
+◇━━━━━━━━━━━━━━━━━━━━━━━◇
+<code>OpenSSH     :</code> 443, 80, 22
+<code>Dropbear    :</code> 443, 109
+<code>SSH WS      :</code> 80, 8080, 8081-9999
+<code>SSH UDP     :</code> 1-65535
+<code>SSH SSL WS  :</code> 443
+<code>SSL/TLS     :</code> 400-900
+<code>OVPN WS SSL :</code> 443
+<code>OVPN SSL    :</code> 443
+<code>OVPN TCP    :</code> 443, 1194
+<code>OVPN UDP    :</code> 2200
+<code>BadVPN UDP  :</code> 7100, 7300, 7300
+◇━━━━━━━━━━━━━━━━━━━━━━━◇
+<b>SSH UDP :</b>
+<code>$domain:1-65535@$Login:$Pass</code>
+◇━━━━━━━━━━━━━━━━━━━━━━━◇
+<b>HTTP CUSTOM :</b>
+<code>$domain:80@$Login:$Pass</code>
+◇━━━━━━━━━━━━━━━━━━━━━━━◇
+<b>Payload WSS :</b>
+<code>GET wss://BUG.COM/ HTTP/1.1[crlf]Host: $domain[crlf]Upgrade: websocket[crlf][crlf]</code>
+◇━━━━━━━━━━━━━━━━━━━━━━━◇
+<b>OVPN Download:</b>
+https://$domain:81/
+◇━━━━━━━━━━━━━━━━━━━━━━━◇
+<b>Save Link Account:</b>
+https://$domain:81/ssh-$Login.txt
+◇━━━━━━━━━━━━━━━━━━━━━━━◇
+<code>Inicia Hoy  :</code> <b>$tnggl</b>
+<code>Expira el   :</code> <b>$expe</b>
+◇━━━━━━━━━━━━━━━━━━━━━━━◇
+"
+curl -s --max-time $TIME -d "chat_id=$CHATID&disable_web_page_preview=1&text=$TEXT&parse_mode=html" $URL >/dev/null
+}
+
+# function notif transaksi
+function notiftrx() {
+CHATID="$CHATID2"
+KEY="$KEY2"
+TIME="$TIME"
+URL="$URL2"
+TEXT="
+◇━━━━━━━━━━━━━━━━━━◇
+        <b>CUENTA SSH CREADA</b>
+◇━━━━━━━━━━━━━━━━━━◇
+☘️ » <code>Trx     :</code> <code>SSH WS</code>
+☘️ » <code>Cliente :</code> @${pembeli}
+☘️ » <code>Dominio :</code> <code>${domain}</code>
+☘️ » <code>ISP     :</code> <code>${ISP}</code>
+☘️ » <code>Region  :</code> <code>${CITY}</code>
+☘️ » <code>IP User :</code> <code>${iplimit} usuario</code>
+☘️ » <code>Dias    :</code> <code>${masaaktif} Dias</code>
+◇━━━━━━━━━━━━━━━━━━◇
+<i>Notificacion protocolo SSH...</i>
+"'&reply_markup={"inline_keyboard":[[{"text":"☘️ ORDER","url":"https://t.me/darnix0"},{"text":"TESTI ☘️","url":"https://t.me/botlatmx"}]]}'
+curl -s --max-time $TIME -d "chat_id=$CHATID&disable_web_page_preview=1&text=$TEXT&parse_mode=html" $URL >/dev/null
+}
+clear
+notiftelebot
+notiftrx
+echo ""
+echo -e "◇━━━━━━━━━━━━━━━━━━━━━━━━━━━◇" | tee -a /etc/user-create/user.log
+echo -e "  SSH / OPENVPN CUENTA   " | tee -a /etc/user-create/user.log
+echo -e "◇━━━━━━━━━━━━━━━━━━━━━━━━━━━◇" | tee -a /etc/user-create/user.log
+echo -e "Usuario         : $Login" | tee -a /etc/user-create/user.log
+echo -e "Contraseña      : $Pass" | tee -a /etc/user-create/user.log
+echo -e "◇━━━━━━━━━━━━━━━━━━━━━━━━━━━◇" | tee -a /etc/user-create/user.log
+echo -e "Limite Ip        : ${iplimit} User" | tee -a /etc/user-create/user.log
+echo -e "Host             : $domain" | tee -a /etc/user-create/user.log
+echo -e "Location         : $CITY" | tee -a /etc/user-create/user.log
+echo -e "Port OpenSSH     : 443, 80, 22" | tee -a /etc/user-create/user.log
+echo -e "Port DNS         : 443, 53 ,22 " | tee -a /etc/user-create/user.log
+echo -e "Port SSH UDP     : 1-65535" | tee -a /etc/user-create/user.log
+echo -e "Port Dropbear    : 443, 109" | tee -a /etc/user-create/user.log
+echo -e "Port SSH WS      : 80, 8080, 8880, 2082, 2095" | tee -a /etc/user-create/user.log
+echo -e "Port SSH SSL WS  : 443" | tee -a /etc/user-create/user.log
+echo -e "Port SSL/TLS     : 400-900" | tee -a /etc/user-create/user.log
+echo -e "Port OVPN WS SSL : 443" | tee -a /etc/user-create/user.log
+echo -e "Port OVPN SSL    : 443" | tee -a /etc/user-create/user.log
+echo -e "Port OVPN TCP    : 443, 1194" | tee -a /etc/user-create/user.log
+echo -e "Port OVPN UDP    : 2200" | tee -a /etc/user-create/user.log
+echo -e "BadVPN UDP       : 7100, 7300, 7300" | tee -a /etc/user-create/user.log
+echo -e "◇━━━━━━━━━━━━━━━━━━━━━━━━━━━◇" | tee -a /etc/user-create/user.log
+echo -e "SSH UDP VIRAL : $domain:1-65535@$Login:$Pass"            | tee -a /etc/user-create/user.log
+echo -e "◇━━━━━━━━━━━━━━━━━━━━━━━━━━━◇" | tee -a /etc/user-create/user.log
+echo -e "HTTP COSTUM : $domain:80@$Login:$Pass"                   | tee -a /etc/user-create/user.log
+echo -e "◇━━━━━━━━━━━━━━━━━━━━━━━━━━━◇" | tee -a /etc/user-create/user.log
+echo -e "Payload WSS      : GET wss://BUG.COM/ HTTP/1.1[crlf]Host: $domain[crlf]Upgrade: websocket[crlf][crlf]" | tee -a /etc/user-create/user.log
+echo -e "◇━━━━━━━━━━━━━━━━━━━━━━━━━━━◇" | tee -a /etc/user-create/user.log
+echo -e "Payload WS       : GET / HTTP/1.1[crlf]Host: $domain[crlf]Upgrade: ws[crlf][crlf]" | tee -a /etc/user-create/user.log
+echo -e "◇━━━━━━━━━━━━━━━━━━━━━━━━━━━◇" | tee -a /etc/user-create/user.log
+echo -e "OVPN Download    : https://$domain:81/" | tee -a /etc/user-create/user.log
+echo -e "◇━━━━━━━━━━━━━━━━━━━━━━━━━━━◇" | tee -a /etc/user-create/user.log
+echo -e "Save Link Account: https://$domain:81/ssh-$Login.txt" | tee -a /etc/user-create/user.log
+echo -e "◇━━━━━━━━━━━━━━━━━━━━━━━━━━━◇" | tee -a /etc/user-create/user.log
+echo -e "Inicia Hoy      : $tnggl" | tee -a /etc/user-create/user.log
+echo -e "Expira el       : $expe" | tee -a /etc/user-create/user.log
+echo -e "◇━━━━━━━━━━━━━━━━━━━━━━━━━━━◇" | tee -a /etc/user-create/user.log
+
+read -p "Presiona [ enter ] Para Continuar "
+m-sshws
