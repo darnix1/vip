@@ -227,7 +227,7 @@ echo -e "${grs}│${bg}                 CREAR CUENTA SSH              ${NC}${grs
 echo -e "${grs}└───────────────────────────────────────────────┘${NC}"
 echo -e ""
 while true; do
-        echo -e "\033[1;37m INGRESE EL USUARIO\033[1;33m" && read Login
+        echo -ne "\033[1;37m INGRESE EL USUARIO\033[1;33m" && read Login
         Login="$(echo $Login | sed -e 's/[^a-z0-9 -]//ig')"
         if [[ -z $Login ]]; then
           err_fun 1 && continue
@@ -277,14 +277,8 @@ while true; do
         fi
         break
       done
-while true; do
-        echo -ne "Nombre de usuario telegram:" && read pembeli
-        if [[ "$pembeli" != +([0-9]) ]]; then
-          err_fun 12 && continue
-        
-        fi
-        break
-      done
+read -p " Ingresa el usuario de telegram (cliente): " pembeli
+
 #limitip
 #limitip
 if [[ $iplimit -gt 0 ]]; then
