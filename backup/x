@@ -223,11 +223,11 @@ echo -e ""
 echo -e "\033[38;5;239m══════════════════\e[48;5;1m\e[38;5;230m  MENU SSH  \e[0m\e[38;5;239m════════════════════"
 echo -e ""
 echo -e "${grs}┌───────────────────────────────────────────────┐${NC}"
-echo -e "${grs}│${bg}                 CREAR CUENTA SSH               ${NC}${grs}│${NC}"
+echo -e "${grs}│${bg}                 CREAR CUENTA SSH              ${NC}${grs}│${NC}"
 echo -e "${grs}└───────────────────────────────────────────────┘${NC}"
 echo -e ""
 while true; do
-        echo -ne "Agregar Nuevo Usuario: " && read Login
+        echo -e "\033[1;37m INGRESE EL USUARIO\033[1;33m" && read Login
         Login="$(echo $Login | sed -e 's/[^a-z0-9 -]//ig')"
         if [[ -z $Login ]]; then
           err_fun 1 && continue
@@ -279,7 +279,7 @@ while true; do
       done
 while true; do
         echo -ne "Nombre de usuario telegram:" && read pembeli
-        if [[ "$Quota" != +([0-9]) ]]; then
+        if [[ "$pembeli" != +([0-9]) ]]; then
           err_fun 12 && continue
         
         fi
