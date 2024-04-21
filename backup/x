@@ -227,7 +227,7 @@ echo -e "${grs}│${bg}                 CREAR CUENTA SSH              ${NC}${grs
 echo -e "${grs}└───────────────────────────────────────────────┘${NC}"
 echo -e ""
 while true; do
-        echo -ne "\033[1;37m INGRESE EL USUARIO\033[1;33m" && read Login
+        echo -ne "\033[1;37m INGRESE EL USUARIO \033[1;33m" && read Login
         Login="$(echo $Login | sed -e 's/[^a-z0-9 -]//ig')"
         if [[ -z $Login ]]; then
           err_fun 1 && continue
@@ -241,7 +241,7 @@ while true; do
       done
 
 while true; do
-        echo -ne "Nueva Contraseña para $Login:" && read Pass
+        echo -ne "\033[1;37m INGRESE LA CONTRASENA \033[1;33m" && read Pass
         if [[ -z $Pass ]]; then
           err_fun 4 && continue
         elif [[ "${#Pass}" -lt "5" ]]; then
@@ -255,7 +255,7 @@ while true; do
       done
 
 while true; do
-        echo -ne "Conexiones maximas (IP):" && read iplimit
+        echo -ne "\033[1;37m CONEXION MAXIMA (IP) \033[1;33m" && read iplimit
         if [[ -z "$iplimit" ]]; then
           err_fun 11 && continue
         elif [[ "$iplimit" != +([0-9]) ]]; then
@@ -267,7 +267,7 @@ while true; do
       done
 
 while true; do
-        echo -ne "Agregue los Dias:" && read masaaktif
+        echo -ne "\033[1;37m DIAS DE ACCESO \033[1;33m" && read masaaktif
         if [[ -z "$masaaktif" ]]; then
           err_fun 7 && continue
         elif [[ "$masaaktif" != +([0-9]) ]]; then
@@ -277,7 +277,7 @@ while true; do
         fi
         break
       done
-read -p " Ingresa el usuario de telegram (cliente): " pembeli
+read -p "Usuario de telegram (cliente): " pembeli
 
 #limitip
 #limitip
