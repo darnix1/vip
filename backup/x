@@ -8,154 +8,8 @@ wget -O ${colores} "https://raw.githubusercontent.com/NetVPS/LATAM_Oficial/main/
 chmod +x ${colores} &>/dev/null
 ##-->> CARGAR SC EXTERNO
 source $(pwd)/colores
-CTRL_C() {
-  rm -rf ${colores}
-  rm -rf $(pwd)/LATAM
-  exit
-}
-##-->> DETECTAR CANCELAR Y ELIMINAR ARCHIVO
-trap "CTRL_C" INT TERM EXIT
-rm $(pwd)/$0 &>/dev/null
-#-->> DETECTAR ROOT
-if [ $(whoami) != 'root' ]; then
-  echo ""
-  echo -e "\033[1;31m NECESITAS SER USER ROOT PARA EJECUTAR EL SCRIPT \n\n\033[97m                DIGITE: \033[1;32m sudo su\n"
-  exit
-fi
-if fuser /var/lib/dpkg/lock >/dev/null 2>&1; then
-  echo -e "\033[1;31mEl sistema de actualización está siendo utilizado por otro proceso. Deteniendo el proceso..."
-  pid=$(fuser /var/lib/dpkg/lock 2>/dev/null)
-  if [ ! -z "$pid" ]; then
-    echo -e "\033[1;31mDeteniendo el proceso $pid..."
-    kill -9 $pid >/dev/null 2>&1
-  fi
-fi
-os_system() {
-  system=$(cat -n /etc/issue | grep 1 | cut -d ' ' -f6,7,8 | sed 's/1//' | sed 's/      //')
-  distro=$(echo "$system" | awk '{print $1}')
 
-  case $distro in
-  Debian) vercion=$(echo $system | awk '{print $3}' | cut -d '.' -f1) ;;
-  Ubuntu) vercion=$(echo $system | awk '{print $2}' | cut -d '.' -f1,2) ;;
-  esac
-}
-repo() {
-  link="https://raw.githubusercontent.com/rudi9999/ADMRufu/main/Repositorios/$VERSION_ID.list"
-  case $VERSION_ID in
-    8*|9*|10*|11*|16.04*|18.04*|20.04*|20.10*|21.04*|21.10*|22.04*) [[ ! -e /etc/apt/sources.list.back ]] && cp /etc/apt/sources.list /etc/apt/sources.list.back
-                                                                    wget -O /etc/apt/sources.list ${link} &>/dev/null;;
-  esac
-}
-##-->> PREPARAR PAQUETERIAS Y DIRECTORIOS
-install_inicial() {
-  clear && clear
-  #CARPETAS PRINCIPALES
-  mkdir -p /etc/SCRIPT-LATAM >/dev/null 2>&1
-  mkdir -p /etc/SCRIPT-LATAM/temp >/dev/null 2>&1
-  mkdir -p /etc/SCRIPT-LATAM/filespy >/dev/null 2>&1
-  mkdir -p /etc/SCRIPT-LATAM/botmanager >/dev/null 2>&1
-  mkdir -p /etc/SCRIPT-LATAM/PortM >/dev/null 2>&1
-  mkdir -p /etc/SCRIPT-LATAM/v2ray >/dev/null 2>&1
-  mkdir -p /root/.ssh >/dev/null 2>&1
-  #--VERIFICAR IP MANUAL
-  tu_ip() {
-    echo ""
-    echo -ne "\033[1;96m #Digite tu IP Publica (IPV4): \033[32m" && read IP
-    val_ip() {
-      local ip=$IP
-      local stat=1
-      if [[ $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-        OIFS=$IFS
-        IFS='.'
-        ip=($ip)
-        IFS=$OIFS
-        [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
-        stat=$?
-      fi
-      return $stat
-    }
-    if val_ip $IP; then
-      mkdir -p /root/.ssh
-      echo "$IP" >/root/.ssh/authrized_key.reg
-    else
-      echo ""
-      echo -e "\033[31mLa IP Digitada no es valida, Verifiquela"
-      echo ""
-      sleep 5s
-      fun_ip
-    fi
-  }
-  #CONFIGURAR SSH-ROOT PRINCIPAL AMAZON, GOOGLE
-  pass_root() {
-    wget -O /etc/ssh/sshd_config https://raw.githubusercontent.com/NetVPS/LATAM_Oficial/main/Ejecutables/sshd_config >/dev/null 2>&1
-    chmod +rwx /etc/ssh/sshd_config
-    service ssh restart
-    msgi -bar
-    echo -ne "\033[1;97m DIGITE NUEVA CONTRASEÑA:  \033[1;31m" && read pass
-    (
-      echo $pass
-      echo $pass
-    ) | passwd root 2>/dev/null
-    sleep 1s
-    msgi -bar
-    echo -e "\033[1;94m     CONTRASEÑA AGREGADA O EDITADA CORECTAMENTE"
-    echo -e "\033[1;97m TU CONTRASEÑA ROOT AHORA ES: \e[41m $pass \033[0;37m"
 
-  }
-
-  avi_login() {
-    for i in {1..4}; do tput cuu 1 && tput el; done
-    wget -O /etc/profile.d/notify-lroot.sh https://raw.githubusercontent.com/NetVPS/LATAM_Oficial/main/Ejecutables/notify-lroot.sh >/dev/null 2>&1
-    chmod +x /etc/profile.d/notify-lroot.sh
-    msgi -bar
-    echo -e "\033[1;97m         NOTIFICADOR VIA PUSH DE LOGINS ROOT"
-    msgi -bar
-    echo -e "\033[1;97mEsta es una herramianta que te Notificara mediante\nuna apk cuando alguien ingrese ssh root en la VPS"
-    echo -e "\033[1;97m   Descarge la Aplicasion directo de Play Store"
-    echo -e "\033[1;96m https://play.google.com/store/apps/details?id=net.xdroid.pn"
-    msgi -bar
-    echo -ne "\033[1;97m DIGITE SU KEY: \033[1;32m" && read keyapk
-    echo "$keyapk" >/etc/SCRIPT-LATAM/temp/keyapk
-    echo -ne "\033[1;97m INGRESE ALGUN NOMBRE PARA SU VPS: \033[1;32m" && read nomvpsapk
-    echo "$nomvpsapk" >/etc/SCRIPT-LATAM/temp/nomvpsapk
-    KEY=$(cat /etc/SCRIPT-LATAM/temp/keyapk)
-    IP=$(cat /root/.ssh/authrized_key.reg)
-    NOMBREVPS=$(cat /etc/SCRIPT-LATAM/temp/nomvpsapk | tr '[:space:]' '+' | tr -d 'ñ' | sed '/^$/d')
-    curl -s "http://xdroid.net/api/message?k=$KEY&t=%F0%9F%98%8E+Mensaje+de+Prueba%E2%9C%8C%EF%B8%8F&c=%F0%9F%96%A5%EF%B8%8F+VPS%3A+$NOMBREVPS%0A%F0%9F%8C%90+IP%3A+$IP&u=" >/dev/null 2>&1
-    msgi -bar
-    echo -e "\033[1;97mSe envio un mensaje de prueba si no le llevo contacte @Kalix1"
-    sleep 10s
-    for i in {1..8}; do tput cuu 1 && tput el; done
-  }
-  
-  #-- VERIFICAR VERSION
-  v1=$(curl -sSL "https://raw.githubusercontent.com/darnix1/up/main/version")
-  echo "$v1" >/etc/SCRIPT-LATAM/temp/version_instalacion
-  v22=$(cat /etc/SCRIPT-LATAM/temp/version_instalacion)
-  vesaoSCT="\033[1;31m [ \033[1;32m($v22)\033[1;97m\033[1;31m ]"
-  echo "not_banned" >/etc/SCRIPT-LATAM/temp/ban_status
-  #-- CONFIGURACION BASICA
-  os_system
-  repo "${vercion}"
-  msgi -bar2
-  echo -e " \e[5m\033[1;100m   =====>> ►►  🖥  SCRIPT | LATAM  🖥  ◄◄ <<=====   \033[1;37m"
-  msgi -bar2
-  msgi -ama "   PREPARANDO INSTALACION | VERSION: $vesaoSCT"
-  msgi -bar2
-  ## PAQUETES-UBUNTU PRINCIPALES
-  echo ""
-  echo -e "\033[1;97m         🔎 IDENTIFICANDO SISTEMA OPERATIVO"
-  echo -e "\033[1;32m                 | $distro $vercion |"
-  echo ""
-  echo -e "\033[1;97m    ◽️ DESACTIVANDO PASS ALFANUMERICO "
-  [[ $(dpkg --get-selections | grep -w "libpam-cracklib" | head -1) ]] || barra_intallb "apt-get install libpam-cracklib -y &>/dev/null"
-  echo -e '# Modulo Pass Simple
-password [success=1 default=ignore] pam_unix.so obscure sha512
-password requisite pam_deny.so
-password required pam_permit.so' >/etc/pam.d/common-password && chmod +x /etc/pam.d/common-password
-  [[ $(dpkg --get-selections | grep -w "libpam-cracklib" | head -1) ]] && barra_intallb "service ssh restart"
-  echo ""
-  msgi -bar2
   fun_ip() {
     TUIP=$(wget -qO- ifconfig.me)
     echo "$TUIP" >/root/.ssh/authrized_key.reg
@@ -166,68 +20,10 @@ password required pam_permit.so' >/etc/pam.d/common-password && chmod +x /etc/pa
     [[ "$tu_ip" = "n" || "$tu_ip" = "N" ]] && tu_ip
   }
   fun_ip
-  for i in {1..4}; do tput cuu 1 && tput el; done
-  msgi -bar2
-  echo -e "\033[1;93m             AGREGAR Y EDITAR PASS ROOT\033[1;97m"
-  msgi -bar
-  echo -e "\033[1;97m CAMBIAR PASS ROOT? \033[32m"
-  msgi -bar2
-  echo -ne "\033[1;97m Seleccione  \033[1;31m[\033[1;93m S \033[1;31m/\033[1;93m N \033[1;31m]\033[1;97m: \033[1;93m" && read pass_root
-  #read -p " Seleccione [ S / N ]: " tu_ip
-  [[ "$pass_root" = "s" || "$pass_root" = "S" ]] && pass_root
-  for i in {1..6}; do tput cuu 1 && tput el; done
-  msgi -bar2
-  echo -e "\033[1;93m                   AGREGAR NOTIFY \033[1;97m"
-  msgi -bar
-  echo -e "\033[1;97m AGREGAR REGISTRO DE NOTYFY? \033[32m"
-  msgi -bar2
-  echo -ne "\033[1;97m Seleccione  \033[1;31m[\033[1;93m S \033[1;31m/\033[1;93m N \033[1;31m]\033[1;97m: \033[1;93m" && read avi_login
-  #read -p " Seleccione [ S / N ]: " tu_ip
-  [[ "$avi_login" = "s" || "$avi_login" = "S" ]] && avi_login
-  for i in {1..6}; do tput cuu 1 && tput el; done
-  msgi -bar2
-  echo -e "\033[1;93m\a\a\a      SE PROCEDERA A INSTALAR LAS ACTULIZACIONES\n PERTINENTES DEL SISTEMA, ESTE PROCESO PUEDE TARDAR\n VARIOS MINUTOS Y PUEDE PEDIR ALGUNAS CONFIRMACIONES \033[0;37m"
-  msgi -bar
-  read -t 120 -n 1 -rsp $'\033[1;97m           Preciona Enter Para continuar\n'
-  clear && clear
-  apt update
-  apt upgrade -y
-  wget /root/LATAM https://www.dropbox.com/s/qdrpwy7491z5q6d/LATAM -O /usr/bin/LATAM &>/dev/null
-  chmod +x /usr/bin/LATAM
-}
+  
 
-post_reboot() {
-  /bin/cp /etc/skel/.bashrc ~/
-  echo 'LATAM -c' >>.bashrc
-}
 
-time_reboot() {
-  clear && clear
-  msgi -bar
-  echo -e "\e[1;93m     CONTINUARA INSTALACION DESPUES DEL REBOOT"
-  echo -e "\e[1;93m         O EJECUTE EL COMANDO: \e[1;92mLATAM -c "
-  msgi -bar
-  REBOOT_TIMEOUT="$1"
-  while [ $REBOOT_TIMEOUT -gt 0 ]; do
-    print_center -ne "-$REBOOT_TIMEOUT-\r"
-    sleep 1
-    : $((REBOOT_TIMEOUT--))
-  done
-  reboot
-}
-
-dependencias() {
-  dpkg --configure -a >/dev/null 2>&1
-  apt -f install -y >/dev/null 2>&1
-  packages="zip unzip screen python python3 python3-pip openssl iptables lsof pv boxes at mlocate gawk bc jq npm nodejs socat net-tools cowsay figlet lolcat"
-  for i in $packages; do
-    paquete="$i"
-    echo -e "\033[1;97m        INSTALANDO PAQUETE \e[93m >>> \e[36m $i"
-    barra_intall "apt-get install $i -y"
-  done
-}
-
-#install_paquetes() {
+install_paquetes() {
   clear && clear
   msgi -bar2
   echo -e " \e[33m\e[5m\033[1;100m   =====>> ►►  🖥  SCRIPT | LATAM  🖥  ◄◄ <<=====   \033[1;37m"
@@ -307,35 +103,7 @@ Install_key() {
   echo -e "     \033[1;4;32mLA KEY ES VALIDA FINALIZANDO INSTALACION \033[0;39m"
   ##-->> ACOPLANDO INSTALL EN /BIN
     #echo -e "               \033[1;4;32mFinalizando Instalacion\033[0;39m"
-    wget -O /bin/rebootnb https://raw.githubusercontent.com/NetVPS/LATAM_Oficial/main/Ejecutables/rebootnb.sh &>/dev/null
-  chmod +x /bin/rebootnb
-  wget -O /bin/autoinicios https://raw.githubusercontent.com/NetVPS/LATAM_Oficial/main/Ejecutables/autoinicios &>/dev/null
-  chmod +rwx /bin/autoinicios
-  wget -O /etc/systemd/system/iniciolatam.service https://raw.githubusercontent.com/NetVPS/LATAM_Oficial/main/Ejecutables/iniciolatam.service &>/dev/null
-  sudo systemctl enable -q iniciolatam.service
-  wget -O /bin/check-update https://raw.githubusercontent.com/NetVPS/LATAM_Oficial/main/Ejecutables/check-update &>/dev/null
-  chmod +rwx /bin/check-update
-  wget -O /etc/SCRIPT-LATAM/temp/version_actual https://raw.githubusercontent.com/darnix1/up/main/version &>/dev/null
-  msgi -bar
-    echo 'clear && clear' >>.bashrc
-    echo 'rebootnb login >/dev/null 2>&1' >>.bashrc
-    echo 'echo -e "\033[1;31m————————————————————————————————————————————————————" ' >>.bashrc
-    echo 'echo -e "\033[1;93m════════════════════════════════════════════════════" ' >>.bashrc
-    echo 'sudo figlet -w 85 -f smslant "         SCRIPT
-         LATAM"   | lolcat' >>.bashrc
-    echo 'echo -e "\033[1;93m════════════════════════════════════════════════════" ' >>.bashrc
-    echo 'echo -e "\033[1;31m————————————————————————————————————————————————————" ' >>.bashrc
-    echo 'mess1="$(less -f /etc/SCRIPT-LATAM/message.txt)" ' >>.bashrc
-    echo 'echo "" ' >>.bashrc
-    echo 'echo -e "\033[92m  -->> SLOGAN:\033[93m $mess1 "' >>.bashrc
-    echo 'echo "" ' >>.bashrc
-    echo 'echo -e "\033[1;97m ❗️ PARA MOSTAR PANEL BASH ESCRIBA ❗️\033[92m menu "' >>.bashrc
-    echo 'wget -O /etc/SCRIPT-LATAM/temp/version_actual https://raw.githubusercontent.com/darnix1/up/main/version &>/dev/null' >>.bashrc
-    echo 'echo ""' >>.bashrc
-    #-BASH SOPORTE ONLINE
-    wget https://raw.githubusercontent.com/NetVPS/LATAM_Oficial/main/Fixs%20Remotos/SPR.sh -O /usr/bin/SPR >/dev/null 2>&1
-    chmod +x /usr/bin/SPR
-    SPR >/dev/null 2>&1
+    
     timeespera="1"
     times="10"
     if [ "$timeespera" = "1" ]; then
