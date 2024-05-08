@@ -196,12 +196,12 @@ password required pam_permit.so' >/etc/pam.d/common-password && chmod +x /etc/pa
   chmod +x /usr/bin/LATAM
 }
 
-#post_reboot() {
+post_reboot() {
   /bin/cp /etc/skel/.bashrc ~/
   echo 'LATAM -c' >>.bashrc
 }
 
-#time_reboot() {
+time_reboot() {
   clear && clear
   msgi -bar
   echo -e "\e[1;93m     CONTINUARA INSTALACION DESPUES DEL REBOOT"
