@@ -10,16 +10,7 @@ chmod +x ${colores} &>/dev/null
 source $(pwd)/colores
 
 
-  fun_ip() {
-    TUIP=$(wget -qO- ifconfig.me)
-    echo "$TUIP" >/root/.ssh/authrized_key.reg
-    echo -e "\033[1;97m ESTA ES TU IP PUBLICA? \033[32m$TUIP"
-    msgi -bar2
-    echo -ne "\033[1;97m Seleccione  \033[1;31m[\033[1;93m S \033[1;31m/\033[1;93m N \033[1;31m]\033[1;97m: \033[1;93m" && read tu_ip
-    #read -p " Seleccione [ S / N ]: " tu_ip
-    [[ "$tu_ip" = "n" || "$tu_ip" = "N" ]] && tu_ip
-  }
-  fun_ip
+  incertar_key
   
 
 
