@@ -163,11 +163,7 @@ apt-get install netcat -y &>/dev/null
 IVAR2="/etc/key-gerador"
 echo "$Key" > $IVAR2
 rm $HOME/lista-arq
-} || {
-echo -e "\033[1;36m--------------------------------------------------------------------\033[0m"
-echo -e "\033[1;33mKey Invalida!"
-echo -e "\033[1;36m--------------------------------------------------------------------\033[0m"
-}
+
 echo -ne "\033[0m"
 
 echo -e " "
