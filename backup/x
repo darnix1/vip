@@ -1,130 +1,42 @@
 #!/bin/bash
-##-->> INSTALADOR --- ACTUALIZADO EL 16-03-2023 -- >> By @Kalix1 << ---
-clear && clear
-colores="$(pwd)/colores"
-rm -rf ${colores}
-wget -O ${colores} "https://raw.githubusercontent.com/NetVPS/LATAM_Oficial/main/Ejecutables/colores" &>/dev/null
-[[ ! -e ${colores} ]] && exit
-chmod +x ${colores} &>/dev/null
-##-->> CARGAR SC EXTERNO
-source $(pwd)/colores
+Green="\e[92;1m"
+RED="\033[31m"
+YELLOW="\033[33m"
+BLUE="\033[36m"
+FONT="\033[0m"
+GREENBG="\033[42;37m"
+REDBG="\033[41;37m"
+OK="${Green}--->${FONT}"
+ERROR="${RED}[ERROR]${FONT}"
+GRAY="\e[1;30m"
+NC='\e[0m'
+red='\e[1;31m'
+green='\e[0;32m'
+# ===================
+clear
+  # // Exporint IP AddressInformation
+  sudo apt-get install -y figlet boxes
+sudo apt-get install -y pv
+sudo apt-get install curl -y
+sudo apt update -y && sudo apt upgrade -y
+sudo apt-get update
+sudo apt-get install -y ncurses-dev
+export IP=$( curl -sS icanhazip.com )
+export IP=$( curl -sS ipinfo.io/ip )
+module="$(pwd)/module"
+rm -rf ${module}
+wget -O ${module} "https://gitlab.com/fdarnix/chukkmod-files/-/raw/main/darnix" &>/dev/null
+[[ ! -e ${module} ]] && exit
+chmod +x ${module} &>/dev/null
+source ${module}
 
 
-  incertar_key
-  
+# ===================
+IVAR="/etc/http-instas"
+SCPT_DIR="/etc/SCRIPT"
+rm $(pwd)/$0
 
-
-install_paquetes() {
-  clear && clear
-  msgi -bar2
-  echo -e " \e[33m\e[5m\033[1;100m   =====>> ►►  🖥  SCRIPT | LATAM  🖥  ◄◄ <<=====   \033[1;37m"
-  msgi -bar
-  echo -e "  \033[1;41m    -- INSTALACION DE PAQUETES PARA LATAM --   \e[49m"
-  msgi -bar
-  dependencias
-  echo -e "\e[1;97m          REMOVIENDO PAQUETES OBSOLETOS \e[1;32m"
-  barra_intallb "apt autoremove -y "
-  echo iptables-persistent iptables-persistent/autosave_v4 boolean true | sudo debconf-set-selections
-  echo iptables-persistent iptables-persistent/autosave_v6 boolean true | sudo debconf-set-selections
-  msgi -bar2
-  read -t 30 -n 1 -rsp $'\033[1;97m           Preciona Enter Para continuar\n'
-}
-
-#SELECTOR DE INSTALACION
-while :; do
-  case $1 in
-  -s | --start) install_inicial && post_reboot && time_reboot "15" ;;
-  -c | --continue)
-    install_paquetes
-    rm -rf /root/LATAM &>/dev/null
-    break
-    ;;
-  -k | --key)
-    clear && clear
-    break
-    ;;
-  *) exit ;;
-  esac
-done
-
-## PASO DOS
-Install_key() {
-  wget /root/LATAM https://www.dropbox.com/s/qdrpwy7491z5q6d/LATAM -O /usr/bin/LATAM &>/dev/null
-  chmod +x /usr/bin/LATAM
-  /bin/cp /etc/skel/.bashrc ~/
-  clear && clear
-  SCPdir="/etc/SCRIPT-LATAM"
-  SCPinstal="$HOME/install"
-  Filbot="${SCPdir}/botmanager"
-  Filpy="${SCPdir}/filespy"
-  Filotros="${SCPdir}/temp"
-  IP=$(cat /root/.ssh/authrized_key.reg)
-  function_verify() {
-    permited=$(curl -sSL "https://raw.githubusercontent.com/DanssBot/DanBot/main/control")
-    [[ $(echo $permited | grep "${IP}") = "" ]] && {
-      clear && clear
-      echo -e "\n\n\n\033[1;91m————————————————————————————————————————————————————\n      ¡ESTA KEY NO CONCUERDA CON EL INSTALADOR! \n                 CONATACTE A @Kalix1\n————————————————————————————————————————————————————\n\n\n"
-      # [[ -d /etc/SCRIPT-LATAM ]] && rm -rf /etc/SCRIPT-LATAM
-      exit 1
-    } || {
-      ### INSTALAR VERSION DE SCRIPT
-      v1=$(curl -sSL "https://raw.githubusercontent.com/darnix1/up/main/version")
-      echo "$v1" >/etc/SCRIPT-LATAM/temp/version_instalacion
-      FIns=$(printf '%(%D-%H:%M:%S)T')
-      echo "$FIns" >/etc/SCRIPT-LATAM/F-Instalacion
-      last_check_file="/etc/SCRIPT-LATAM/temp/last_check"
-      date "+%Y-%m-%d %H:%M:%S" >"$last_check_file"
-    }
-  }
-  fun_idi() {
-    clear && clear
-    msgi -bar2
-    echo -e "\033[1;32m————————————————————————————————————————————————————"
-    figlet -w 85 -f smslant "         SCRIPT
-         LATAM  " | lolcat
-    msgi -ama "          [ ----- \033[1;97m 🐲 By @Kalix1 🐲\033[1;33m ----- ]"
-    echo -e "\033[1;32m————————————————————————————————————————————————————"
-    pv="$(echo es)"
-    [[ ${#id} -gt 2 ]] && id="es" || id="$pv"
-    byinst="true"
-  }
-  install_fim() {
-  tput cuu1 && tput dl1
-  tput cuu1 && tput dl1
-  echo -e "     \033[1;4;32mLA KEY ES VALIDA FINALIZANDO INSTALACION \033[0;39m"
-  ##-->> ACOPLANDO INSTALL EN /BIN
-    #echo -e "               \033[1;4;32mFinalizando Instalacion\033[0;39m"
-    
-    timeespera="1"
-    times="10"
-    if [ "$timeespera" = "1" ]; then
-      echo -e "\033[1;97m         ❗️ REGISTRANDO IP y KEY EN LA BASE ❗️            "
-      msgi -bar2
-      while [ $times -gt 0 ]; do
-        echo -ne "                         -$times-\033[0K\r"
-        sleep 1
-        : $((times--))
-      done
-      tput cuu1 && tput dl1
-      tput cuu1 && tput dl1
-      tput cuu1 && tput dl1
-      msgi -bar2
-      echo -e " \033[1;92m              LISTO REGISTRO COMPLETO "
-      echo -e " \033[1;97m       COMANDO PRINCIPAL PARA ENTRAR AL PANEL "
-      echo -e " \033[1;41m                    menu o MENU                   \033[0;37m" && msgi -bar2
-    fi
-    meu_ip() {
-      if [[ -e /tmp/IP ]]; then
-        echo "$(cat /tmp/IP)"
-      else
-        MEU_IP=$(wget -qO- ifconfig.me)
-        echo "$MEU_IP" >/tmp/IP
-      fi
-    }
-    meu_ip
-    exit
-  }
-  ofus() {
+ofus() {
     unset server
     server=$(echo ${txt_ofuscatw} | cut -d':' -f1)
     unset txtofus
@@ -147,121 +59,243 @@ Install_key() {
     done
     echo "$txtofus" | rev
   }
-  verificar_arq() {
-    case $1 in
-    "menu.sh" | "message.txt") ARQ="${SCPdir}/" ;;
-    "LATAMbot.sh") ARQ="${Filbot}/" ;;
-    "PDirect.py" | "PPub.py" | "PPriv.py" | "POpen.py" | "PGet.py") ARQ="${Filpy}/" ;;
-    *) ARQ="${Filotros}/" ;;
-    esac
-    mv -f ${SCPinstal}/$1 ${ARQ}/$1
-    chmod +x ${ARQ}/$1
-  }
-  #fun_ip
-  [[ $1 = "" ]] && fun_idi || {
-    [[ ${#1} -gt 2 ]] && fun_idi || id="$1"
-  }
-  error_fun() {
-    msgi -bar2
-    msgi -bar2
-    sleep 3s
-    clear && clear
-    echo "Codificacion Incorrecta" >/etc/SCRIPT-LATAM/errorkey
-    msgi -bar2
-    [[ $1 = "" ]] && fun_idi || {
-      [[ ${#1} -gt 2 ]] && fun_idi || id="$1"
-    }
-    echo -e "\033[1;31m               ¡# ERROR INESPERADO #¡\n          ESTA KEY YA FUE USADA O EXPIRO "
-    echo -e "\033[0;93m    -SI EL ERROR PERCISTE REVISAR PUERTO 81 TCP -"
-    msgi -bar2
-    echo -ne "\033[1;97m DESEAS REINTENTAR CON OTRA KEY  \033[1;31m[\033[1;93m S \033[1;31m/\033[1;93m N \033[1;31m]\033[1;97m: \033[1;93m" && read incertar_key
-    service apache2 restart >/dev/null 2>&1
-    [[ "$incertar_key" = "s" || "$incertar_key" = "S" ]] && incertar_key
-    clear && clear
-    msgi -bar2
-    msgi -bar2
-    rm -rf lista-arq
-    echo -e "\033[1;97m          ---- INSTALACION CANCELADA  -----"
-    msgi -bar2
-    msgi -bar2
+  
+# // Exporint IP AddressInformation
+
+# // Clear Data
+clear
+clear && clear && clear
+clear;clear;clear
+
+  # // Banner
+
+###### IZIN SC 
+
+veryfy_fun () {
+[[ ! -d ${IVAR} ]] && touch ${IVAR}
+[[ ! -d ${SCPT_DIR} ]] && mkdir ${SCPT_DIR}
+unset ARQ
+case $1 in
+"gerar.sh")ARQ="/usr/bin/";;
+"http-server.py")ARQ="/bin/";;
+*)ARQ="${SCPT_DIR}/";;
+esac
+mv -f $HOME/$1 ${ARQ}/$1
+chmod +x ${ARQ}/$1
+}
+
+figlet " DARNIXMX " | boxes -d stone -p a2v1 | sed 's/\(.\)/\x1b[1;37m\1\x1b[0m/g'
+read -p $'\033[1;97;102mINGRESA TU CLAVE\033[0m ' Key
+[[ ! $Key ]] && {
+echo -e "\033[1;36m--------------------------------------------------------------------\033[0m"
+echo -e "\033[1;33mKey inválida!"
+echo -e "\033[1;36m--------------------------------------------------------------------\033[0m"
+exit
+}
+meu_ip () {
+MIP=$(ip addr | grep 'inet' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | grep -o -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | head -1)
+MIP2=$(wget -qO- ipv4.icanhazip.com)
+[[ "$MIP" != "$MIP2" ]] && IP="$MIP2" || IP="$MIP"
+echo "$IP" > /usr/bin/vendor_code
+}
+meu_ip
+text="COMPILANDO CLAVE DE ACCESO "
+color="\033[1;37m"  # Blanco
+
+for ((i = 0; i < ${#text}; i++)); do
+    echo -n -e "${color}${text:$i:1}"
+    sleep 0.1  # Ajusta este valor según tu preferencia para el retraso entre letras
+done
+echo -e "\033[0m"  # Restaura el color predeterminado al final
+cd $HOME
+wget -O "$HOME/lista-arq" $(ofus "$Key")/$IP > /dev/null 2>&1
+IP=$(ofus "$Key" | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | grep -o -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
+sleep 1s
+[[ -e $HOME/lista-arq ]] && {
+REQUEST=$(ofus "$Key" |cut -d'/' -f2)
+for arqx in `cat $HOME/lista-arq`; do
+echo -ne "\033[38;5;15;48;5;208mCONEXION: \033[0m"
+wget -O $HOME/$arqx ${IP}:8888/${REQUEST}/${arqx} > /dev/null 2>&1 && echo -e "\033[1;31m- \033[1;32mExitosa !" || { echo -e "\033[0;97;41mFallida (Saliendo)\033[0m" | pv -qL 10; exit 1; }
+[[ -e $HOME/$arqx ]] && veryfy_fun $arqx
+done
+[[ ! -e /usr/bin/trans ]] && wget -O /usr/bin/trans https://www.dropbox.com/s/l6iqf5xjtjmpdx5/trans?dl=0 &> /dev/null
+#mv -f /bin/http-server.py /bin/http-server.sh && chmod +x /bin/http-server.sh
+apt-get install bc -y &>/dev/null
+apt-get install screen -y &>/dev/null
+apt-get install nano -y &>/dev/null
+apt-get install curl -y &>/dev/null
+apt-get install netcat -y &>/dev/null
+#apt-get install apache2 -y &>/dev/null
+#sed -i "s;Listen 80;Listen 81;g" /etc/apache2/ports.conf
+#service apache2 restart > /dev/null 2>&1 &
+IVAR2="/etc/key-gerador"
+echo "$Key" > $IVAR2
+rm $HOME/lista-arq
+} || {
+echo -e "\033[1;36m--------------------------------------------------------------------\033[0m"
+echo -e "\033[1;33mKey Invalida!"
+echo -e "\033[1;36m--------------------------------------------------------------------\033[0m"
+}
+echo -ne "\033[0m"
+
+echo -e " "
+    #echo -e " \033[3;97;41m REGISTRANDO CONEXION IP SSH \033[0m" | pv -qL 10
+    echo -e "\033[0;97;41mREGISTRANDO CONEXION IP SSH\033[0m" | pv -qL 10
+
+      sleep 5  # Pausa de 5 segundos
+       echo -e "\e[0;97;42mEXITOSO\e[0m" | pv -qL 10
+       sleep 2
+       sudo mv /etc/SCRIPT /usr/bin/
+
+    clear
+    clear
+    MI=$(wget -qO- ifconfig.me)
+ipsaya=$(wget -qO- ipinfo.io/ip)
+
+data_ip="https://raw.githubusercontent.com/darnix1/vip/main/izin"
+
+checking_sc() {
+  # Comentar las líneas relacionadas con la verificación de la fecha de vencimiento
+  # useexp=$(wget -qO- $data_ip | grep $ipsaya | awk '{print $3}')
+  # if [[ $date_list < $useexp ]]; then
+  #   echo -ne
+  # else
+  cols=$(tput cols)
+text="INSTALACION EN CURSO:"
+padding=$(((cols - ${#text}) / 3))
+    echo -e "\033[1;93m────────────────────────────────────────────\033[0m"
+    echo -ne "\033[38;5;15;48;5;208m$(printf "%*s" $padding)${text}$(printf "%*s" $padding)\033[0m"
+    echo " "
+    #echo -e "\033[1;93m────────────────────────────────────────────\033[0m"
+    echo " "
+    echo -e "\e[1;33m RESELLER: $(awk '{printf "%0s\n", $0}' /usr/bin/SCRIPT/message.txt) VERIFICADO \e[0m" | pv -qL 10
+    echo -e "            ${RED}PERMISO CONCEDIDO${NC}"  # Ajusta el mensaje según tus necesidades
+    echo -e "   \033[0;33mTu ip fue autorizado exitosamente.${NC}"
+    echo -e "\033[1;93m────────────────────────────────────────────\033[0m"
+    # exit
+  # fi
+}
+
+###### IZIN SC 
+checking_sc() {
+  useexp=$(wget -qO- $data_ip | grep $ipsaya | awk '{print $3}')
+  if [[ -n $useexp ]]; then
+    echo -e "\033[1;93m────────────────────────────────────────────\033[0m"
+echo -e "\033[42m          404 NO ENCONTRADO AUTOSCRIPT         \033[0m"
+echo -e "\033[1;93m────────────────────────────────────────────\033[0m"
+echo -e ""
+echo -e "            ${RED}PERMISO DENEGADO !${NC}"
+echo -e "   \033[0;33mTu VPS${NC} $ipsaya \033[0;33mHa sido Baneada${NC}"
+echo -e "     \033[0;33mCompra permisos de acceso para los scripts${NC}"
+echo -e "             \033[0;33mContacta al Administrador :${NC}"
+echo -e "      \033[0;36mTelegram${NC} t.me/darnix1"
+echo -e "      ${GREEN}WhatsApp${NC} wa.me/null"
+echo -e "\033[1;93m────────────────────────────────────────────\033[0m"
+  exit
+  fi
+}
+
+checking_sc
+
+# // Clear Data
+clear
+clear && clear && clear
+clear;clear;clear
+
+# // color
+grs="\033[1;93m"
+bg="\033[42m"
+gr="\e[92;1m"
+NC='\033[0m'
+clear
+
+# // Banner
+echo -e ""
+echo -e "\e[38;5;239m════════════════════════════════════════════════════"
+echo -e "         \033[45m \033[103m \033[107m\033[30m SCRIPT DARNIX OPTIMIZADO \033[103m \033[45m \e[0m"
+echo -e ""
+echo -e "\033[38;5;239m═════════════════\e[48;5;1m\e[38;5;230m  INSTALADOR  \e[0m\e[38;5;239m════════════════════"
+echo -e ""
+echo -e "        ${gr} SCRIPT BY DARNIX ${NC}"
+echo -e "   ${grs}───────────────────────────────────────────${NC}"
+echo -e ""
+while true; do
+    read -rp " Introduce tu nombre (sin espacios): " buyer
+    [[ -n "$buyer" ]] && break
+done
+sleep 2
+MYIP=$(wget -qO- ipinfo.io/ip);
+clear
+# // Valid Script
+ipsaya=$(curl -sS ipv4.icanhazip.com)
+
+#data_server=$(curl -v --insecure --silent https://google.com/ 2>&1 | grep Date | sed -e 's/< Date: //')
+#date_list=$(date +"%Y-%m-%d" -d "$data_server")
+#data_ip="https://raw.githubusercontent.com/darnix1/autoscript/main/REGISTRASI"
+# // Checking Os Architecture
+if [[ $( uname -m | awk '{print $1}' ) == "x86_64" ]]; then
+    echo -e "${OK} Your Architecture Is Supported ( ${green}$( uname -m )${NC} )"
+else
+    echo -e "${EROR} Your Architecture Is Not Supported ( ${YELLOW}$( uname -m )${NC} )"
     exit 1
-  }
-  invalid_key() {
-    msgi -bar2
-    msgi -bar2
-    sleep 3s
-    clear && clear
-    echo "Codificacion Incorrecta" >/etc/SCRIPT-LATAM/errorkey
-    msgi -bar2
-    [[ $1 = "" ]] && fun_idi || {
-      [[ ${#1} -gt 2 ]] && fun_idi || id="$1"
-    }
-    echo -e "\033[1;31m    CIFRADO INVALIDO -- #¡La Key fue Invalida#! "
-    msgi -bar2
-    echo -ne "\033[1;97m DESEAS REINTENTAR CON OTRA KEY  \033[1;31m[\033[1;93m S \033[1;31m/\033[1;93m N \033[1;31m]\033[1;93m: \033[1;93m" && read incertar_key
-    [[ "$incertar_key" = "s" || "$incertar_key" = "S" ]] && incertar_key
-    clear && clear
-    msgi -bar2
-    msgi -bar2
-    echo -e "\033[1;97m          ---- INSTALACION CANCELADA  -----"
-    msgi -bar2
-    msgi -bar2
+fi
+
+# // Checking System
+if [[ $( cat /etc/os-release | grep -w ID | head -n1 | sed 's/=//g' | sed 's/"//g' | sed 's/ID//g' ) == "ubuntu" ]]; then
+    echo -e "${OK} Your OS Is Supported ( ${green}$( cat /etc/os-release | grep -w PRETTY_NAME | head -n1 | sed 's/=//g' | sed 's/"//g' | sed 's/PRETTY_NAME//g' )${NC} )"
+elif [[ $( cat /etc/os-release | grep -w ID | head -n1 | sed 's/=//g' | sed 's/"//g' | sed 's/ID//g' ) == "debian" ]]; then
+    echo -e "${OK} Your OS Is Supported ( ${green}$( cat /etc/os-release | grep -w PRETTY_NAME | head -n1 | sed 's/=//g' | sed 's/"//g' | sed 's/PRETTY_NAME//g' )${NC} )"
+else
+    echo -e "${EROR} Your OS Is Not Supported ( ${YELLOW}$( cat /etc/os-release | grep -w PRETTY_NAME | head -n1 | sed 's/=//g' | sed 's/"//g' | sed 's/PRETTY_NAME//g' )${NC} )"
     exit 1
-  }
+fi
 
-  incertar_key() {
+# // IP Address Validating
+if [[ $IP == "" ]]; then
+    echo -e "${EROR} IP Address ( ${YELLOW}Not Detected${NC} )"
+else
+    echo -e "${OK} IP Address ( ${green}$IP${NC} )"
+fi
 
-    [[ -d /etc/SCRIPT-LATAM/errorkey ]] && rm -rf /etc/SCRIPT-LATAM/errorkey >/dev/null 2>&1
-    echo "By Kalix1" >/etc/SCRIPT-LATAM/errorkey
-    msgi -bar2
-    echo -ne "\033[1;96m          >>> INTRODUZCA LA KEY ABAJO <<<\n\033[1;31m   " && read Key
-    [[ -z "$Key" ]] && Key="NULL"
-    tput cuu1 && tput dl1
-    msgi -ne "    \033[1;93m# Verificando Key # : "
-    cd $HOME
-    IPL=$(cat /root/.ssh/authrized_key.reg)
-    wget -O $HOME/lista-arq $(ofus "$Key")/$IPL >/dev/null 2>&1 && echo -e "\033[1;32m Codificacion Correcta" || {
-      echo -e "\033[1;31m Codificacion Incorrecta"
-      invalid_key
-      exit
-    }
-    IP=$(ofus "$Key" | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | grep -o -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}') && echo "$IP" >/usr/bin/vendor_code
-    sleep 1s
-    function_verify
-    updatedb
-    if [[ -e $HOME/lista-arq ]] && [[ ! $(cat /etc/SCRIPT-LATAM/errorkey | grep "Codificacion Incorrecta") ]]; then
-      msgi -bar2
-      msgi -verd " Ficheros Copiados \e[97m[\e[93m Key By @Panel_NetVPS_bot \e[97m]"
-      REQUEST=$(ofus "$Key" | cut -d'/' -f2)
-      [[ ! -d ${SCPinstal} ]] && mkdir ${SCPinstal}
-      pontos="."
-      stopping="Configurando Directorios"
-      for arqx in $(cat $HOME/lista-arq); do
-        msgi -verm "${stopping}${pontos}"
-        wget --no-check-certificate -O ${SCPinstal}/${arqx} ${IP}:8888/${REQUEST}/${arqx} >/dev/null 2>&1 && verificar_arq "${arqx}" || {
-          error_fun
-          exit
-        }
-        tput cuu1 && tput dl1
-        pontos+="."
-      done
-  _hora=$(printf '%(%D-%H:%M:%S)T') 
-       #  msg -verd "    $(source trans -b es:${id} "Ficheros Copiados"|sed -e 's/[^a-z -]//ig'): \e[97m[\e[93m@conectedmx_bot\e[97m]"
-  API_KEY="6707733847:AAGmyG1bkb9BrKOjytnHfNjEpo1_aSr7cTo"
-CHAT_ID="6409531191"
-MSG="❗️𝗞𝗘𝗬 𝗔𝗖𝗧𝗜𝗩𝗔𝗗𝗔❗️
-🔑 $Key
-🌐 $IPL $TUIP 
-👤 SLOGAN: $(cat ${SCPdir}/message.txt)
-🕥 $_hora "
-URL="https://api.telegram.org/bot$API_KEY/sendMessage"
-curl -s -X POST $URL -d chat_id=$CHAT_ID -d text="$MSG" > /dev/null
+# // Validate Successfull
+echo ""
+read -p "$( echo -e "Press ${GRAY}[ ${NC}${green}Enter${NC} ${GRAY}]${NC} For Starting Installation") "
+echo ""
+clear
+if [ "${EUID}" -ne 0 ]; then
+		echo "You need to run this script as root"
+		exit 1
+fi
+if [ "$(systemd-detect-virt)" == "openvz" ]; then
+		echo "OpenVZ is not supported"
+		exit 1
+fi
+red='\e[1;31m'
+green='\e[0;32m'
+NC='\e[0m'
+#IZIN SCRIPT
+MYIP=$(curl -sS ipv4.icanhazip.com)
+echo -e "\e[32mloading...\e[0m"
+clear
+apt install ruby -y
+gem install lolcat
+apt install wondershaper -y
+clear
+# REPO
+REPO="https://raw.githubusercontent.com/darnix1/dnx/main/"
 
-      sleep 1s
-      msgi -bar2
-      listaarqs="$(locate "lista-arq" | head -1)" && [[ -e ${listaarqs} ]] && rm $listaarqs
-      cat /etc/bash.bashrc | grep -v '[[ $UID != 0 ]] && TMOUT=15 && export TMOUT' >/etc/bash.bashrc.2
-      echo -e '[[ $UID != 0 ]] && TMOUT=15 && export TMOUT' >>/etc/bash.bashrc.2
-      mv -f /etc/bash.bashrc.2 /etc/bash.bashrc
-      echo "${SCPdir}/menu.sh" >/usr/bin/menu && chmod +x /usr/bin/menu
-      echo "${SCPdir}/menu.sh" >/usr/bin/MENU && chmod +x /usr/bin/MENU
+####
+start=$(date +%s)
+secs_to_human() {
+    echo " ➣ Tiempo de instalación del script: $((${1} / 3600)) hours $(((${1} / 60) % 60)) minute's $((${1} % 60)) seconds"
+}
+### Status
+function print_ok() {
+    echo -e "${OK} ${BLUE} $1 ${FONT}"
+}
+function print_install() {
+	echo -e "${green} ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ${FONT}"
+    echo -e "${YELLOW} # $1 ${FONT}"
+	echo -e "${green} ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ${FONT}"
+    sleep 1
+}
