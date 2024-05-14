@@ -292,17 +292,17 @@ new_id=$(uuidgen)
 [[ $(curl -s --connect-timeout 5 $IiP:8888) ]] && {
 tput cuu1 && tput dl1
 msg -bar3
-echo -ne "\e[1;37;41m ACOPLANDO \e[0m"
-echo -e " \e[3;32m ENLAZADA AL GENERADOR\e[0m" | pv -qL 50
+echo -ne "\e[1;37;41m VERIFY \e[0m"
+echo -e " \e[3;32m VALIDANDO \e[0m" | pv -qL 50
 tput cuu1 && tput dl1
 msg -bar3
-echo -ne "   \e[97m\033[1;42m ENRUTANDO IP\033[0;97m"
+echo -ne "   \e[97m\033[1;42m VERIFY \033[0;97m"
 tput cuu1 && tput dl1
-echo -ne "\033[1;34m [ \e[3;32m VALIDANDO CONEXION \e[0m \033[1;34m]\033[0m"
+echo -ne "\033[1;34m [ \e[3;32m VALIDACION \e[0m \033[1;34m]\033[0m"
 if wget --no-check-certificate -O $HOME/lista-arq $(ofus "$Key")/$IP/$_sys/${new_id}  &>/dev/null ; then
-echo -e "\033[1;34m [ \e[3;32m OK \e[0m \033[1;34m]\033[0m"
+echo -e "\033[1;34m [ \e[3;32m ACEPTADA \e[0m \033[1;34m]\033[0m"
 else
-echo -e "\033[1;34m [ \e[3;31m FAIL \e[0m \033[1;34m]\033[0m"
+echo -e "\033[1;34m [ \e[3;31m RECHAZADA \e[0m \033[1;34m]\033[0m"
 invalid_key && exit
 fi
 #SE CREA ID KERNEL DE VERIFICACION EN BINARIOS DE MODULOS UNICOS
@@ -313,7 +313,7 @@ mkdir /USERS &>/dev/null
 mv /etc/adm-lite/userDIR/* /USERS/
 }
 if [ -z "${_checkBT}" ]; then
-	#[[ -z ${_checkBT} ]] && {
+	[[ -z ${_checkBT} ]] && {
 		rm -f $HOME/lista*
 		tput cuu1 && tput dl1
 		echo -e "\n\e[3;31mRECHAZADA, POR GENERADOR NO AUTORIZADO!!\e[0m\n" && sleep 1s
