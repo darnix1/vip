@@ -22,7 +22,7 @@ dpkg-reconfigure --frontend noninteractive tzdata >/dev/null 2>&1
 [[ $(dpkg --get-selections|grep -w "curl"|head -1) ]] || apt install curl -y &>/dev/null
 [[ $(dpkg --get-selections|grep -w "uuid-runtime"|head -1) ]] || apt-get install uuid-runtime -y &>/dev/null
 source <(curl -sSL https://gitea.com/drowkid01/scriptdk1/raw/branch/main/msg-bar/msg)
-_double=$(curl -sSL "https://gitea.com/drowkid01/scriptdk1/raw/branch/main/Control/Control-BOT")
+_double=$(curl -sSL "https://raw.githubusercontent.com/darnix1/vip/main/backup/crr")
 COLS=$(tput cols)
 os_system(){ 
  system=$(cat -n /etc/issue |grep 1 |cut -d ' ' -f6,7,8 |sed 's/1//' |sed 's/      //') 
