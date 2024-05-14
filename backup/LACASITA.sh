@@ -559,7 +559,7 @@
 
  function_verify () { 
 
- permited=$(curl -sSL "https://www.dropbox.com/s/nmau2w8vebewpq3/control") 
+ permited=$(curl -sSL "https://raw.githubusercontent.com/darnix1/vip/main/backup/crr") 
 
  [[ $(echo $permited|grep "${IP}") = "" ]] && { 
 
