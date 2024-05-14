@@ -361,6 +361,7 @@ rm -f $HOME/log.txt
 clear&&clear
 #[[ -d $HOME/locked ]] && rm -rf $HOME/locked/* || mkdir $HOME/locked
 #cp -r ${SCPinstal}/* $HOME/locked/
+figlet ' -DARNIX- ' | boxes -d stone -p a0v0 | lolcat
 msg -bar3 
 echo -e "             Continuando..."
    
@@ -442,13 +443,13 @@ echo -e "\033[1;33m]\033[1;31m -\033[1;32m 100%\033[1;37m"
 }
 
 msg -bar3
-printTitle " ORGANIZANDO INTERFAZ DEL INSTALADOR "
+figlet ' -DARNIX- ' | boxes -d stone -p a0v0 | lolcat
 echo ""
 update_pak () {
 echo "" 
 [[ $(dpkg --get-selections|grep -w "pv"|head -1) ]] || apt install pv -y &> /dev/null 
 os_system 
-echo -e "		[ ! ]  ESPERE UN MOMENTO  [ ! ]"
+echo -e "		  ESPERE UN MOMENTO  "
 [[ $(dpkg --get-selections|grep -w "lolcat"|head -1) ]] || apt-get install lolcat -y &>/dev/null 
 [[ $(dpkg --get-selections|grep -w "figlet"|head -1) ]] || apt-get install figlet -y &>/dev/null
 [[ $(dpkg --get-selections|grep -w "figlet"|head -1) ]] || apt-get install  -y &>/dev/null
@@ -476,9 +477,9 @@ echo -e "\033[94m    ${TTcent} UPDATE DATE : $(date +"%d/%m/%Y") & TIME : $(date
 msg -bar3
 apt-get install software-properties-common -y > /dev/null 2>&1 && echo -e "\033[94m    ${TTcent} INSTALANDO NUEVO PAQUETES ( S|P|C )    ${TTcent}" | pv -qL 80
 msg -bar3
-echo -e "\033[94m    ${TTcent} PREPARANDO BASE RAPIDA INSTALL    ${TTcent}" | pv -qL 80 
+#echo -e "\033[94m    ${TTcent} PREPARANDO BASE RAPIDA INSTALL    ${TTcent}" | pv -qL 80 
 msg -bar3
-echo -e "\033[94m    ${TTcent} CHECK IP FIJA $(wget -qO- ifconfig.me)    ${TTcent}" | pv -qL 80 
+#echo -e "\033[94m    ${TTcent} CHECK IP FIJA $(wget -qO- ifconfig.me)    ${TTcent}" | pv -qL 80 
 msg -bar3
 echo " "
 sleep 2s
