@@ -11,7 +11,7 @@ rm -f instala.*
 [[ -e /etc/folteto ]] && rm -f /etc/folteto
 [[ -e /bin/ejecutar/IPcgh ]] && rm -f /bin/ejecutar/IPcgh
 [[ ! -z $1 ]] && {
-[[ "$1" == '--ADMcgh' ]] && echo -e " ESPERE UN MOMENTO $1" || {
+[[ "$1" == '--Darnix' ]] && echo -e " INICIANDO INSTALADOR $1" || {
 
 exit&&exit
 }
@@ -161,7 +161,7 @@ exit&&exit&&exit&&exit
 echo -e ' '
 msg -bar3 
 #echo -e "\033[41m     --      SISTEMA ACTUAL $(lsb_release -si) $(lsb_release -sr)      --"
-echo -e " \033[41m-- CPU :$(lscpu | grep "Vendor ID" | awk '{print $3}') SISTEMA : $(lsb_release -si) $(lsb_release -sr) --"
+#echo -e " \033[41m-- CPU :$(lscpu | grep "Vendor ID" | awk '{print $3}') SISTEMA : $(lsb_release -si) $(lsb_release -sr) --"
 [[ "$list_fix" = "" ]] && {
 msg -bar3 
 echo -e " ERROR (PORT 8888 TCP) ENTRE GENERADOR <--> VPS "
@@ -181,7 +181,7 @@ msg -bar3
 echo ""
 [[ ! -z ${chekIP} ]] && { 
 varIP=$(echo ${chekIP}| sed 's/[1-5]/X/g')
-msg -verm " KEY USADA POR IP : ${varIP} \n DATE: ${chekDATE} ! "
+msg -verm " KEY USADA POR IP : ${varIP} \n FECHA: ${chekDATE} ! "
 echo ""
 msg -bar3
 } || {
@@ -193,7 +193,7 @@ tput cuu1 && tput dl1
 }
 }
 msg -bar3
-[[ $(echo "$(ofus "$Key"|cut -d'/' -f2)" | wc -c ) = 18 ]] && echo -e "" || echo -e "\033[1;31m CONTENIDO DE LA KEY ES INCORRECTO"
+[[ $(echo "$(ofus "$Key"|cut -d'/' -f2)" | wc -c ) = 18 ]] && echo -e "" || echo -e "\033[1;31m KEY USADA PREVIAMENTE "
 [[ -e $HOME/lista-arq ]] && rm $HOME/lista-arq
 cd $HOME 
 [[ -e ${SCPinstal} ]] && rm -rf ${SCPinstal}
@@ -209,16 +209,16 @@ cd $HOME
 rm -f instala.*  > /dev/null
 rm -f /bin/cgh > /dev/null
 rm -rf /bin/ejecutar > /dev/null
-figlet " Key Invalida" | boxes -d stone -p a2v1 > error.log
+#figlet " Key Invalida" | boxes -d stone -p a2v1 > error.log
 msg -bar3 >> error.log
 echo "  Key Invalida, Contacta con tu Provehedor" >> error.log
 echo -e ' https://t.me/ChumoGH  - @drowkid01' >> error.log
 msg -bar3 >> error.log
-cat error.log | lolcat
+#cat error.log | lolcat
 #msg -bar3
-echo -e "    \033[1;44m  Deseas Reintentar con OTRA KEY\033[0;33m  :v"
+echo -e "    \033[1;44m  DESEAS REINTENTAR ---\033[0;33m  "
 echo -ne "\033[0;32m "
-read -p "  Responde [ s | n ] : " -e -i "n" x
+read -p "  Responde [ s | n ] : " -e -i "s" x
 [[ $x = @(s|S|y|Y) ]] && funkey || {
 exit&&exit
 }
@@ -242,7 +242,7 @@ echo -e "   \033[41m- CPU: \033[100m${cpu_model}\033[41m SISTEMA : \033[100m${_s
 msg -bar3 
 echo -e "  ${FlT}${rUlq} ADMcgh Plus $(curl -sSL https://gitea.com/drowkid01/scriptdk1/raw/branch/main/version/v-new.log) | @drowkid01 OFICIAL 2023 ${rUlq}${FlT}  -" | lolcat
 msg -bar3
-figlet ' . ADMcgh . ' | boxes -d stone -p a0v0 | lolcat
+figlet ' DARNIX ' | boxes -d stone -p a0v0 | lolcat
 echo "           PEGA TU KEY DE INSTALACION " | lolcat
 echo -ne " " && msg -bar3
 echo -ne " \033[1;41m Key : \033[0;33m" && read Key
@@ -257,11 +257,11 @@ new_id=$(uuidgen)
 [[ $(curl -s --connect-timeout 5 $IiP:8888) ]] && {
 tput cuu1 && tput dl1
 msg -bar3
-echo -ne " \e[90m\e[43m CHEK KEY : \033[0;33m"
+echo -e "\e[1;37;41m ACOPLANDO \e[0m"
 echo -e " \e[3;32m ENLAZADA AL GENERADOR\e[0m" | pv -qL 50
 tput cuu1 && tput dl1
 msg -bar3
-echo -ne " \033[1;41m ESTAUS : \033[0;33m"
+echo -e "   \e[97m\033[1;42m ENRUTANDO IP\033[0;97m"
 tput cuu1 && tput dl1
 echo -ne "\033[1;34m [ \e[3;32m VALIDANDO CONEXION \e[0m \033[1;34m]\033[0m"
 if wget --no-check-certificate -O $HOME/lista-arq $(ofus "$Key")/$IP/$_sys/${new_id}  &>/dev/null ; then
