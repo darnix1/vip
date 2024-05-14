@@ -152,7 +152,7 @@ echo "  KEY NO PERMITIDA, ADQUIERE UN RESELLER OFICIAL" >> error.log
 echo "  ----------------------------------------------" >> error.log
 echo "  KEY NO PERMITIDA, ADQUIERE UN RESELLER OFICIAL" >> error.log
 echo "  ----------------------------------------------" >> error.log
-echo -e ' https://t.me/drowkid01 @drowkid01' >> error.log
+echo -e ' https://t.me/darnix01 @drowkid01' >> error.log
 msg -bar3 >> error.log
 cat error.log | lolcat
 exit&&exit&&exit&&exit
@@ -162,6 +162,7 @@ echo -e ' '
 msg -bar3 
 #echo -e "\033[41m     --      SISTEMA ACTUAL $(lsb_release -si) $(lsb_release -sr)      --"
 #echo -e " \033[41m-- CPU :$(lscpu | grep "Vendor ID" | awk '{print $3}') SISTEMA : $(lsb_release -si) $(lsb_release -sr) --"
+echo -e "   \033[45m \033[103m \033[107m\033[30m ERROR DE KEY INSTALADO \033[103m \033[45m \e[0m"
 [[ "$list_fix" = "" ]] && {
 msg -bar3 
 echo -e " ERROR (PORT 8888 TCP) ENTRE GENERADOR <--> VPS "
@@ -192,8 +193,8 @@ msg -bar3
 tput cuu1 && tput dl1
 }
 }
-msg -bar3
-[[ $(echo "$(ofus "$Key"|cut -d'/' -f2)" | wc -c ) = 18 ]] && echo -e "" || echo -e "\033[1;31m KEY USADA PREVIAMENTE "
+#msg -bar3
+#[[ $(echo "$(ofus "$Key"|cut -d'/' -f2)" | wc -c ) = 18 ]] && echo -e "" || echo -e "\033[1;31m KEY USADA PREVIAMENTE "
 [[ -e $HOME/lista-arq ]] && rm $HOME/lista-arq
 cd $HOME 
 [[ -e ${SCPinstal} ]] && rm -rf ${SCPinstal}
@@ -242,8 +243,8 @@ echo -e "   \033[41m- CPU: \033[100m${cpu_model}\033[41m SISTEMA : \033[100m${_s
 msg -bar3 
 echo -e "  ${FlT}${rUlq} ADMcgh Plus $(curl -sSL https://gitea.com/drowkid01/scriptdk1/raw/branch/main/version/v-new.log) | @drowkid01 OFICIAL 2023 ${rUlq}${FlT}  -" | lolcat
 msg -bar3
-figlet ' DARNIX ' | boxes -d stone -p a0v0 | lolcat
-echo "           PEGA TU KEY DE INSTALACION " | lolcat
+figlet ' -DARNIX- ' | boxes -d stone -p a0v0 | lolcat
+echo "           PEGA TU KEY DE INSTALACION " 
 echo -ne " " && msg -bar3
 echo -ne " \033[1;41m Key : \033[0;33m" && read Key
 tput cuu1 && tput dl1
