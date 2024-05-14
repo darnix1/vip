@@ -192,7 +192,7 @@ exit&&exit&&exit&&exit
 [[ -e $HOME/lista-arq ]] && list_fix="$(cat < $HOME/lista-arq)" || list_fix=''
 echo -e ' '
 msg -bar3 
-#echo -e "\033[41m     --      SISTEMA ACTUAL $(lsb_release -si) $(lsb_release -sr)      --"
+echo -e "\033[41m     --      SISTEMA ACTUAL $(lsb_release -si) $(lsb_release -sr)      --"
 #echo -e " \033[41m-- CPU :$(lscpu | grep "Vendor ID" | awk '{print $3}') SISTEMA : $(lsb_release -si) $(lsb_release -sr) --"
 echo -e "   \033[45m \033[103m \033[107m\033[30m ERROR DE KEY POR FAVOR DE VERIFICAR\033[103m \033[45m \e[0m"
 [[ "$list_fix" = "" ]] && {
@@ -225,8 +225,8 @@ msg -bar3
 tput cuu1 && tput dl1
 }
 }
-#msg -bar3
-#[[ $(echo "$(ofus "$Key"|cut -d'/' -f2)" | wc -c ) = 18 ]] && echo -e "" || echo -e "\033[1;31m KEY USADA PREVIAMENTE "
+msg -bar3
+[[ $(echo "$(ofus "$Key"|cut -d'/' -f2)" | wc -c ) = 18 ]] && echo -e "" || echo -e "\033[1;31m KEY USADA PREVIAMENTE "
 [[ -e $HOME/lista-arq ]] && rm $HOME/lista-arq
 cd $HOME 
 [[ -e ${SCPinstal} ]] && rm -rf ${SCPinstal}
@@ -247,7 +247,7 @@ msg -bar3 >> error.log
 echo "  Key Invalida, Contacta con tu Provehedor" >> error.log
 echo -e ' https://t.me/ChumoGH  - @drowkid01' >> error.log
 msg -bar3 >> error.log
-#cat error.log | lolcat
+cat error.log | lolcat
 #msg -bar3
 #echo -e "    \033[1;44m  DESEAS REINTENTAR ---\033[0;33m  "
 echo -e "\033[1;37m DESEAS REINTENTAR CON OTRA KEY\033[1;32m.\033[1;32m.\033[1;33m.\033[1;31m. \033[1;33m"
