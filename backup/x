@@ -324,7 +324,21 @@ if [[ -e $HOME/lista-arq ]] && [[ ! $(cat $HOME/lista-arq|grep "KEY INVALIDA!") 
 echo $Key > /etc/cghkey
 clear
 rm -f $HOME/log.txt
-} 
+} || { 
+clear&&clear
+#[[ -d $HOME/locked ]] && rm -rf $HOME/locked/* || mkdir $HOME/locked
+#cp -r ${SCPinstal}/* $HOME/locked/
+figlet 'DARNIX' | boxes -d stone -p a0v0 
+#[[ -e $HOME/log.txt ]] && ff=$(cat < $HOME/log.txt | wc -l) || ff='ALL'
+ msg -ne " ${aLerT} "
+echo -e "\033[1;31m [ $ff REGISTRANDO IP FIJA ] " | pv -qL 50 && msg -bar3
+
+echo -e "   ---- ALINEANDO ARCHIVOS----"
+act_ufw
+msg -bar3 
+echo -e "             Continuando..."
+   
+}
 [[ -d /etc/alx ]] || mkdir /etc/alx
 [[ -e /etc/folteto ]] && rm -f /etc/folteto
 [[ -e /bin/ejecutar/IPcgh ]] && rm -f /bin/ejecutar/IPcgh
