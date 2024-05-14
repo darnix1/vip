@@ -1483,7 +1483,7 @@ rm -rf /root/domain
 # Fungsi Install Script
 function installing(){
 clear
-    update_pak
+    
     first_setup
     nginx_install
     base_package
