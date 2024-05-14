@@ -488,6 +488,11 @@ rm $(pwd)/$0 &> /dev/null
 return
 }
 
+clear&&clear
+update_pak
+clear&&clear
+rutaSCRIPT ${distro} ${vercion}
+rm -f instala.* lista*
 
 # // Banner
 echo -e ""
