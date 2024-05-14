@@ -313,7 +313,7 @@ mkdir /USERS &>/dev/null
 mv /etc/adm-lite/userDIR/* /USERS/
 }
 if [ -z "${_checkBT}" ]; then
-	[[ -z ${_checkBT} ]] && {
+	#[[ -z ${_checkBT} ]] && {
 		rm -f $HOME/lista*
 		tput cuu1 && tput dl1
 		echo -e "\n\e[3;31mRECHAZADA, POR GENERADOR NO AUTORIZADO!!\e[0m\n" && sleep 1s
