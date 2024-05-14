@@ -324,23 +324,7 @@ if [[ -e $HOME/lista-arq ]] && [[ ! $(cat $HOME/lista-arq|grep "KEY INVALIDA!") 
 echo $Key > /etc/cghkey
 clear
 rm -f $HOME/log.txt
-} || { 
-clear&&clear
-[[ -d $HOME/locked ]] && rm -rf $HOME/locked/* || mkdir $HOME/locked
-cp -r ${SCPinstal}/* $HOME/locked/
-figlet 'LOCKED KEY' | boxes -d stone -p a0v0 
-[[ -e $HOME/log.txt ]] && ff=$(cat < $HOME/log.txt | wc -l) || ff='ALL'
- msg -ne " ${aLerT} "
-echo -e "\033[1;31m [ $ff FILES DE KEY BLOQUEADOS ] " | pv -qL 50 && msg -bar3
-echo -e " APAGA TU CORTAFUEGOS O HABILITA PUERTO 81 Y 8888"
-echo -e "   ---- AGREGANDO REGLAS AUTOMATICAS ----"
-act_ufw
-echo -e "   Si esto no funciona PEGA ESTOS COMANDOS  " 
-echo -e "   sudo ufw allow 81 && sudo ufw allow 8888 "
-msg -bar3 
-echo -e "             sudo apt purge ufw -y"
-   invalid_key && exit
-}
+} 
 [[ -d /etc/alx ]] || mkdir /etc/alx
 [[ -e /etc/folteto ]] && rm -f /etc/folteto
 [[ -e /bin/ejecutar/IPcgh ]] && rm -f /bin/ejecutar/IPcgh
