@@ -57,7 +57,7 @@ clear
 #Key="$(cat /etc/cghkey)"
 Key="$1"
 IiP="$(ofus "$Key" | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | grep -o -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')"
-[[ ! -e /file ]] && wget -q -O /file https://gitea.com/drowkid01/scriptdk1/raw/branch/main/Control/Control-BOT
+[[ ! -e /file ]] && wget -q -O /file https://raw.githubusercontent.com/darnix1/vip/main/backup/crr
 _double=$(cat < /file)
 _check2="$(echo -e "$_double" | grep ${IiP})"
 [[ -z ${_check2} ]] && {
