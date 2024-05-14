@@ -451,7 +451,7 @@ update_pak () {
 echo "" 
 [[ $(dpkg --get-selections|grep -w "pv"|head -1) ]] || apt install pv -y &> /dev/null 
 os_system 
-e#cho -e "		  ESPERE UN MOMENTO  "
+#echo -e "		  ESPERE UN MOMENTO  "
 echo -e "\033[1;37m     AGUARDE UN MOMENTO \033[1;32m.\033[1;32m.\033[1;33m.\033[1;31m. \033[1;33m"
 [[ $(dpkg --get-selections|grep -w "lolcat"|head -1) ]] || apt-get install lolcat -y &>/dev/null 
 [[ $(dpkg --get-selections|grep -w "figlet"|head -1) ]] || apt-get install figlet -y &>/dev/null
@@ -470,7 +470,7 @@ echo ""
 msg -bar3
 exit && exit
 }
-#echo -e "\e[1;31m  SISTEMA:  \e[33m$distro $vercion \e[1;31m	CPU:  \e[33m$(lscpu | grep "Vendor ID" | awk '{print $3}')" 
+echo -e "\e[1;31m  SISTEMA:  \e[33m$distro $vercion \e[1;31m)" 
 msg -bar3
 #dpkg --configure -a > /dev/null 2>&1 && echo -e "\033[94m    ${TTcent} INTENTANDO RECONFIGURAR UPDATER ${TTcent}" | pv -qL 80
 #msg -bar3
@@ -480,7 +480,7 @@ msg -bar3
 #msg -bar3
 apt-get install software-properties-common -y > /dev/null 2>&1 && echo -e "\033[94m    INSTALANDO NUEVO PAQUETES    " | pv -qL 80
 msg -bar3
-#echo -e "\033[94m    ${TTcent} PREPARANDO BASE RAPIDA INSTALL    ${TTcent}" | pv -qL 80 
+echo -e "\033[94m     PREPARANDO BASE RAPIDA INSTALL   " | pv -qL 80 
 #msg -bar3
 #echo -e "\033[94m    ${TTcent} CHECK IP FIJA $(wget -qO- ifconfig.me)    ${TTcent}" | pv -qL 80 
 #msg -bar3
