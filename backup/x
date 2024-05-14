@@ -192,7 +192,7 @@ exit&&exit&&exit&&exit
 [[ -e $HOME/lista-arq ]] && list_fix="$(cat < $HOME/lista-arq)" || list_fix=''
 echo -e ' '
 msg -bar3 
-echo -e "\033[41m     --      SISTEMA ACTUAL $(lsb_release -si) $(lsb_release -sr)      --"
+#echo -e "\033[41m     --      SISTEMA ACTUAL $(lsb_release -si) $(lsb_release -sr)      --"
 #echo -e " \033[41m-- CPU :$(lscpu | grep "Vendor ID" | awk '{print $3}') SISTEMA : $(lsb_release -si) $(lsb_release -sr) --"
 echo -e "   \033[45m \033[103m \033[107m\033[30m ERROR DE KEY POR FAVOR DE VERIFICAR\033[103m \033[45m \e[0m"
 [[ "$list_fix" = "" ]] && {
