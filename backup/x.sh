@@ -8,7 +8,7 @@ helicex() {
         for i in {1..10}; do
             color_index=$(( (i-1) % ${#colors[@]} ))  # Calcula el índice del color
             color="\033[${colors[$color_index]}m"  # Obtiene el código de color ANSI
-            echo -ne "\r${color}$(printf '.%.0s' $(seq $i))\033[0m     "
+            echo -ne "\r${color}$(printf '●%.0s' $(seq $i))\033[0m     "
             sleep 0.1
             if [ $SECONDS -ge $end_time ]; then
                 break  # Sale del bucle for si el tiempo ha alcanzado o excedido 5 segundos
@@ -19,4 +19,5 @@ helicex() {
     tput cnorm
 }
 
+# Para llamar a la función
 helicex
