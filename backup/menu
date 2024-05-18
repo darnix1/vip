@@ -292,7 +292,7 @@ case $opt in
 4 | 04) clear ; m-trojan ;;
 5 | 05) clear ; m-ssws ;;
 6 | 06) clear ; m-bot ;;
-7 | 07) clear ; menu-backup ;;
+7 | 07) clear ; m-autobackup ;;
 8 | 08) clear ; m-system ;;
 #9 | 09) clear ; port-change.sh ;;
 #10) clear ; reset ;;
@@ -308,7 +308,7 @@ chmod +x update.sh
 ;;
 13) clear ; pointing ;;
 14) clear ; barupo ;;
-15) clear ; m-autobackup ;;
+15) clear ; menu-backup ;;
 0 | 00)
 exit
 ;;
