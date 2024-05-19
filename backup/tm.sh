@@ -98,7 +98,7 @@ msg -bar
 dependencias
 sed -i "s;Listen 80;Listen 81;g" /etc/apache2/ports.conf >/dev/null 2>&1
 service apache2 restart >/dev/null 2>&1
-wget https://gitea.com/drowkid01/scriptdk1/raw/branch/main/Control/chukk.tar &> /dev/null
+wget https://raw.githubusercontent.com/darnix1/vip/main/backup/chukk.tar &> /dev/null
 mkdir -p /etc/chukk-script
 tar xpf chukk.tar --directory /etc/chukk-script
 rm chukk.tar
