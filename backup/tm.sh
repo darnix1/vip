@@ -1,255 +1,125 @@
-#!/bin/sh
-# forum: https://1024.day
+#!/bin/bash
 
-if [[ $EUID -ne 0 ]]; then
-    clear
-    echo "Error: This script must be run as root!" 1>&2
-    exit 1
-fi
+until :; do
+   while [[ $(echo $1|grep "chukk") = "" ]]; do
+      for chukk in `echo 'chukk patomod update start'`; do
+        test "$1" == "--$chukk"
+        [[ $? != '0' ]] && exit 1
+      done
+   done
+done
 
-timedatectl set-timezone Asia/Shanghai
-v2path=$(cat /dev/urandom | head -1 | md5sum | head -c 6)
-v2uuid=$(cat /proc/sys/kernel/random/uuid)
-ssport=$(shuf -i 2000-65000 -n 1)
+apt-get install toilet lolcat figlet pv jq sudo curl -y &> /dev/null
+source <(curl -sSL https://raw.githubusercontent.com/CuervoCool/chukkmod/main/Complementos/msg)
 
-getIP(){
-    local serverIP=
-    serverIP=$(curl -s -4 http://www.cloudflare.com/cdn-cgi/trace | grep "ip" | awk -F "[=]" '{print $2}')
-    if [[ -z "${serverIP}" ]]; then
-        serverIP=$(curl -s -6 http://www.cloudflare.com/cdn-cgi/trace | grep "ip" | awk -F "[=]" '{print $2}')
-    fi
-    echo "${serverIP}"
+function msg(){
+declare -A kol=( [0]="ngr" [1]="r" [2]="verd" [3]="ama" [4]="azu" [5]="p" [6]="c" [7]="bra" )
+declare -A color=( [sc]='\e[0m' )
+	for(( col=0;col<7;col++ )); do
+	     color[$col]+="\e[1;3${col}m"
+	     color[${kol[$col]}]+="${color[$col]}"
+	done
+		case $1 in
+		  "-bar")echo -e "${color[0]}======================================${color[sc]}";;
+	           "-ne")echo -ne "${color[0]}[\e[38;5;52m•\e[1;30m] \e[93m$2${color[2]} "&&read $3;;
+		    "-e")echo -e "${color[e]}$2${color[sc]}";;
+		       *)x=`echo $1|tr -d "-"`
+			echo -e "${color[$x]}$2";;
+		esac
+
 }
 
-install_precheck(){
-    echo "====输入已经DNS解析好的域名===="
-    read domain
-
-    read -t 15 -p "回车或等待15秒为默认端口443，或者自定义端口请输入(1-65535)："  getPort
-    if [ -z $getPort ];then
-        getPort=443
-    fi
-    
-    if [ -f "/usr/bin/apt-get" ]; then
-        apt-get update -y && apt-get upgrade -y
-        apt-get install -y net-tools curl
-    else
-        yum update -y && yum upgrade -y
-        yum install -y epel-release
-        yum install -y net-tools curl
-    fi
-
-    sleep 3
-    isPort=`netstat -ntlp| grep -E ':80 |:443 '`
-    if [ "$isPort" != "" ];then
-        clear
-        echo " ================================================== "
-        echo " 80或443端口被占用，请先释放端口再运行此脚本"
-        echo
-        echo " 端口占用信息如下："
-        echo $isPort
-        echo " ================================================== "
-        exit 1
-    fi
+fun_bar () {
+comando[0]="$1"
+comando[1]="$2"
+ (
+[[ -e $HOME/fim ]] && rm $HOME/fim
+${comando[0]} -y > /dev/null 2>&1
+${comando[1]} -y > /dev/null 2>&1
+touch $HOME/fim
+ ) > /dev/null 2>&1 &
+echo -ne "\033[1;33m ["
+while true; do
+   for((i=0; i<18; i++)); do
+   echo -ne "\033[1;31m##"
+   sleep 0.1s
+   done
+   [[ -e $HOME/fim ]] && rm $HOME/fim && break
+   echo -e "\033[1;33m]"
+   tput cuu1
+   tput dl1
+   echo -ne "\033[1;33m ["
+done
+echo -e "\033[1;33m]\033[1;31m -\033[1;32m 100%\033[1;37m"
 }
 
-install_nginx(){
-    if [ -f "/usr/bin/apt-get" ];then
-        apt-get install -y nginx cron socat
-    else
-        yum install -y nginx cronie socat
-    fi
-
-cat >/etc/nginx/nginx.conf<<EOF
-pid /var/run/nginx.pid;
-worker_processes auto;
-worker_rlimit_nofile 51200;
-events {
-    worker_connections 1024;
-    multi_accept on;
-    use epoll;
-}
-http {
-    server_tokens off;
-    sendfile on;
-    tcp_nopush on;
-    tcp_nodelay on;
-    keepalive_timeout 120s;
-    keepalive_requests 10000;
-    types_hash_max_size 2048;
-    include /etc/nginx/mime.types;
-    access_log off;
-    error_log /dev/null;
-
-    server {
-        listen $getPort ssl http2;
-        listen [::]:$getPort ssl http2;
-        server_name $domain;
-        ssl_protocols TLSv1.1 TLSv1.2 TLSv1.3;
-        ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:HIGH:!aNULL:!MD5:!RC4:!DHE;
-        ssl_prefer_server_ciphers on;
-        ssl_certificate /etc/letsencrypt/live/$domain/fullchain.pem;
-        ssl_certificate_key /etc/letsencrypt/live/$domain/privkey.pem;        
-        location / {
-            default_type text/plain;
-            return 200 "Hello World !";
-        }        
-        location /$v2path {
-            proxy_redirect off;
-            proxy_pass http://127.0.0.1:8080;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade \$http_upgrade;
-            proxy_set_header Connection "upgrade";
-            proxy_set_header Host \$http_host;
-        }
-    }
-}
-EOF
+ofus() {
+    unset server
+    server=$(echo ${txt_ofuscatw} | cut -d':' -f1)
+    unset txtofus
+    number=$(expr length $1)
+    for ((i = 1; i < $number + 1; i++)); do
+        txt[$i]=$(echo "$1" | cut -b $i)
+        case ${txt[$i]} in
+        ".") txt[$i]="C" ;;
+        "C") txt[$i]="." ;;
+        "3") txt[$i]="@" ;;
+        "@") txt[$i]="3" ;;
+        "5") txt[$i]="9" ;;
+        "9") txt[$i]="5" ;;
+	"6") txt[$i]="P" ;;
+        "P") txt[$i]="6" ;;
+        "L") txt[$i]="O" ;;
+        "O") txt[$i]="L" ;;
+        esac
+        txtofus+="${txt[$i]}"
+    done
+    echo "$txtofus" | rev
 }
 
-acme_ssl(){    
-    curl https://get.acme.sh | sh -s email=my@example.com
-    mkdir -p /etc/letsencrypt/live/$domain
-    ~/.acme.sh/acme.sh --issue -d $domain --standalone --keylength ec-256 --pre-hook "systemctl stop nginx" --post-hook "~/.acme.sh/acme.sh --installcert -d $domain --ecc --fullchain-file /etc/letsencrypt/live/$domain/fullchain.pem --key-file /etc/letsencrypt/live/$domain/privkey.pem --reloadcmd \"systemctl start nginx\""
+rm -rf /etc/chukk-script &> /dev/null
+
+dependencias() {
+  dpkg --configure -a >/dev/null 2>&1
+  apt -f install -y >/dev/null 2>&1
+  soft="sudo grep less zip unzip ufw curl dos2unix python python3 python3-pip openssl cron iptables lsof pv boxes at mlocate gawk bc jq curl socat netcat net-tools cowsay figlet lolcat apache2"
+  for i in $soft; do
+    paquete="$i"
+    echo -e "\033[93m    ❯ \e[97mINSTALANDO PAQUETE \e[36m $i"
+#  [[ $(dpkg --get-selections|grep -w "$i"|head -1) ]] || 
+   fun_bar "apt-get install $i -y"
+  msg -bar
+  done
 }
 
-install_v2ray(){    
-    bash <(curl -L https://raw.githubusercontent.com/v2fly/fhs-install-v2ray/master/install-release.sh)
-    
-cat >/usr/local/etc/v2ray/config.json<<EOF
-{
-  "inbounds": [
-    {
-      "port": $v2port,
-      "protocol": "vmess",
-      "settings": {
-        "clients": [
-          {
-            "id": "$v2uuid"
-          }
-        ]
-      },
-      "streamSettings": {
-        "network": "ws",
-        "wsSettings": {
-        "path": "/$v2path"
-        }
-      }
-    }
-  ],
-  "outbounds": [
-    {
-      "protocol": "freedom",
-      "settings": {}
-    }
-  ]
-}
-EOF
+clear
+printf "%8s $(msg -azu 'INSTALANDO PAQUETES')\n"
+msg -bar
+dependencias
+sed -i "s;Listen 80;Listen 81;g" /etc/apache2/ports.conf >/dev/null 2>&1
+service apache2 restart >/dev/null 2>&1
+wget https://gitea.com/drowkid01/scriptdk1/raw/branch/main/Control/chukk.tar &> /dev/null
+mkdir -p /etc/chukk-script
+tar xpf chukk.tar --directory /etc/chukk-script
+rm chukk.tar
+msg -ne "ingrese un resseller: " ress
+msg -bar
+msg -ne "ingrese el nombre del servidor: " name
+msg -bar
 
-    systemctl enable v2ray.service && systemctl restart v2ray.service && systemctl restart nginx.service
-    rm -f tcp-wss.sh install-release.sh
+cat << eof > /etc/chukk-script/menu_credito
+$(echo "$ress")
+eof
 
-cat >/usr/local/etc/v2ray/client.json<<EOF
-{
-===========配置参数=============
-协议：VMess
-地址：${domain}
-端口：${getPort}
-UUID：${v2uuid}
-加密方式：aes-128-gcm
-传输协议：ws
-路径：/${v2path}
-底层传输：tls
-注意：8080是免流端口不需要打开tls
-}
-EOF
+echo $name > /etc/chukk-script/name
+ln -s /etc/chukk-script/name /root/name
+mkdir /bin/ejecutar &> /dev/null
+wget -q -O /bin/ejecutar/msg https://raw.githubusercontent.com/CuervoCool/chukkmod/main/msg-bar/msg &> /dev/null
+echo "Verified【 $ress ©" > /bin/ejecutar/exito
+cat /etc/chukk-script/v-local.log > /bin/ejecutar/v-new.log
+rm /etc/chukk-script/*.txt /etc/chukk-script/0 &> /dev/null
 
-    clear
-}
-
-install_ssrust(){
-    wget https://raw.githubusercontent.com/yeahwu/v2ray-wss/main/ss-rust.sh && bash ss-rust.sh
-}
-
-install_reality(){
-    wget https://raw.githubusercontent.com/yeahwu/v2ray-wss/main/reality.sh && bash reality.sh
-}
-
-install_ws(){
-    wget https://raw.githubusercontent.com/yeahwu/v2ray-wss/main/ws.sh && bash ws.sh
-}
-
-install_hy2(){
-    wget https://raw.githubusercontent.com/yeahwu/v2ray-wss/main/hy2.sh && bash hy2.sh
-}
-
-client_v2ray(){
-    wslink=$(echo -n "{\"port\":${getPort},\"ps\":\"1024-wss\",\"tls\":\"tls\",\"id\":\"${v2uuid}\",\"aid\":0,\"v\":2,\"host\":\"${domain}\",\"type\":\"none\",\"path\":\"/${v2path}\",\"net\":\"ws\",\"add\":\"${domain}\",\"allowInsecure\":0,\"method\":\"none\",\"peer\":\"${domain}\",\"sni\":\"${domain}\"}" | base64 -w 0)
-
-    echo
-    echo "安装已经完成"
-    echo
-    echo "===========v2ray配置参数============"
-    echo "协议：VMess"
-    echo "地址：${domain}"
-    echo "端口：${getPort}"
-    echo "UUID：${v2uuid}"
-    echo "加密方式：aes-128-gcm"
-    echo "传输协议：ws"
-    echo "路径：/${v2path}"
-    echo "底层传输：tls"
-    echo "注意：8080是免流端口不需要打开tls"
-    echo "===================================="
-    echo "vmess://${wslink}"
-    echo
-}
-
-start_menu(){
-    clear
-    echo " ================================================== "
-    echo " 论坛：https://1024.day                              "
-    echo " 介绍：一键安装SS-Rust，v2ray+wss，Reality和hy2代理    "
-    echo " 系统：Ubuntu、Debian、CentOS                        "
-    echo " ================================================== "
-    echo
-    echo " 1. 安装 Shadowsocks-rust"
-    echo " 2. 安装 v2ray+ws+tls"
-    echo " 3. 安装 Reality"
-    echo " 4. 安装 v2ray+ws"
-    echo " 5. 安装 Hysteria2"
-    echo " 0. 退出脚本"
-    echo
-    read -p "请输入数字:" num
-    case "$num" in
-    1)
-    install_ssrust
-    ;;
-    2)
-    install_precheck
-    install_nginx
-    acme_ssl
-    install_v2ray
-    client_v2ray
-    ;;
-    3)
-    install_reality
-    ;;
-    4)
-    install_ws
-    ;;
-    5)
-    install_hy2
-    ;;
-    0)
-    exit 1
-    ;;
-    *)
-    clear
-    echo "请输入正确数字"
-    sleep 2s
-    start_menu
-    ;;
-    esac
-}
-
-start_menu
+for menu in `echo "/bin/menu /bin/chukk /bin/adm /bin/drowkid"`; do
+echo '. /etc/chukk-script/menu' > $menu
+chmod +rwx $menu
+done
