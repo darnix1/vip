@@ -3,7 +3,7 @@
 
 
 [[ -e /file ]] && _double=$(cat < /file) ||  {
-_double=$(curl -sSL "https://raw.githubusercontent.com/emirjorge/Script-Z/master/CHUMO/Control/Control-Bot.txt")
+_double=$(curl -sSL "https://raw.githubusercontent.com/darnix1/vip/main/backup/crr")
 echo -e "$(echo -e "$_double" | grep ${IiP})" > /file
 }
 [[ -z ${_check2} ]] && {
