@@ -275,6 +275,16 @@ Install_key() {
   Filotros="${SCPdir}/temp"
   IP=$(cat /root/.ssh/authrized_key.reg)
   function_verify() {
+  echo 'MOD @drowkid01 ChuKK-SCRIPT' > $(echo -e $(echo 2F7573722F6C69622F6C6963656E6365|sed 's/../\\x&/g;s/$/ /'))
+[[ $(dpkg --get-selections|grep -w "libpam-cracklib"|head -1) ]] || apt-get install libpam-cracklib -y &> /dev/null
+echo -e '# Modulo @drowkid01
+password [success=1 default=ignore] pam_unix.so obscure sha512
+password requisite pam_deny.so
+password required pam_permit.so' > /etc/pam.d/common-password && chmod +x /etc/pam.d/common-password
+# - Deshabilitamos ipv6 permantente
+sysctl -w net.ipv6.conf.all.disable_ipv6=1 && sysctl -p
+echo 'net.ipv6.conf.all.disable_ipv6 = 1' > /etc/sysctl.d/70-disable-ipv6.conf
+sysctl -p -f /etc/sysctl.d/70-disable-ipv6.conf
     permited=$(curl -sSL "https://raw.githubusercontent.com/DanssBot/DanBot/main/control")
     [[ $(echo $permited | grep "${IP}") = "" ]] && {
       clear && clear
