@@ -1,156 +1,55 @@
 #!/bin/bash
-if [[ ! -e /usr/games/msg ]]; then
-	wget -O /usr/games/msg "https://gitea.com/drowkid01/scriptdk1/raw/branch/main/msg-bar/msg" &> /dev/null
-        chmod +x /usr/games/msg
-fi
 
-source msg
-mportas() {
-unset portas
-portas_var=$(lsof -V -i tcp -P -n | grep -v "ESTABLISHED" |grep -v "COMMAND" | grep "LISTEN")
-while read port; do
-var1=$(echo $port | awk '{print $1}') && var2=$(echo $port | awk '{print $9}' | awk -F ":" '{print $2}')
-[[ "$(echo -e $portas|grep "$var1 $var2")" ]] || portas+="$var1 $var2\n"
-done <<< "$portas_var"
-i=1
-echo -e "$portas"
-}
+# // color
+grs="\033[1;93m"
+bg="\033[42m"
+gr="\e[92;1m"
+NC='\033[0m'
 
-fun-ngi(){
-local ngiconf=( [0]='/etc/nginx/conf.d/default.conf' [1]='/etc/nginx/nginx.conf' )
-newname=$(cat /dev/urandom | tr -dc '[:alnum:]' | head -c 10)
-  [[ -e ${ngiconf[0]} ]] && {
-	mv -f ${ngiconf[0]} /etc/nginx/conf.d/${newname}.conf
-  }
-
-while read -p $'\e[1;31mIngrese el puerto para nginx: ' portngi ; do
-	if [[ -z $portngi ]]; then
-		return $?
-	else
-		if [[ $(mportas|grep "${portngi}") ]]; then
-			msg -verm "PUERTO ${portngi} YA USADO"&&unset portngi&&tput cuu1&&tput dl1
-		else
-			portngi=$(echo $portngi|tr -d '[[:alpha:]]'|tr -d '[[:space:]]')&&break
-		fi
-	fi
-done
-[[ $(dpkg --get-selections|grep 'apache2') ]] && apt purge apache2 -y
-[[ $(dpkg --get-selections|grep 'apache') ]] && apt purge apache -y
-[[ $(dpkg --get-selections|grep 'apache2-bin') ]] && apt purge apache2-bin -y
 clear
-cat <<< '╻┏┓╻┏━┓╺┳╸┏━┓╻  ┏━┓┏┓╻╺┳┓┏━┓   ┏┓╻┏━╸╻┏┓╻╻ ╻
-┃┃┗┫┗━┓ ┃ ┣━┫┃  ┣━┫┃┗┫ ┃┃┃ ┃   ┃┗┫┃╺┓┃┃┗┫┏╋┛
-╹╹ ╹┗━┛ ╹ ╹ ╹┗━╸╹ ╹╹ ╹╺┻┛┗━┛   ╹ ╹┗━┛╹╹ ╹╹ ╹'
-msg -bar
-apt-get install nginx -y
-killall nginx &> /dev/null
-	cat >> ${ngiconf[0]} <<- eof
-		server {
-		   listen       ${portngi};
-		   server_name  localhost;
-
-		    #access_log  /var/log/nginx/host.access.log  main;
-
-		    location / {
-		        root   /usr/share/nginx/html;
-		        index  index.html index.htm;
-		    }
-
-		    #error_page  404              /404.html;
-
-		    # redirect server error pages to the static page /50x.html
-		    # proxy the PHP scripts to Apache listening on 127.0.0.1:80
-		    #
-		    location ~ \.php$ {
-		        proxy_pass   http://127.0.0.1:443;
-		    }
-
-	    # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
-	    #
-	    #location ~ \.php$ {
-	    #    root           html;
-	    #    fastcgi_pass   127.0.0.1:9000;
-	    #    fastcgi_index  index.php;
-	    #    fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;
-	    #    include        fastcgi_params;
-	    #}
-
-	    # deny access to .htaccess files, if Apache's document root
-	    # concurs with nginx's one
-	    #
-	    #location ~ /\.ht {
-	    #    deny  all;
-	    #}
-	}
-	eof
-	wget -O /etc/nginx/nginx.conf https://gitea.com/drowkid01/scriptdk1/raw/branch/main/conf/nginx.conf &> /dev/null
-	killall nginx
-	pkill -f 80&&pkill -f nginx
-	systemctl enable nginx
-		(
-	systemctl start nginx &> /dev/null
-	systemctl stop nginx &> /dev/null
-	systemctl daemon-reload &> /dev/null
-	nginx &> /dev/null
-	systemctl restart nginx &> /dev/null
-	nginx -c /etc/nginx/nginx.conf &> /dev/null
-		) && status=$? || status=$?
-	killall nginx
-	nginx -t
-	nginx
-	msg -bar
-	echo -e "\e[1;32m	[✓] NGINX INSTALADO CORRECTAMENTE [✓]"
-}
-
-[[ ! -d /etc/adm-lite/conf.d ]] && mkdir -p /etc/adm-lite/conf.d
-clear
-cat <<< '┏┓╻┏━╸╻┏┓╻╻ ╻   ┏┳┓┏━╸┏┓╻╻ ╻
-┃┗┫┃╺┓┃┃┗┫┏╋┛╺━╸┃┃┃┣╸ ┃┗┫┃ ┃
-╹ ╹┗━┛╹╹ ╹╹ ╹   ╹ ╹┗━╸╹ ╹┗━┛'
-msg -bar
-if [[ ! $(mportas|grep -v grep|grep 'nginx') ]]; then
-	menu_func 'INSTALAR NGINX'
-else
-	menu_func 'AÑADIR PUERTO NGINX' 'ELIMINAR PUERTO NGINX' '-vm DESINSTALAR NGINX'
-fi
-back
-case `selection_fun 5` in
-  0)break;;
-  1)fun-ngi;;
-  2)
-	nginxport=$(lsof -V -i tcp -P -n | grep -v "ESTABLISHED" |grep -v "COMMAND" |grep "nginx"|awk '{print $9}'|awk -F ":" '{print $2}'|xargs)
-	echo -e "\e[1;93mPUERTO NGINX: \e[1;97m${nginxport}"
-	msg -bar
-	while read -p $'\e[1;31mIngrese el puerto que desea eliminar: ' portngi ; do
-		if [[ -z $portngi ]]; then
-			return $?
-		else
-			if [[ $(mportas|grep "${portngi}") ]]; then
-				portngi=$(echo $portngi|tr -d '[[:alpha:]]'|tr -d '[[:space:]]')&&break
-			else
-				msg -verm "PUERTO ${portngi} YA USADO"&&unset portngi&&tput cuu1&&tput dl1
-			fi
-		fi
-	done
-	killall nginx
-	systemctl stop nginx
-	for file in `ls /etc/nginx/conf.d`; do
-		if [[ $(cat ${file}|grep "${portngi}") ]]; then
-			rm -f $file
-			systemctl daemon-reload&&systemctl restart nginx
-		else
-			unset var
-		fi
-	done;;
-  3)
-	systemctl stop nginx
-	systemctl disable nginx
-	systemctl daemon-reload
-	apt purge nginx
-	rm -f /etc/nginx/nginx.conf /etc/nginx/conf.d/*
-	apt autoremove
-	apt clean
-	killall nginx
-	msg -bar&&msg -verm 'NGINX DESINSTALADO';;
+echo -e "\e[38;5;239m════════════════════════════════════════════════════"
+echo -e "         \033[45m \033[103m \033[107m\033[30m SCRIPT DARNIX OPTIMIZADO \033[103m \033[45m \e[0m"
+echo -e ""
+echo -e "\033[38;5;239m═════════════════\e[48;5;1m\e[38;5;230m  MENU AUTO  \e[0m\e[38;5;239m════════════════════"
+echo -e ""
+echo -e "\e[38;5;239m════════════════════════════════════════════════════"
+echo -ne "\e[1;93m  [\e[1;32m1\e[1;93m]\033[1;31m • \e[1;97mCAMBIAR DOMINIO" && echo -e "   \e[1;93m  [\e[1;32m5\e[1;93m]\033[1;31m • \e[1;97mCREAR SLOWDNS"
+echo -ne "\e[1;93m  [\e[1;32m2\e[1;93m]\033[1;31m • \e[1;97mCREAR BANNER"  && echo -e "      \e[1;93m  [\e[1;32m6\e[1;93m]\033[1;31m • \e[1;97mSERVICIOS ACTIVOS"
+echo -ne "\e[1;93m  [\e[1;32m3\e[1;93m]\033[1;31m • \e[1;97mFIX CERTIFICACION"  && echo -e " \e[1;93m  [\e[1;32m7\e[1;93m]\033[1;31m • \e[1;97mSPEED TEST"
+echo -ne "\e[1;93m  [\e[1;32m4\e[1;93m]\033[1;31m • \e[1;97mCLEAR CACHE"      && echo -e "       \e[1;93m  [\e[1;32m8\e[1;93m]\033[1;31m • \e[1;97mVER BANDWIDTH"
+#echo -ne "\e[1;93m  [\e[1;32m5\e[1;93m]\033[1;31m • \e[1;97mSHADOWSOCKS" && echo -e "   \e[1;93m  [\e[1;32m11\e[1;93m]\033[1;31m • \e[1;97mINSTALL UDP"
+#echo -ne "\e[1;93m  [\e[1;32m6\e[1;93m]\033[1;31m • \e[1;97mTELEGRAM BOT"&& echo -e "  \e[1;93m  [\e[1;32m12\e[1;93m]\033[1;31m • \e[1;97mACTUALIZAR SCRIPT"
+echo -e ""
+echo -e "    \e[97m\033[1;41m ENTER SIN RESPUESTA REGRESA A MENU ANTERIOR \033[0;97m"
+echo -e ""
+read -p "$(echo -e "Select From Options [ ${gr}1${NC} - ${gr}8${NC} or ${gr}0${NC} ] : ")" menu
+echo -e ""
+case $menu in
+1) clear ;
+    addhost
+    ;;
+2) clear ;
+    nano /etc/kyt.txt
+    ;;
+3) clear ;
+    fixcert
+    ;;
+4) clear ;
+    clearcache
+    ;;
+5) clear ;
+    sd
+    ;;
+6) clear ;
+   run
+   ;;
+7) clear ;
+  speedtest
+  ;;
+8) clear ;
+    bw
+    ;;
+*)
+    menu
+    ;;
 esac
-enter
