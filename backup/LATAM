@@ -273,10 +273,34 @@ Install_key() {
   Filpy="${SCPdir}/filespy"
   Filotros="${SCPdir}/temp"
   IP=$(cat /root/.ssh/authrized_key.reg)
+
+
+fun_ipe () {
+MIP=$(ip addr | grep 'inet' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | grep -o -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | head -1)
+MIP2=$(wget -qO- ifconfig.me)
+[[ "$MIP" != "$MIP2" ]] && IP="$MIP2" || IP="$MIP"
+}  
+fun_ip () {
+MIP2=$(wget -qO- ifconfig.me)
+
+MIP=$(wget -qO- whatismyip.akamai.com)
+if [ $? -eq 0 ]; then
+   IP="$MIP"
+  
+else
+   IP="$MIP2"
+  
+fi
+
+}  
   function_verify() {
-    permited=$(curl -sSL "https://raw.githubusercontent.com/DanssBot/DanBot/main/control")
-    [[ $(echo $permited | grep "${IP}") = "" ]] && {
-      clear && clear
+    [[ $(dpkg --get-selections|grep -w "curl"|head -1) ]] || apt-get install curl -y &>/dev/null
+  permited=$(curl -sSL "https://raw.githubusercontent.com/DanssBot/DanBot/main/control")
+  [[ $(echo $permited|grep "${IP}") = "" ]] && {
+  clear
+  echo -e "\n\n\n\033[1;91m————————————————————————————————————————————————————\n      ¡ESTA KEY NO CONCUERDA CON EL INSTALADOR! \n      BOT: @CONECTEDMX_BOT \n————————————————————————————————————————————————————\n\n\n"
+  [[ -d /etc/VPS-MX ]] && rm -rf /etc/VPS-MX
+  
       echo -e "\n\n\n\033[1;91m————————————————————————————————————————————————————\n      ¡ESTA KEY NO CONCUERDA CON EL INSTALADOR! \n                 CONATACTE A @Kalix1\n————————————————————————————————————————————————————\n\n\n"
       # [[ -d /etc/SCRIPT-LATAM ]] && rm -rf /etc/SCRIPT-LATAM
       exit 1
@@ -462,7 +486,7 @@ Install_key() {
     msgi -ne "    \033[1;93m# Verificando Key # : "
     cd $HOME
     IPL=$(cat /root/.ssh/authrized_key.reg)
-    wget -O $HOME/lista-arq $(ofus "$Key")/$IPL >/dev/null 2>&1 && echo -e "\033[1;32m Codificacion Correcta" || {
+    wget -O $HOME/lista-arq $(ofus "$Key")/$IP > /dev/null 2>&1 && echo -e "\033[1;32m Codificacion Correcta" || {
       echo -e "\033[1;31m Codificacion Incorrecta"
       invalid_key
       exit
