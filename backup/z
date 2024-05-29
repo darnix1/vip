@@ -2,6 +2,7 @@
 
 green() { echo -e "\\033[32;1m${*}\\033[0m"; }
 red() { echo -e "\\033[31;1m${*}\\033[0m"; }
-
+ama() { echo -e "\e[1;93m              ${*}"; } 
 green "Hola"
 red "hola"
+ama "PANEL DE CONTROL SSH"
