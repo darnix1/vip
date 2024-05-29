@@ -81,10 +81,9 @@ remove_blocked_domain() {
   else
     echo -e "Removing domain '$domain' from blocked list..."
     sed -i "/\"domain\": \[\"$domain\"\],/d" "$CONFIG_FILE"
-    sed -i "/\"domain\": \[\"$domain\"\],/d" "$CONFIG_FILE2"
+    #sed -i "/\"domain\": \[\"$domain\"\],/d" "$CONFIG_FILE2"
     echo -e "${kubali_kidude}Domain '$domain' removed from blocked list."
-    systemctl restart vmtls
-    systemctl restart vmntls
+    systemctl restart xray
   fi
 }
 
