@@ -1,16 +1,5 @@
 #!/bin/bash
 msg() { ##-->> COLORES, TITULO, BARRAS
-  ##-->> ACTULIZADOR Y VERCION
-  [[ ! -e /etc/SCRIPT-LATAM/temp/version_instalacion ]] && printf '1\n' >/etc/SCRIPT-LATAM/temp/version_instalacion
-  v11=$(cat /etc/SCRIPT-LATAM/temp/version_actual)
-  v22=$(cat /etc/SCRIPT-LATAM/temp/version_instalacion)
-  if [[ $v11 = $v22 ]]; then
-    vesaoSCT="\e[1;31m[\033[1;37m Ver.\033[1;32m $v22 \033[1;31m]"
-  else
-    vesaoSCT="\e[1;31m[\e[31m ACTUALIZAR \e[25m\033[1;31m]"
-  fi
-  ##-->> COLORES
-  local colors="/etc/SCRIPT-LATAM/colors"
   if [[ ! -e $colors ]]; then
     COLOR[0]='\033[1;37m' #GRIS='\033[1;37m'
     COLOR[1]='\e[31m'     #ROJO='\e[31m'
@@ -39,6 +28,7 @@ msg() { ##-->> COLORES, TITULO, BARRAS
   SINCOLOR='\e[0m'
   case $1 in
   -ne) cor="${COLOR[1]}${NEGRITO}" && echo -ne "${cor}${2}${SINCOLOR}" ;;
+  -nazu) cor="${COLOR[6]}${NEGRITO}" && echo -ne "${cor}${2}${SEMCOR}";;
   -ama) cor="${COLOR[3]}${NEGRITO}" && echo -e "${cor}${2}${SINCOLOR}" ;;
   -verm) cor="${COLOR[3]}${NEGRITO}[!] ${COLOR[1]}" && echo -e "${cor}${2}${SINCOLOR}" ;;
   -verm2) cor="${COLOR[1]}${NEGRITO}" && echo -e "${cor}${2}${SINCOLOR}" ;;
@@ -47,12 +37,12 @@ msg() { ##-->> COLORES, TITULO, BARRAS
   -bra) cor="${COLOR[0]}${SINCOLOR}" && echo -e "${cor}${2}${SINCOLOR}" ;;
   "-bar2" | "-bar") cor="${COLOR[1]}════════════════════════════════════════════════════" && echo -e "${SINCOLOR}${cor}${SINCOLOR}" ;;
   # Centrar texto
-  -tit) echo -e " \e[48;5;214m\e[38;5;0m   💻 𝙎 𝘾 𝙍 𝙄 𝙋 𝙏 | 𝙇 𝘼 𝙏 𝘼 𝙈 💻   \e[0m  $vesaoSCT" ;;
+  -tit) echo -e "\e[38;5;239m════════════════════════════════════════════════════"
+echo -e "\e[1;33m ❰❰❰ ░Ｄ░ ░Ａ░ ░Ｒ░ ░Ｎ░ ░Ｉ░ ░Ｘ░ ❱❱❱ 𝗩𝗲𝗿𝘀𝗶𝗼𝗻: $(cat /opt/.ver) \e[0m"
+echo -e "\e[38;5;239m════════════════════════════════════════════════════"
   esac
 }
 
-
-ama "PANEL DE CONTROL SSH"
 
     banner_on() {
       clear && clear
@@ -67,9 +57,8 @@ ama "PANEL DE CONTROL SSH"
         echo "Banner /etc/issue.net" >>/etc/ssh/sshd_config
         local="/etc/issue.net"
       fi
-      msg -bar
+      
       msg -tit
-      msg -bar
       msg -ama "         AGREGAR BANNER SSH/SSL/DROPBEAR"
       msg -bar
       msg -ne "Inserte el BANNER de preferencia en HTML sin saltos: \n\n" && read ban_ner
@@ -107,6 +96,8 @@ ama "PANEL DE CONTROL SSH"
       service dropbear restart
       sed -i "s/=0/=1/g" /etc/default/dropbear
       echo -e "\033[1;92m            BANNER ELIMINADO !! EXITO ¡¡ "
+read -t 60 -n 1 -rsp $'\033[1;39m       << Presiona enter para Continuar >>\n'
+    #controlador_ssh
       msg -bar
     }
     clear && clear
