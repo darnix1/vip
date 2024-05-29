@@ -62,12 +62,12 @@ if [ "$answer" == "${answer#[Yy]}" ] ;then
 else
   clear
   # Eliminar el archivo existente
-  rm -f /etc/kyt.txt
+  rm -f /etc/issue.net
   
   # Pedir al usuario que introduzca el HTML
   echo "Por favor, introduzca su HTML tipo banner (presione CTRL+D para finalizar):"
   # Leer el HTML del usuario y guardar en el archivo
-  cat > /etc/kyt.txt
+  cat > /etc/issue.net
   
   # Llamar al menú después de guardar el archivo
   menu
