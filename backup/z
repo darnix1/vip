@@ -61,8 +61,7 @@ add_blocked_domain() {
     sed -i "/\"rules\": \[/a \\\t{ \"type\": \"field\", \"domain\": [\"$domain\"], \"outboundTag\": \"blocked\" }," "$CONFIG_FILE"
     #sed -i "/\"rules\": \[/a \\\t{ \"type\": \"field\", \"domain\": [\"$domain\"], \"outboundTag\": \"blocked\" }," "$CONFIG_FILE2"
     echo -e "${kubali}Domain '$domain' added to be blocked.${mwisho}"
-    systemctl restart vmtls
-    systemctl restart vmntls
+    systemctl restart xray
   fi
 }
 
