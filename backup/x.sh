@@ -46,7 +46,8 @@ echo -e "${selected_color}
                       ┛    
 ${mwisho}"
 
-echo -e "\033[1mPaste the custom banner content below (press Ctrl+D to finish):\033[0m"
+echo -e "\033[1mPegue el contenido del banner personalizado a continuación (presione Ctrl+D para finalizar):\033[0m"
+echo -e "\033[1m ⚠️ Pueda que sea necesario oprimir 2 veces Ctrl+D ⚠️):\033[0m"
 custom_banner=$(</dev/stdin)
 
 # Backup the original /etc/issue.net file
@@ -58,8 +59,8 @@ echo "$custom_banner" | sudo tee /etc/issue.net > /dev/null
 # Inform the user that the banner has been changed
 echo ""
 echo ""
-echo "🚀New banner content:🚀"
-echo -e "👍${kubali}Banner has been updated successfully!${mwisho}"
+echo "🚀 BANNER AGREGADO CON EXITO:🚀"
+echo -e "👍${kubali}Por favor espera un segundo!${mwisho}"
 echo ""
 service ssh restart 2>/dev/null
       service dropbear stop 2>/dev/null
