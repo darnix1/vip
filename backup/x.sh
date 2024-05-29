@@ -61,14 +61,35 @@ if [ "$answer" == "${answer#[Yy]}" ] ;then
   menu
 else
   clear
-  # Eliminar el archivo existente
-  rm -f /etc/issue.net
-  
-  # Pedir al usuario que introduzca el HTML
-  echo "Por favor, introduzca su HTML tipo banner (presione CTRL+D para finalizar):"
-  # Leer el HTML del usuario y guardar en el archivo
-  cat > /etc/issue.net
-  
+  local="/etc/issue.net"
+      rm -rf $local >/dev/null 2>&1
+      local2="/etc/dropbear/banner"
+      chk=$(cat /etc/ssh/sshd_config | grep Banner)
+      if [ "$(echo "$chk" | grep -v "#Banner" | grep Banner)" != "" ]; then
+        local=$(echo "$chk" | grep -v "#Banner" | grep Banner | awk '{print $2}')
+      else
+        echo "" >>/etc/ssh/sshd_config
+        echo "Banner /etc/issue.net" >>/etc/ssh/sshd_config
+        local="/etc/issue.net"
+      fi
+#msg -bar
+      msg -ne "Inserte el BANNER de preferencia en HTML sin saltos: \n\n" && read ban_ner
+      echo ""
+      msg -bar
+      #credi="$(less /etc/SCRIPT-LATAM/message.txt)"
+      echo "$ban_ner" >>$local
+      #echo '<p style="text-align: center;"><strong><span style="color: #993300;">'$credi'</span></strong></p>' >>$local
+      #echo '<p style="text-align: center;"><strong>SCRIPT <span style="color: #ff0000;">|</span><span style="color: #ffcc00;"> LATAM</span></strong></p>' >>$local
+      if [[ -e "$local2" ]]; then
+        rm $local2 >/dev/null 2>&1
+        cp $local $local2 >/dev/null 2>&1
+      fi
+      echo -e "          BANNER AGREGADO CON !! EXITO ¡¡" 
+      service ssh restart 2>/dev/null
+      service dropbear stop 2>/dev/null
+      sed -i "s/=1/=0/g" /etc/default/dropbear
+      service dropbear restart
+      sed -i "s/=0/=1/g" /etc/default/dropbear
   # Llamar al menú después de guardar el archivo
   menu
 fi
