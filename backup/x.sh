@@ -61,4 +61,13 @@ echo ""
 echo "🚀New banner content:🚀"
 echo -e "👍${kubali}Banner has been updated successfully!${mwisho}"
 echo ""
-systemctl restart ws-dropbear
+service ssh restart 2>/dev/null
+      service dropbear stop 2>/dev/null
+      sed -i "s/=1/=0/g" /etc/default/dropbear
+      service dropbear restart
+      sed -i "s/=0/=1/g" /etc/default/dropbear
+echo "Presiona Enter para regresar al menú..."
+read -r  # Espera a que el usuario presione Enter
+
+# Llamar al menú
+menu
