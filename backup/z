@@ -1,137 +1,133 @@
 #!/bin/bash
-msg() { ##-->> COLORES, TITULO, BARRAS
-  if [[ ! -e $colors ]]; then
-    COLOR[0]='\033[1;37m' #GRIS='\033[1;37m'
-    COLOR[1]='\e[31m'     #ROJO='\e[31m'
-    COLOR[2]='\e[32m'     #VERDE='\e[32m'
-    COLOR[3]='\e[33m'     #AMARILLO='\e[33m'
-    COLOR[4]='\e[34m'     #AZUL='\e[34m'
-    COLOR[5]='\e[91m'     #ROJO-NEON='\e[91m'
-    COLOR[6]='\033[1;97m' #BALNCO='\033[1;97m'
 
+kubali="\033[38;2;0;128;0m"
+GREEN="\033[0;32m"
+kataa="\033[31;1m"
+siani="\033[0;36m"
+mwisho="\033[0m"
+teal_color="\033[38;2;100;182;172m"
+orange="\033[0;33m"
+PURPLE='\033[0;35m'
+kidude="[+]"
+kubali_kidude="${kubali}${kidude}${mwisho}"
+kataa_kidude="${kataa}${kidude}"
+dark_blue="\033[38;2;0;0;128m"
+orange_kidude="${orange}\033[1m[!]$mwisho"
+
+# Xray Configuration File
+CONFIG_FILE="/etc/xray/config.json"
+#CONFIG_FILE2="/usr/local/etc/xray/vmntls.json"
+colors=(
+  "\033[0;31m"  # Red
+  "\033[0;32m"  # Green
+  "\033[0;33m"  # Yellow
+  "\033[0;34m"  # Blue
+  "\033[0;35m"  # Purple
+  "\033[0;36m"  # Cyan
+  "\033[0;91m"  # Light Red
+  "\033[0;92m"  # Light Green
+  "\033[0;93m"  # Light Yellow
+  "\033[0;94m"  # Light Blue
+  "\033[0;95m"  # Light Purple
+  "\033[0;96m"  # Light Cyan
+)
+
+# Function to choose a random color
+function choose_random_color() {
+  local num_colors=${#colors[@]}
+  local random_index=$((RANDOM % num_colors))
+  echo -e "${colors[random_index]}"
+}
+selected_color=$(choose_random_color)
+
+function banner(){
+  echo -e "${selected_color}
+╔═╗┬┌┬┐┌─┐  ╔╗ ┬  ┌─┐┌─┐┬┌─┌─┐┬─┐
+╚═╗│ │ ├┤   ╠╩╗│  │ ││  ├┴┐├┤ ├┬┘
+╚═╝┴ ┴ └─┘  ╚═╝┴─┘└─┘└─┘┴ ┴└─┘┴└─
+          (Vmess)
+  ${mwisho}
+  "
+}
+# Function to add a domain to be blocked
+add_blocked_domain() {
+  domain=$1
+  if [[ -z "$domain" ]]; then
+    echo -e "${kataa}Error: Domain cannot be empty.${mwisho}"
+  elif grep -q "\"domain\": \[\"$domain\"\]" "$CONFIG_FILE"; then
+    echo -e "${kataa}Domain '$domain' is already blocked.${mwisho}"
   else
-    local COL=0
-    for number in $(cat $colors); do
-      case $number in
-      1) COLOR[$COL]='\033[1;37m' ;;
-      2) COLOR[$COL]='\e[31m' ;;
-      3) COLOR[$COL]='\e[32m' ;;
-      4) COLOR[$COL]='\e[33m' ;;
-      5) COLOR[$COL]='\e[34m' ;;
-      6) COLOR[$COL]='\e[35m' ;;
-      7) COLOR[$COL]='\033[1;36m' ;;
-      esac
-      let COL++
-    done
+    echo -e "${kubali}Adding domain '$domain' to be blocked...${mwisho}"
+    sed -i "/\"rules\": \[/a \\\t{ \"type\": \"field\", \"domain\": [\"$domain\"], \"outboundTag\": \"blocked\" }," "$CONFIG_FILE"
+    #sed -i "/\"rules\": \[/a \\\t{ \"type\": \"field\", \"domain\": [\"$domain\"], \"outboundTag\": \"blocked\" }," "$CONFIG_FILE2"
+    echo -e "${kubali}Domain '$domain' added to be blocked.${mwisho}"
+    systemctl restart vmtls
+    systemctl restart vmntls
   fi
-  NEGRITO='\e[1m'
-  SINCOLOR='\e[0m'
-  case $1 in
-  -ne) cor="${COLOR[1]}${NEGRITO}" && echo -ne "${cor}${2}${SINCOLOR}" ;;
-  -nazu) cor="${COLOR[6]}${NEGRITO}" && echo -ne "${cor}${2}${SEMCOR}";;
-  -ama) cor="${COLOR[3]}${NEGRITO}" && echo -e "${cor}${2}${SINCOLOR}" ;;
-  -verm) cor="${COLOR[3]}${NEGRITO}[!] ${COLOR[1]}" && echo -e "${cor}${2}${SINCOLOR}" ;;
-  -verm2) cor="${COLOR[1]}${NEGRITO}" && echo -e "${cor}${2}${SINCOLOR}" ;;
-  -azu) cor="${COLOR[6]}${NEGRITO}" && echo -e "${cor}${2}${SINCOLOR}" ;;
-  -verd) cor="${COLOR[2]}${NEGRITO}" && echo -e "${cor}${2}${SINCOLOR}" ;;
-  -bra) cor="${COLOR[0]}${SINCOLOR}" && echo -e "${cor}${2}${SINCOLOR}" ;;
-  "-bar2" | "-bar") cor="${COLOR[1]}════════════════════════════════════════════════════" && echo -e "${SINCOLOR}${cor}${SINCOLOR}" ;;
-  # Centrar texto
-  -tit) echo -e "\e[38;5;239m════════════════════════════════════════════════════"
-echo -e "\e[1;33m ❰❰❰ ░Ｄ░ ░Ａ░ ░Ｒ░ ░Ｎ░ ░Ｉ░ ░Ｘ░ ❱❱❱ 𝗩𝗲𝗿𝘀𝗶𝗼𝗻: $(cat /opt/.ver) \e[0m"
-echo -e "\e[38;5;239m════════════════════════════════════════════════════"
-  esac
 }
 
+# Function to list blocked domains
+list_blocked_domains() {
+  clear
+  echo -e "${kubali_kidude}Blocked Domains:${mwisho}"
+  grep -oP '(?<=domain": \[")[^"]*' "$CONFIG_FILE" | nl -w2 -s". "
+}
 
-    banner_on() {
-      clear && clear
-local="/etc/issue.net"
-rm -rf $local >/dev/null 2>&1
-local2="/etc/dropbear/banner"
-chk=$(cat /etc/ssh/sshd_config | grep Banner)
-if [ "$(echo "$chk" | grep -v "#Banner" | grep Banner)" != "" ]; then
-  local=$(echo "$chk" | grep -v "#Banner" | grep Banner | awk '{print $2}')
-else
-  echo "" >>/etc/ssh/sshd_config
-  echo "Banner /etc/issue.net" >>/etc/ssh/sshd_config
-  local="/etc/issue.net"
-fi
+# Function to remove a blocked domain
+remove_blocked_domain() {
+  index=$1
+  domain=$(grep -oP '(?<=domain": \[")[^"]*' "$CONFIG_FILE" | sed -n "${index}p")
+  if [ -z "$domain" ]; then
+    echo -e "${kataa}Invalid selection.${mwisho}"
+  else
+    echo -e "Removing domain '$domain' from blocked list..."
+    sed -i "/\"domain\": \[\"$domain\"\],/d" "$CONFIG_FILE"
+    sed -i "/\"domain\": \[\"$domain\"\],/d" "$CONFIG_FILE2"
+    echo -e "${kubali_kidude}Domain '$domain' removed from blocked list."
+    systemctl restart vmtls
+    systemctl restart vmntls
+  fi
+}
 
-msg -tit
-msg -ama "         AGREGAR BANNER SSH/SSL/DROPBEAR"
-msg -bar
-msg -ne "Inserte el BANNER de preferencia en HTML sin saltos: \n\n" && read ban_ner
-echo ""
-msg -bar
+# Main function
+main() {
+  while true; do
+    clear
+    banner
+    echo ""
+    echo "[1]. Add a domain to be blocked"
+    echo "[2]. List blocked domains"
+    echo "[3]. Remove a domain from blocked list"
+    echo "[4]. Exit"
+    read -p "Choose an option (1-4): " choice
 
-# Espera a que el usuario presione Enter antes de continuar
-read -p "Presione Enter para añadir el banner..."
-
-credi="$(less /etc/SCRIPT-LATAM/message.txt)"
-echo "$ban_ner" >>$local
-echo '<p style="text-align: center;"><strong><span style="color: #993300;">'$credi'</span></strong></p>' >>$local
-echo '<p style="text-align: center;"><strong>SCRIPT <span style="color: #ff0000;">|</span><span style="color: #ffcc00;"> LATAM</span></strong></p>' >>$local
-if [[ -e "$local2" ]]; then
-  rm $local2 >/dev/null 2>&1
-  cp $local $local2 >/dev/null 2>&1
-fi
-msg -verd "          BANNER AGREGADO CON !! EXITO ¡¡" && msg -bar
-service ssh restart 2>/dev/null
-service dropbear stop 2>/dev/null
-sed -i "s/=1/=0/g" /etc/default/dropbear
-service dropbear restart
-sed -i "s/=0/=1/g" /etc/default/dropbear
-    }
-
-    banner_off() {
-      clear && clear
-      msg -bar
-      msg -ama "         ELIMINANDO  BANNER SSH/SSL/DROPBEAR"
-      msg -bar
-      sed -i '/'Banner'/d' /etc/ssh/sshd_config
-      sed -i -e 's/^[ \t]*//; s/[ \t]*$//; /^$/d' /etc/ssh/sshd_config
-      echo "" >>/etc/ssh/sshd_config
-      rm -rf /etc/dropbear/banner >/dev/null 2>&1
-      echo "" >/etc/dropbear/banner >/dev/null 2>&1
-      service ssh restart 2>/dev/null
-      service dropbear stop 2>/dev/null
-      sed -i "s/=1/=0/g" /etc/default/dropbear
-      service dropbear restart
-      sed -i "s/=0/=1/g" /etc/default/dropbear
-      echo -e "\033[1;92m            BANNER ELIMINADO !! EXITO ¡¡ "
-read -t 60 -n 1 -rsp $'\033[1;39m       << Presiona enter para Continuar >>\n'
-    #controlador_ssh
-      msg -bar
-    }
-    clear && clear
-    msg -bar
-    msg -tit
-    msg -bar
-    msg -ama "         AGREGAR BANNER SSH/SSL/DROPBEAR"
-    msg -bar
-    echo -e "${cor[1]}            Escoja la opcion deseada."
-    msg -bar
-    echo -e "\e[1;93m [\e[1;32m1\e[1;93m]\033[1;31m > \e[1;97m AGREGAR BANNER SSH/SSL/DROPBEAR "
-    echo -e "\e[1;93m [\e[1;32m2\e[1;93m]\033[1;31m > \e[1;97m ELIMINAR Y DESACTIVAR BANNER   "
-    msg -bar
-    echo -e "    \e[97m\033[1;41m ENTER SIN RESPUESTA REGRESA A MENU ANTERIOR \033[0;37m"
-    msg -bar
-    echo -ne "\033[1;37mDigite solo el numero segun su respuesta: \033[1;32m"
-    read opcao
-    case $opcao in
-    1)
-      msg -bar
-      banner_on
-      ;;
-    2)
-      msg -bar
-      banner_off
-      ;;
-    *)
-      msg -bar
-      ;;
+    case $choice in
+      1)
+        read -p "[!]Enter domain to be blocked (e.g., example.com): " domain
+        add_blocked_domain "$domain"
+        read -rp "press any key to continue"
+        ;;
+      2)
+        list_blocked_domains
+        read -rp "press any key to continue"
+        ;;
+      3)
+        list_blocked_domains
+        read -p "[!]Enter the number of the domain to be removed from the blocked list: " index
+        remove_blocked_domain "$index"
+        read -rp "press any key to continue"
+        ;;
+      4)
+        echo -e "Exiting..."
+        break
+        ;;
+      *)
+        echo -e "${kataa}Invalid choice. Please try again${mwisho}."
+        ;;
     esac
-    read -t 60 -n 1 -rsp $'\033[1;39m       << Presiona enter para Continuar >>\n'
-    #controlador_ssh
-  
+
+    echo
+  done
+}
+
+main
