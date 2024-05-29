@@ -1,4 +1,55 @@
 #!/bin/bash
+msg() { ##-->> COLORES, TITULO, BARRAS
+  ##-->> ACTULIZADOR Y VERCION
+  [[ ! -e /etc/SCRIPT-LATAM/temp/version_instalacion ]] && printf '1\n' >/etc/SCRIPT-LATAM/temp/version_instalacion
+  v11=$(cat /etc/SCRIPT-LATAM/temp/version_actual)
+  v22=$(cat /etc/SCRIPT-LATAM/temp/version_instalacion)
+  if [[ $v11 = $v22 ]]; then
+    vesaoSCT="\e[1;31m[\033[1;37m Ver.\033[1;32m $v22 \033[1;31m]"
+  else
+    vesaoSCT="\e[1;31m[\e[31m ACTUALIZAR \e[25m\033[1;31m]"
+  fi
+  ##-->> COLORES
+  local colors="/etc/SCRIPT-LATAM/colors"
+  if [[ ! -e $colors ]]; then
+    COLOR[0]='\033[1;37m' #GRIS='\033[1;37m'
+    COLOR[1]='\e[31m'     #ROJO='\e[31m'
+    COLOR[2]='\e[32m'     #VERDE='\e[32m'
+    COLOR[3]='\e[33m'     #AMARILLO='\e[33m'
+    COLOR[4]='\e[34m'     #AZUL='\e[34m'
+    COLOR[5]='\e[91m'     #ROJO-NEON='\e[91m'
+    COLOR[6]='\033[1;97m' #BALNCO='\033[1;97m'
+
+  else
+    local COL=0
+    for number in $(cat $colors); do
+      case $number in
+      1) COLOR[$COL]='\033[1;37m' ;;
+      2) COLOR[$COL]='\e[31m' ;;
+      3) COLOR[$COL]='\e[32m' ;;
+      4) COLOR[$COL]='\e[33m' ;;
+      5) COLOR[$COL]='\e[34m' ;;
+      6) COLOR[$COL]='\e[35m' ;;
+      7) COLOR[$COL]='\033[1;36m' ;;
+      esac
+      let COL++
+    done
+  fi
+  NEGRITO='\e[1m'
+  SINCOLOR='\e[0m'
+  case $1 in
+  -ne) cor="${COLOR[1]}${NEGRITO}" && echo -ne "${cor}${2}${SINCOLOR}" ;;
+  -ama) cor="${COLOR[3]}${NEGRITO}" && echo -e "${cor}${2}${SINCOLOR}" ;;
+  -verm) cor="${COLOR[3]}${NEGRITO}[!] ${COLOR[1]}" && echo -e "${cor}${2}${SINCOLOR}" ;;
+  -verm2) cor="${COLOR[1]}${NEGRITO}" && echo -e "${cor}${2}${SINCOLOR}" ;;
+  -azu) cor="${COLOR[6]}${NEGRITO}" && echo -e "${cor}${2}${SINCOLOR}" ;;
+  -verd) cor="${COLOR[2]}${NEGRITO}" && echo -e "${cor}${2}${SINCOLOR}" ;;
+  -bra) cor="${COLOR[0]}${SINCOLOR}" && echo -e "${cor}${2}${SINCOLOR}" ;;
+  "-bar2" | "-bar") cor="${COLOR[1]}════════════════════════════════════════════════════" && echo -e "${SINCOLOR}${cor}${SINCOLOR}" ;;
+  # Centrar texto
+  -tit) echo -e " \e[48;5;214m\e[38;5;0m   💻 𝙎 𝘾 𝙍 𝙄 𝙋 𝙏 | 𝙇 𝘼 𝙏 𝘼 𝙈 💻   \e[0m  $vesaoSCT" ;;
+  esac
+}
 
 green() { echo -e "\\033[32;1m${*}\\033[0m"; }
 red() { echo -e "\\033[31;1m${*}\\033[0m"; }
@@ -6,3 +57,90 @@ ama() { echo -e "\e[1;93m              ${*}"; }
 green "Hola"
 red "hola"
 ama "PANEL DE CONTROL SSH"
+baner_fun() {
+    banner_on() {
+      clear && clear
+      local="/etc/issue.net"
+      rm -rf $local >/dev/null 2>&1
+      local2="/etc/dropbear/banner"
+      chk=$(cat /etc/ssh/sshd_config | grep Banner)
+      if [ "$(echo "$chk" | grep -v "#Banner" | grep Banner)" != "" ]; then
+        local=$(echo "$chk" | grep -v "#Banner" | grep Banner | awk '{print $2}')
+      else
+        echo "" >>/etc/ssh/sshd_config
+        echo "Banner /etc/issue.net" >>/etc/ssh/sshd_config
+        local="/etc/issue.net"
+      fi
+      msg -bar
+      msg -tit
+      msg -bar
+      msg -ama "         AGREGAR BANNER SSH/SSL/DROPBEAR"
+      msg -bar
+      msg -ne "Inserte el BANNER de preferencia en HTML sin saltos: \n\n" && read ban_ner
+      echo ""
+      msg -bar
+      credi="$(less /etc/SCRIPT-LATAM/message.txt)"
+      echo "$ban_ner" >>$local
+      echo '<p style="text-align: center;"><strong><span style="color: #993300;">'$credi'</span></strong></p>' >>$local
+      echo '<p style="text-align: center;"><strong>SCRIPT <span style="color: #ff0000;">|</span><span style="color: #ffcc00;"> LATAM</span></strong></p>' >>$local
+      if [[ -e "$local2" ]]; then
+        rm $local2 >/dev/null 2>&1
+        cp $local $local2 >/dev/null 2>&1
+      fi
+      msg -verd "          BANNER AGREGADO CON !! EXITO ¡¡" && msg -bar
+      service ssh restart 2>/dev/null
+      service dropbear stop 2>/dev/null
+      sed -i "s/=1/=0/g" /etc/default/dropbear
+      service dropbear restart
+      sed -i "s/=0/=1/g" /etc/default/dropbear
+    }
+
+    banner_off() {
+      clear && clear
+      msg -bar
+      msg -ama "         ELIMINANDO  BANNER SSH/SSL/DROPBEAR"
+      msg -bar
+      sed -i '/'Banner'/d' /etc/ssh/sshd_config
+      sed -i -e 's/^[ \t]*//; s/[ \t]*$//; /^$/d' /etc/ssh/sshd_config
+      echo "" >>/etc/ssh/sshd_config
+      rm -rf /etc/dropbear/banner >/dev/null 2>&1
+      echo "" >/etc/dropbear/banner >/dev/null 2>&1
+      service ssh restart 2>/dev/null
+      service dropbear stop 2>/dev/null
+      sed -i "s/=1/=0/g" /etc/default/dropbear
+      service dropbear restart
+      sed -i "s/=0/=1/g" /etc/default/dropbear
+      echo -e "\033[1;92m            BANNER ELIMINADO !! EXITO ¡¡ "
+      msg -bar
+    }
+    clear && clear
+    msg -bar
+    msg -tit
+    msg -bar
+    msg -ama "         AGREGAR BANNER SSH/SSL/DROPBEAR"
+    msg -bar
+    echo -e "${cor[1]}            Escoja la opcion deseada."
+    msg -bar
+    echo -e "\e[1;93m [\e[1;32m1\e[1;93m]\033[1;31m > \e[1;97m AGREGAR BANNER SSH/SSL/DROPBEAR "
+    echo -e "\e[1;93m [\e[1;32m2\e[1;93m]\033[1;31m > \e[1;97m ELIMINAR Y DESACTIVAR BANNER   "
+    msg -bar
+    echo -e "    \e[97m\033[1;41m ENTER SIN RESPUESTA REGRESA A MENU ANTERIOR \033[0;37m"
+    msg -bar
+    echo -ne "\033[1;37mDigite solo el numero segun su respuesta: \033[1;32m"
+    read opcao
+    case $opcao in
+    1)
+      msg -bar
+      banner_on
+      ;;
+    2)
+      msg -bar
+      banner_off
+      ;;
+    *)
+      msg -bar
+      ;;
+    esac
+    read -t 60 -n 1 -rsp $'\033[1;39m       << Presiona enter para Continuar >>\n'
+    #controlador_ssh
+  }
