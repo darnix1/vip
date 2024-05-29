@@ -64,9 +64,7 @@ echo -e "👍${kubali}Por favor espera un segundo!${mwisho}"
 echo ""
 service ssh restart 2>/dev/null
       service dropbear stop 2>/dev/null
-      sed -i "s/=1/=0/g" /etc/default/dropbear
-      service dropbear restart
-      sed -i "s/=0/=1/g" /etc/default/dropbear
+      service dropbear restart 2>/dev/null
 echo "Presiona Enter para regresar al menú..."
 read -r  # Espera a que el usuario presione Enter
 
