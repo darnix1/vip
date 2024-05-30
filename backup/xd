@@ -7,8 +7,8 @@ SCPusr="${SCPdir}/ger-user"
 SCPfrm="/etc/ger-frm"
 SCPinst="/etc/ger-inst"
 
-dnx_roj() { echo -e "\e[1;37;41m${*}\e[0m":}
-dnx_ver() { echo -e "\e[1;37;42m${*}\e[0m";}
+dnxroj() { echo -e "\e[1;37;41m${*}\e[0m":}
+dnxver() { echo -e "\e[1;37;42m${*}\e[0m";}
 
 [[ $(dpkg --get-selections|grep -w "gawk"|head -1) ]] || apt-get install gawk -y &>/dev/null
 [[ $(dpkg --get-selections|grep -w "mlocate"|head -1) ]] || apt-get install mlocate -y &>/dev/null
@@ -163,7 +163,7 @@ msg -bar3
 echo ""
 [[ ! -z ${chekIP} ]] && { 
 varIP=$(echo ${chekIP}| sed 's/[1-5]/X/g')
-dnx_roj "KEY DETECTA EN LA BASE DE DATOS @botgenmx_bot"
+dnxroj "KEY DETECTA EN LA BASE DE DATOS @botgenmx_bot"
 msg -verm "USADA IP : ${varIP} \n FECHA : ${chekDATE} ! "
 echo ""
 msg -bar3
@@ -204,7 +204,7 @@ updatedb
 if [[ -e $HOME/lista-arq ]] && [[ ! $(cat $HOME/lista-arq|grep "KEY INVALIDA!") ]]; then
    msg -bar2
    #msg -ama "$(source trans -b pt:${id} "BEM VINDO, OBRIGADO POR UTILIZAR"|sed -e 's/[^a-z -]//ig'): \033[1;31m[NEW-ULTIMATE]"
-   dnx_ver " TU IP SE ENLAZO EXITOSAMENTE "
+   dnxver " TU IP SE ENLAZO EXITOSAMENTE "
    REQUEST=$(ofus "$Key"|cut -d'/' -f2)
    [[ ! -d ${SCPinstal} ]] && mkdir ${SCPinstal}
    pontos="."
