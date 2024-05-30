@@ -187,6 +187,7 @@ exit&&exit
 
 
 funkey () {
+unset key
 while [[ ! $Key ]]; do
 msg -ne "KEY: " && read Key
 tput cuu1 && tput dl1
