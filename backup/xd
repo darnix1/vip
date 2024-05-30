@@ -186,8 +186,7 @@ exit&&exit
 }
 
 
-funkey () {
-unset key
+
 while [[ ! $Key ]]; do
 msg -ne "KEY: " && read Key
 tput cuu1 && tput dl1
@@ -232,4 +231,4 @@ if [[ -e $HOME/lista-arq ]] && [[ ! $(cat $HOME/lista-arq|grep "KEY INVALIDA!") 
 else
 invalid_key
 fi
-}
+
