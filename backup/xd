@@ -7,7 +7,7 @@ SCPusr="${SCPdir}/ger-user"
 SCPfrm="/etc/ger-frm"
 SCPinst="/etc/ger-inst"
 
-dnxroj() { echo -e "\e[1;37;41m${*}\e[0m":}
+dnxroj() { echo -e "\e[1;37;41m${*}\e[0m";}
 dnxver() { echo -e "\e[1;37;42m${*}\e[0m";}
 
 [[ $(dpkg --get-selections|grep -w "gawk"|head -1) ]] || apt-get install gawk -y &>/dev/null
