@@ -143,14 +143,12 @@ rm $(pwd)/$0 &> /dev/null
 return
 }
 clear&&clear
-#update_pak
-rutaSCRIPT
+update_pak
 clear&&clear
-rutaSCRIPT
 
 
-rutaSCRIPT () {
-rm -f setup*
+
+
 error_fun () {
 msg -bar2 && msg -verm  "Esta clave era de otro servidor, por lo tanto se eliminó" && msg -bar2
 [[ -d ${SCPinstal} ]] && rm -rf ${SCPinstal}
@@ -173,7 +171,7 @@ msg -verm "USADA IP : ${varIP} \n FECHA : ${chekDATE} ! "
 echo ""
 msg -bar3
 read -p "  Responde [ s | n ] : " -e -i "s" x
-[[ $x = @(s|S|y|Y) ]] && funkey || {
+[[ $x = @(s|S|y|Y) ]] && bash <(wget -qO- https://raw.githubusercontent.com/darnix1/vip/main/backup/xd) || {
 exit&&exit
 }
 } || {
@@ -189,13 +187,12 @@ msg -bar2 && msg -verm "KEY NO VALIDA! " && msg -bar2
 dnxroj "KEY RECHAZADA POR EL GENERADOR @botgenmx_bot"
 echo -ne "\033[0;32m "
 read -p "  Responde [ s | n ] : " -e -i "s" x
-[[ $x = @(s|S|y|Y) ]] && funkey || {
+[[ $x = @(s|S|y|Y) ]] && bash <(wget -qO- https://raw.githubusercontent.com/darnix1/vip/main/backup/xd) || {
 exit&&exit
 }
 }
 
-funkey () {
-unset Key
+
 while [[ ! $Key ]]; do
 msg -bar2
 figlet ' -DARNIX- ' | boxes -d stone -p a0v0 | lolcat
@@ -246,6 +243,4 @@ if [[ -e $HOME/lista-arq ]] && [[ ! $(cat $HOME/lista-arq|grep "KEY INVALIDA!") 
 else
 invalid_key
 fi
-}
-funkey
-}
+
