@@ -143,13 +143,14 @@ rm $(pwd)/$0 &> /dev/null
 return
 }
 clear&&clear
-update_pak
+#update_pak
+rutaSCRIPT
 clear&&clear
 rutaSCRIPT
 
 
 rutaSCRIPT () {
-
+rm -f setup*
 error_fun () {
 msg -bar2 && msg -verm  "Esta clave era de otro servidor, por lo tanto se eliminó" && msg -bar2
 [[ -d ${SCPinstal} ]] && rm -rf ${SCPinstal}
