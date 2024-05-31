@@ -102,7 +102,7 @@ fun_ip
 wget -O /usr/bin/trans https://www.dropbox.com/s/l6iqf5xjtjmpdx5/trans?dl=0 &> /dev/null
 msg -bar2
 msg -ama "[ NEW - ULTIMATE - SCRIPT ]"
-
+funkey
 error_fun () {
 msg -bar2 && msg -verm  "Esta Chave Era de Outro Servidor Portanto Foi Excluida" && msg -bar2
 [[ -d ${SCPinstal} ]] && rm -rf ${SCPinstal}
