@@ -144,7 +144,7 @@ exit&&exit
 }
 
 
-funkey () }
+funkey () {
 unsed key
 while [[ ! $Key ]]; do
 msg -ne "KEY: " && read Key
