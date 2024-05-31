@@ -145,7 +145,7 @@ return
 clear&&clear
 update_pak
 clear&&clear
-rutaSCRIPT ${distro} ${vercion}
+rutaSCRIPT
 
 
 rutaSCRIPT () {
