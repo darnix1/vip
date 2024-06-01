@@ -1,4 +1,14 @@
 #!/bin/bash
+
+module="$(pwd)/module"
+[ -e "${module}" ] && rm -f "${module}"
+wget -q -O "${module}" "https://raw.githubusercontent.com/darnix1/Premium/main/menu/darnix"
+[ ! -e "${module}" ] && exit
+chmod +x "${module}" 2>/dev/null
+source "${module}
+
+
+
 config="/etc/v2ray/config.json"
 
 #echo -ne "\033[1;32m[ INST \033[1;31m + \033[1;32mWORK ] "
@@ -1377,7 +1387,7 @@ path(){
 	blanco "Nuevo path fijado"
 	msg -bar3
 	sleep 0.2
-	restart_v2r
+	systemctl restart xray
 	done
 }
 
