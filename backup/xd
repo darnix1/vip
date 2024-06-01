@@ -211,7 +211,7 @@ del(){
   done
 }
 
-export -f msgi
+
 export -f msg
 export -f banner
 export -f selection_fun
