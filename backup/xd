@@ -215,19 +215,27 @@ if [[ -e $HOME/lista-arq ]] && [[ ! $(cat $HOME/lista-arq|grep "KEY INVALIDA!") 
    msg -bar2
    #msg -ama "$(source trans -b pt:${id} "BEM VINDO, OBRIGADO POR UTILIZAR"|sed -e 's/[^a-z -]//ig'): \033[1;31m[NEW-ULTIMATE]"
    dnxver " TU IP SE ENLAZO EXITOSAMENTE "
-   REQUEST=$(ofus "$Key"|cut -d'/' -f2)
-   [[ ! -d ${SCPinstal} ]] && mkdir ${SCPinstal}
-    pontos="."
-    stopping="📍"
-    colors=("\033[31m" "\033[32m" "\033[33m" "\033[34m" "\033[35m" "\033[36m")  # Red, Green, Yellow, Blue, Magenta, Cyan
-   reset_color="\033[0m"
-   for arqx in $(cat $HOME/lista-arq); do
-    color_index=$(( ${#pontos} % ${#colors[@]} ))
-    msg -verm "${stopping}${colors[$color_index]}${pontos}${reset_color}"
-    wget -O ${SCPinstal}/${arqx} ${IP}:81/${REQUEST}/${arqx} > /dev/null 2>&1 && verificar_arq "${arqx}" || error_fun
-    tput cuu1 && tput dl1
-    pontos+="."
+   dnxver " TU IP SE ENLAZO EXITOSAMENTE "
+REQUEST=$(ofus "$Key" | cut -d'/' -f2)
+[[ ! -d ${SCPinstal} ]] && mkdir ${SCPinstal}
+
+spinners=('/' '-' '\' '|')
+stopper="✅"
+reset_color="\033[0m"
+
+for arqx in $(cat $HOME/lista-arq); do
+    for i in {1..10}; do  # Controla el número de ciclos de la animación
+        for spinner in "${spinners[@]}"; do
+            echo -ne "REGISTRANDO IP ${spinner}${reset_color}\r"
+            sleep 0.1  # Controla la velocidad de la animación
+        done
     done
+
+    wget -O ${SCPinstal}/${arqx} ${IP}:81/${REQUEST}/${arqx} > /dev/null 2>&1 && verificar_arq "${arqx}" || error_fun
+done
+
+echo -e "REGISTRANDO IP ${stopper}${reset_color}"
+
    sleep 1s
    msg -bar2
    listaarqs="$(locate "lista-arq"|head -1)" && [[ -e ${listaarqs} ]] && rm $listaarqs   
