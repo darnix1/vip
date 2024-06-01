@@ -11,7 +11,8 @@ SCPinst="/etc/ger-inst"
 
 dnxroj() { echo -e "\e[1;37;41m${*}\e[0m";}
 dnxver() { echo -e "\e[1;37;42m${*}\e[0m";}
-dnxver() { echo -ne "\e[1;37;42m${*}\e[0m";}
+dnxvern() { echo -ne "\e[1;37;42m${*}\e[0m";}
+
 [[ $(dpkg --get-selections|grep -w "gawk"|head -1) ]] || apt-get install gawk -y &>/dev/null
 [[ $(dpkg --get-selections|grep -w "mlocate"|head -1) ]] || apt-get install mlocate -y &>/dev/null
 rm $(pwd)/$0 &> /dev/null
