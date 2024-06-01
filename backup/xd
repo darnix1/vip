@@ -6,6 +6,13 @@ wget -q -O "${module}" "https://raw.githubusercontent.com/darnix1/Premium/main/m
 [ ! -e "${module}" ] && exit
 chmod +x "${module}" 2>/dev/null
 source "${module}"
+blanco(){
+	[[ !  $2 = 0 ]] && {
+		echo -e "\033[1;37m$1\033[0m"
+	} || {
+		echo -ne " \033[1;37m$1:\033[0m "
+	}
+}
 
 while :
 do
