@@ -231,7 +231,7 @@ export -f del
 
 title -ama "ADMINISTRACION DE USUARIOS HWID"
 
-	menu_func "NUEVO CLIENTE SSH 👤 "\
+	menu_func "NUEVO CLIENTE SSH 👤 " \
 "USUARIO TEMPORAL SSH " \
 "$(msg -verd "EDITAR RENOVAR CLIENTE") " \
 "⚠️ ELIMINAR CLIENTE ⚠️\n$(msg -bar2)" \
@@ -239,7 +239,7 @@ title -ama "ADMINISTRACION DE USUARIOS HWID"
 "CONFIGURACION SE USUARIOS" \
 " $(msg -ama "CAMBIAR LIMITE DE IP USER")\n$(msg -bar2)" \
 "CONFIGURAR BLOQUEO LOGIN" \
-#"⚠️ $(msg -verm2 "CAMBIAR LÍMITE DE IP") ⚠️\n$(msg -bar2)" \
+" $(msg -verm2 "CAMBIAR BANNER SSH") \n$(msg -bar2)" \
 #"BACKUP CLIENTES" \
 #"-bar DESACTIVAR PASS ALFANUMERICO $(msg -blu "(VULTR)")" \
 #"CAMBIAR A MODO SSH/TOKEN"
