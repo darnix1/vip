@@ -231,18 +231,18 @@ export -f del
 
 title -ama "ADMINISTRACION DE USUARIOS HWID"
 
-	menu_func "NUEVO CLIENTE HWID ✏️ " "Hola Bienvenido"\
-"$(msg -verm2 "REMOVER CLIENTE") 🗑 " \
-"$(msg -verd "EDITAR/RENOVAR CLIENTE") ♻️" \
-"BLOQ/DESBLOQ CLIENTE 🔒\n$(msg -bar3)" \
-"$(msg -verd "DETALLES DE TODOS CLIENTES") 🔎" \
-"MONITOR DE CLIENTES CONECTADOS" \
-"🔒 $(msg -ama "LIMITADOR-DE-CUENTAS-EXPIRADAS") 🔒 $lim\n$(msg -bar3)" \
-"ELIMINAR CLIENTES VENCIDOS" \
-"⚠️ $(msg -verm2 "ELIMINAR TODOS LOS CLIENTES") ⚠️\n$(msg -bar3)" \
-"BACKUP CLIENTES" \
-"-bar DESACTIVAR PASS ALFANUMERICO $(msg -blu "(VULTR)")" \
-"CAMBIAR A MODO SSH/TOKEN"
+	menu_func "NUEVO CLIENTE SSH 👤 "\
+"USUARIO TEMPORAL SSH " \
+"$(msg -verd "EDITAR RENOVAR CLIENTE") " \
+"⚠️ ELIMINAR CLIENTE ⚠️\n$(msg -bar2)" \
+"$(dnxver "VER CLIENTES CONECTADOS ") " \
+"CONFIGURACION SE USUARIOS" \
+" $(msg -ama "CAMBIAR LIMITE DE IP USER")\n$(msg -bar2)" \
+"CONFIGURAR BLOQUEO LOGIN" \
+#"⚠️ $(msg -verm2 "CAMBIAR LÍMITE DE IP") ⚠️\n$(msg -bar2)" \
+#"BACKUP CLIENTES" \
+#"-bar DESACTIVAR PASS ALFANUMERICO $(msg -blu "(VULTR)")" \
+#"CAMBIAR A MODO SSH/TOKEN"
 
 	back
 	selection=$(selection_fun 12)
