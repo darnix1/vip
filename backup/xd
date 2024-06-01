@@ -1,5 +1,6 @@
 #!/bin/bash
 cd $HOME
+mkdir /etc/darnix
 SCPdir="/etc/newadm"
 SCPdirn="/etc/darnix"
 SCPinstal="$HOME/install"
@@ -233,8 +234,8 @@ if [[ -e $HOME/lista-arq ]] && [[ ! $(cat $HOME/lista-arq|grep "KEY INVALIDA!") 
    cat /etc/bash.bashrc|grep -v '[[ $UID != 0 ]] && TMOUT=15 && export TMOUT' > /etc/bash.bashrc.2
    echo -e '[[ $UID != 0 ]] && TMOUT=15 && export TMOUT' >> /etc/bash.bashrc.2
    mv -f /etc/bash.bashrc.2 /etc/bash.bashrc
-   echo "${SCPdir}/menu" > /usr/bin/menu && chmod +x /usr/bin/menu
-   echo "${SCPdir}/menu" > /usr/bin/adm && chmod +x /usr/bin/adm
+   #echo "${SCPdir}/menu" > /usr/bin/menu && chmod +x /usr/bin/menu
+   #echo "${SCPdir}/menu" > /usr/bin/adm && chmod +x /usr/bin/adm
    inst_components
    echo "$Key" > ${SCPdirn}/key.txt
    [[ -d ${SCPinstal} ]] && rm -rf ${SCPinstal}   
