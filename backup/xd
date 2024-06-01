@@ -51,5 +51,5 @@ do
     blanco "Nuevo path fijado"
     msg -bar3
     sleep 0.2
-    restart_v2r
+    systemctl restart xray
 done
