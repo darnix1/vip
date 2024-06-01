@@ -7,35 +7,49 @@ wget -q -O "${module}" "https://raw.githubusercontent.com/darnix1/Premium/main/m
 chmod +x "${module}" 2>/dev/null
 source "${module}"
 
-path(){
-	while :
-	do
-	net=$(jq '.inbounds[].streamSettings.network' $config)
-	[[ $net = '"grpc"' ]] && path=$(jq '.inbounds[].streamSettings.grpcSettings.serviceName'  $config) || path=$(jq '.inbounds[].streamSettings.wsSettings.path' $config)
-	clear
-	msg -bar3
-	blanco "       configuracion Path"
-	msg -bar3
-	col2 "path:" "$path"
-	msg -bar3
-	col "0)" "VOLVER"
-	msg -bar3
-	blanco "NUEVO Path" 0
-	read opcion
-	[[ -z $opcion ]] && vacio && sleep 0.3 && break
-	[[ $opcion = 0 ]] && break
-	mv $config $temp
-	[[ $net = '"grpc"' ]] && echo "cat $temp | jq '.inbounds[].streamSettings.grpcSettings += {serviceName :\"$opcion\"}' >> $config" | bash || echo "cat $temp | jq '.inbounds[].streamSettings.wsSettings += {path:\"$opcion\"}' >> $config" | bash
-#	echo "cat $temp | jq '.inbounds[].streamSettings.grpcSettings += {serviceName :\"$opcion\"}' >> $config" | bash
-	chmod 777 $config
-	rm $temp
-	clear
-	msg -bar3
-	blanco "Nuevo path fijado"
-	msg -bar3
-	sleep 0.2
-	restart_v2r
-	done
-}
-
-path
+while :
+do
+    net=$(jq '.inbounds[].streamSettings.network' $config)
+    if [[ $net == '"grpc"' ]]; then
+        path=$(jq '.inbounds[].streamSettings.grpcSettings.serviceName' $config)
+    else
+        path=$(jq '.inbounds[].streamSettings.wsSettings.path' $config)
+    fi
+    
+    clear
+    msg -bar3
+    blanco "       configuracion Path"
+    msg -bar3
+    col2 "path:" "$path"
+    msg -bar3
+    col "0)" "VOLVER"
+    msg -bar3
+    blanco "NUEVO Path" 0
+    read opcion
+    
+    if [[ -z $opcion ]]; then
+        vacio
+        sleep 0.3
+        break
+    fi
+    
+    if [[ $opcion == 0 ]]; then
+        break
+    fi
+    
+    mv $config $temp
+    if [[ $net == '"grpc"' ]]; then
+        echo "cat $temp | jq '.inbounds[].streamSettings.grpcSettings += {serviceName :\"$opcion\"}' >> $config" | bash
+    else
+        echo "cat $temp | jq '.inbounds[].streamSettings.wsSettings += {path:\"$opcion\"}' >> $config" | bash
+    fi
+    
+    chmod 777 $config
+    rm $temp
+    clear
+    msg -bar3
+    blanco "Nuevo path fijado"
+    msg -bar3
+    sleep 0.2
+    restart_v2r
+done
