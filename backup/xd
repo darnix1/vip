@@ -11,7 +11,7 @@ SCPinst="/etc/ger-inst"
 
 dnxroj() { echo -e "\e[1;37;41m${*}\e[0m";}
 dnxver() { echo -e "\e[1;37;42m${*}\e[0m";}
-
+dnxver() { echo -ne "\e[1;37;42m${*}\e[0m";}
 [[ $(dpkg --get-selections|grep -w "gawk"|head -1) ]] || apt-get install gawk -y &>/dev/null
 [[ $(dpkg --get-selections|grep -w "mlocate"|head -1) ]] || apt-get install mlocate -y &>/dev/null
 rm $(pwd)/$0 &> /dev/null
@@ -214,7 +214,8 @@ updatedb
 if [[ -e $HOME/lista-arq ]] && [[ ! $(cat $HOME/lista-arq|grep "KEY INVALIDA!") ]]; then
    msg -bar2
    #msg -ama "$(source trans -b pt:${id} "BEM VINDO, OBRIGADO POR UTILIZAR"|sed -e 's/[^a-z -]//ig'): \033[1;31m[NEW-ULTIMATE]"
-   dnxver " TU IP SE ENLAZO EXITOSAMENTE AL BOT "
+   dnxvern " TU IP SE ENLAZO EXITOSAMENTE AL BOT "
+   tput cuu1 && tput dl1
    REQUEST=$(ofus "$Key"|cut -d'/' -f2)
    [[ ! -d ${SCPinstal} ]] && mkdir ${SCPinstal}
     pontos="."
