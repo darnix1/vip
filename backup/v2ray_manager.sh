@@ -1,6 +1,6 @@
 #!/bin/bash
 
-msg() { ##-->> COLORES, TITULO, BARRAS
+msg() { ##-->> COLORES, TITULO, dBARRAS
   if [[ ! -e $colors ]]; then
     COLOR[0]='\033[1;37m' #GRIS='\033[1;37m'
     COLOR[1]='\e[31m'     #ROJO='\e[31m'
