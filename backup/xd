@@ -1,1 +1,41 @@
-x
+#!/bin/bash
+module="$(pwd)/module"
+[ -e "${module}" ] && rm -f "${module}"
+wget -q -O "${module}" "https://raw.githubusercontent.com/darnix1/Premium/main/menu/darnix"
+[ ! -e "${module}" ] && exit
+chmod +x "${module}" 2>/dev/null
+source "${module}"
+
+
+title -ama "ADMINISTRACION DE USUARIOS HWID"
+
+	menu_func "NUEVO CLIENTE HWID ✏️ " "Hola Bienvenido"\
+"$(msg -verm2 "REMOVER CLIENTE") 🗑 " \
+"$(msg -verd "EDITAR/RENOVAR CLIENTE") ♻️" \
+"BLOQ/DESBLOQ CLIENTE 🔒\n$(msg -bar3)" \
+"$(msg -verd "DETALLES DE TODOS CLIENTES") 🔎" \
+"MONITOR DE CLIENTES CONECTADOS" \
+"🔒 $(msg -ama "LIMITADOR-DE-CUENTAS-EXPIRADAS") 🔒 $lim\n$(msg -bar3)" \
+"ELIMINAR CLIENTES VENCIDOS" \
+"⚠️ $(msg -verm2 "ELIMINAR TODOS LOS CLIENTES") ⚠️\n$(msg -bar3)" \
+"BACKUP CLIENTES" \
+"-bar DESACTIVAR PASS ALFANUMERICO $(msg -blu "(VULTR)")" \
+"CAMBIAR A MODO SSH/TOKEN"
+
+	back
+	selection=$(selection_fun 12)
+	case ${selection} in
+		0)break;;
+		1)new_user;;
+		2)remove_user;;
+		3)renew_user;;
+		4)block_user;;
+		5)detail_user;;
+		6)sshmonitor;;
+		7)limiter;;
+		8)rm_vencidos;;
+		9)eliminar_all;;
+		10)backup;;
+		11)ULK_ALF;;
+    12)USER_MODE && break;;
+	esac
