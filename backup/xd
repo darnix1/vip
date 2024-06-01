@@ -7,6 +7,66 @@ wget -q -O "${module}" "https://raw.githubusercontent.com/darnix1/Premium/main/m
 chmod +x "${module}" 2>/dev/null
 source "${module}"
 
+on_off_res(){
+	if [[ $(cat $v2rdir/conf | grep "autBackup" | cut -d " " -f2) = "0" ]]; then
+		echo -e "\033[0;31m[off]"
+	else
+		echo -e "\033[1;92m[on]"
+	fi
+ }
+
+blanco(){
+	[[ !  $2 = 0 ]] && {
+		echo -e "\033[1;37m$1\033[0m"
+	} || {
+		echo -ne " \033[1;37m$1:\033[0m "
+	}
+}
+
+verde(){
+	[[ !  $2 = 0 ]] && {
+		echo -e "\033[1;32m$1\033[0m"
+	} || {
+		echo -ne " \033[1;32m$1:\033[0m "
+	}
+}
+
+rojo(){
+	[[ !  $2 = 0 ]] && {
+		echo -e "\033[1;31m$1\033[0m"
+	} || {
+		echo -ne " \033[1;31m$1:\033[0m "
+	}
+}
+
+col(){
+
+	nom=$(printf '%-55s' "\033[0;92m${1} \033[0;31m>> \033[1;37m${2}")
+	echo -e "	$nom\033[0;31m${3}   \033[0;92m${4}\033[0m"
+}
+
+col2(){
+
+	echo -e " \033[1;91m$1\033[0m \033[1;37m$2\033[0m"
+}
+
+vacio(){
+
+	blanco "\n no se puede ingresar campos vacios..."
+}
+
+cancelar(){
+
+	echo -e "\n \033[3;49;31minstalacion cancelada...\033[0m"
+}
+
+continuar(){
+
+	echo -e " \033[3;49;32mEnter para continuar...\033[0m"
+}
+
+
+
 path(){
 	while :
 	do
