@@ -10,7 +10,8 @@ clear
 # Valid Script
 
 clear
-wsstunnel=" | grep -w "SSL(HTTPS)" | cut -d: -f2|sed 's/ //g')"
+mkdir log-install.txt
+wsstunnel="$(cat ~/log-install.txt | grep -w "SSL(HTTPS)" | cut -d: -f2|sed 's/ //g')"
 ssl="$(cat /etc/stunnel/stunnel.conf | grep -i accept | head -n 2 | cut -d= -f2 | sed 's/ //g' | tr '\n' ' ' | awk '{print $1}')"
 ssl2="$(cat /etc/stunnel/stunnel.conf | grep -i accept | head -n 2 | cut -d= -f2 | sed 's/ //g' | tr '\n' ' ' | awk '{print $2}')"
 echo -e "\e[0;34m.-----------------------------------------.\e[0m"
