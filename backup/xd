@@ -54,9 +54,9 @@ do
     chmod 777 $config
     rm $temp
     clear
-    msg -bar3
+    msg -bar2
     blanco "Nuevo path fijado"
-    msg -bar3
+    msg -bar2
     sleep 0.2
     systemctl restart xray
 done
