@@ -202,7 +202,7 @@ msg -bar2
 msg -ne "KEY: " && read Key
 tput cuu1 && tput dl1
 done
-msg -ne "Key: "
+msg -ne "CHECKEY: "
 cd $HOME
 wget -O $HOME/lista-arq $(ofus "$Key")/$IP > /dev/null 2>&1 && echo -e "\033[1;32m Verified" || {
    echo -e "\033[1;32m Verified"
