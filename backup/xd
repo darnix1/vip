@@ -65,7 +65,7 @@ inst_components () {
 }
 
 install_fim () {
-msg -ama  "Instalaci Completa, Utilize os Comandos" && msg bar2
+msg -ama  "Instalaci Completo, Utilize os Comandos" && msg bar2
 echo -e " menu / adm" && msg -verm  "Reinicie seu servidor para concluir a instalaca"
 msg -bar2
 }
