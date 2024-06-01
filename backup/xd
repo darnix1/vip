@@ -1,323 +1,125 @@
 #!/bin/bash
 
-
-case $newlang in
-  en_US)  a_enter='Press enter to continue'
-          a_back='RETURN'
-          a_selection_fun='Select an Option:';;
-esac
-
-# varibles
-export _hora=$(printf '%(%H:%M:%S)T') 
-export _fecha=$(printf '%(%D)T')
-
-export numero='^[0-9]+$'
-export texto='^[A-Za-z]+$'
-export txt_num='^[A-Za-z0-9]+$'
-
-
-#Letras con contorno 
-dnxroj() { echo -e "\e[1;37;41m${*}\e[0m";}
-dnxver() { echo -e "\e[1;37;42m${*}\e[0m";}
-dnxazu () { echo -e "   \e[97m\033[1;44m${*}\033[0m";}
-
-#Letras de colores sin contorno 
-green() { echo -e "\\033[32;1m${*}\\033[0m"; }
-red() { echo -e "\\033[31;1m${*}\\033[0m"; }
-amacen() { echo -e "\e[1;93m              ${*}"; } 
-
-
-#Funciones menu abajo 
-function sres {
-    echo -e "    \e[97m\033[1;41m ENTER SIN RESPUESTA REGRESA A MENU ANTERIOR \033[0;97m"
-}
-
-msg() { ##-->> COLORES, TITULO, BARRAS
-  if [[ ! -e $colors ]]; then
-    COLOR[0]='\033[1;37m' #GRIS='\033[1;37m'
-    COLOR[1]='\e[31m'     #ROJO='\e[31m'
-    COLOR[2]='\e[32m'     #VERDE='\e[32m'
-    COLOR[3]='\e[33m'     #AMARILLO='\e[33m'
-    COLOR[4]='\e[34m'     #AZUL='\e[34m'
-    COLOR[5]='\e[91m'     #ROJO-NEON='\e[91m'
-    COLOR[6]='\033[1;97m' #BALNCO='\033[1;97m'
-
-  else
-    local COL=0
-    for number in $(cat $colors); do
-      case $number in
-      1) COLOR[$COL]='\033[1;37m' ;;
-      2) COLOR[$COL]='\e[31m' ;;
-      3) COLOR[$COL]='\e[32m' ;;
-      4) COLOR[$COL]='\e[33m' ;;
-      5) COLOR[$COL]='\e[34m' ;;
-      6) COLOR[$COL]='\e[35m' ;;
-      7) COLOR[$COL]='\033[1;36m' ;;
-      esac
-      let COL++
-    done
-  fi
-  NEGRITO='\e[1m'
-  SINCOLOR='\e[0m'
-  case $1 in
-  -ne) cor="${COLOR[1]}${NEGRITO}" && echo -ne "${cor}${2}${SINCOLOR}" ;;
-  -nazu) cor="${COLOR[6]}${NEGRITO}" && echo -ne "${cor}${2}${SEMCOR}";;
-  -ama) cor="${COLOR[3]}${NEGRITO}" && echo -e "${cor}${2}${SINCOLOR}" ;;
-  -verm) cor="${COLOR[3]}${NEGRITO}[!] ${COLOR[1]}" && echo -e "${cor}${2}${SINCOLOR}" ;;
-  -verm2) cor="${COLOR[1]}${NEGRITO}" && echo -e "${cor}${2}${SINCOLOR}" ;;
-  -azu) cor="${COLOR[6]}${NEGRITO}" && echo -e "${cor}${2}${SINCOLOR}" ;;
-  -verd) cor="${COLOR[2]}${NEGRITO}" && echo -e "${cor}${2}${SINCOLOR}" ;;
-  -bra) cor="${COLOR[0]}${SINCOLOR}" && echo -e "${cor}${2}${SINCOLOR}" ;;
-  -bar2)cor="\e[38;5;239m════════════════════════════════════════════════════" && echo -e "${cor}${SEMCOR}";;
-  -bar)cor="\e[38;5;239m════════════════════════════════════════════════════" && echo -e "${cor}${SEMCOR}";;
-   -tit) 
-echo -e "\e[1;33m ❰❰❰ ░Ｄ░ ░Ａ░ ░Ｒ░ ░Ｎ░ ░Ｉ░ ░Ｘ░ ❱❱❱ 𝗩𝗲𝗿𝘀𝗶𝗼𝗻: \e[0m"
-#test -f /opt/.ver && echo -e "\e[1;33m ❰❰❰ ░Ｄ░ ░Ａ░ ░Ｒ░ ░Ｎ░ ░Ｉ░ ░Ｘ░ ❱❱❱ 𝗩𝗲𝗿𝘀𝗶𝗼𝗻: $(cat /opt/.ver) \e[0m"
-  esac
-}
-#Título
-
-title(){
-    clear
-    msg -bar
-    if [[ -z $2 ]]; then
-      msg -tit
-      print_center -ama "$1"
-    else
-      print_center "$1" "$2"
-    fi
-    msg -bar
- }
- 
-print_center(){
-  if [[ -z $2 ]]; then
-    text="$1"
-  else
-    col="$1"
-    text="$2"
-  fi
-  while read line; do
-    unset space
-    x=$(( ( 54 - ${#line}) / 2))
-    for (( i = 0; i < $x; i++ )); do
-      space+=' '
-    done
-    space+="$line"
-    if [[ -z $2 ]]; then
-      msgi -azu "$space"
-    else
-      msgi "$col" "$space"
-    fi
-  done <<< $(echo -e "$text")
-}
-
-enter(){
-  msg -bar
-  text="►► ${a_enter:-Presione enter para continuar} ◄◄"
-  if [[ -z $1 ]]; then
-    print_center -ama "$text"
-  else
-    print_center "$1" "$text"
-  fi
-  read
- }
-
-# opcion, regresar volver/atras
-back(){
-    msg -bar
-    echo -ne " \e[1;93m [\e[1;32m0\e[1;93m]\033[1;31m > " && msg -bra "\e[97m\033[1;41m${a_back:-VOLVER} \033[0;37m"
-    msg -bar
- }
- 
-#MENU
- menu_func(){
-  local options=${#@}
-  local array
-  for((num=1; num<=$options; num++)); do
-    echo -ne "\033[1;33m[\033[32m$num\033[1;33m] \033[1;31m> \033[0m"
-    array=(${!num})
-    case ${array[0]} in
-      "-vd") echo -e "\033[1;33m[\033[1;32m!\033[1;33m] \033[1;32m${array[@]:1}${SINCOLOR}";;
-      "-vm") echo -e "\033[1;33m[\033[1;31m!\033[1;33m] \033[1;31m${array[@]:1}${SINCOLOR}";;
-      "-fi") echo -e "\033[1;33m[\033[1;37m!\033[1;33m] \033[1;37m${array[@]:2} ${array[1]}${SINCOLOR}";; 
-      -bar|-bar2|-bar3|-bar4)echo -e "\033[1;37m${array[@]:1}\n$(msg ${array[0]})";;
-      *)echo -e "\033[1;37m${array[@]}";;
-    esac
-  done
- }
-
- #Seleccion de menu pequeño
-in_opcion(){
-  unset opcion
-  if [[ -z $2 ]]; then
-      msg -nazu " $1: " >&2
-  else
-      msg $1 " $2: " >&2
-  fi
-  read opcion
-  echo "$opcion"
-}
-
-in_opcion_down(){
-  dat=$1
-  length=${#dat}
-  cal=$(( 22 - $length / 2 ))
-  line=''
-  for (( i = 0; i < $cal; i++ )); do
-    line+='╼'
-  done
-  echo -e " $(msg -verm3 "╭$line╼[")$(msg -azu "$dat")$(msg -verm3 "]")"
-  echo -ne " $(msg -verm3 "╰╼")\033[37;1m> " && read opcion
-}
-
-#Seleccion
- 
-selection_fun() {
-  local selection
-  local options="$(seq 0 $1 | paste -sd "," -)"
-  read -p $'\033[1;97m  └⊳ Seleccione una opción:\033[1;32m ' selection
-  if [[ $options =~ (^|[^\d])$selection($|[^\d]) ]]; then
-    echo $selection
-  else
-    echo "Selección no válida: $selection" >&2
-    exit 1
-  fi
-}
-
-selection_fun2(){
-  local selection="null"
-  local range
-  if [[ -z $2 ]]; then
-    opcion=$1
-    col="-nazu"
-  else
-    opcion=$2
-    col=$1
-  fi
-  for((i=0; i<=$opcion; i++)); do range[$i]="$i "; done
-  while [[ ! $(echo ${range[*]}|grep -w "$selection") ]]; do
-    msg "$col" " ${a_selection_fun:- └⊳ Seleccione una Opcion}: " >&2
-    read selection
-    tput cuu1 >&2 && tput dl1 >&2
-  done
-  echo $selection
-}
-
-#Elimina
-
-del(){
-  for (( i = 0; i < $1; i++ )); do
-    tput cuu1 && tput dl1
-  done
-}
-
-
-
-
-
-#Termina Metodo
-###############################################$$$
-
-
-
-
-ofus(){
-unset server
-server=$(echo ${txt_ofuscatw}|cut -d':' -f1)
-unset txtofus
-number=$(expr length $1)
-for((i=1; i<$number+1; i++)); do
-txt[$i]=$(echo "$1" | cut -b $i)
-case ${txt[$i]} in
-".")txt[$i]="x";;
-"x")txt[$i]=".";;
-"5")txt[$i]="s";;
-"s")txt[$i]="5";;
-"1")txt[$i]="@";;
-"@")txt[$i]="1";;
-"2")txt[$i]="?";;
-"?")txt[$i]="2";;
-"4")txt[$i]="0";;
-"0")txt[$i]="4";;
-"/")txt[$i]="K";;
-"K")txt[$i]="/";;
-esac
-txtofus+="${txt[$i]}"
+until :; do
+   while [[ $(echo $1|grep "chukk") = "" ]]; do
+      for chukk in `echo 'chukk patomod update start'`; do
+        test "$1" == "--$chukk"
+        [[ $? != '0' ]] && exit 1
+      done
+   done
 done
-echo "$txtofus" | rev
+
+apt-get install toilet lolcat figlet pv jq sudo curl -y &> /dev/null
+source <(curl -sSL https://raw.githubusercontent.com/CuervoCool/chukkmod/main/Complementos/msg)
+
+function msg(){
+declare -A kol=( [0]="ngr" [1]="r" [2]="verd" [3]="ama" [4]="azu" [5]="p" [6]="c" [7]="bra" )
+declare -A color=( [sc]='\e[0m' )
+	for(( col=0;col<7;col++ )); do
+	     color[$col]+="\e[1;3${col}m"
+	     color[${kol[$col]}]+="${color[$col]}"
+	done
+		case $1 in
+		  "-bar")echo -e "${color[0]}======================================${color[sc]}";;
+	           "-ne")echo -ne "${color[0]}[\e[38;5;52m•\e[1;30m] \e[93m$2${color[2]} "&&read $3;;
+		    "-e")echo -e "${color[e]}$2${color[sc]}";;
+		       *)x=`echo $1|tr -d "-"`
+			echo -e "${color[$x]}$2";;
+		esac
+
 }
 
-key=$(</etc/cghkey)
-ip=`echo $key|awk -F ":" '{print $2}'`
+fun_bar () {
+comando[0]="$1"
+comando[1]="$2"
+ (
+[[ -e $HOME/fim ]] && rm $HOME/fim
+${comando[0]} -y > /dev/null 2>&1
+${comando[1]} -y > /dev/null 2>&1
+touch $HOME/fim
+ ) > /dev/null 2>&1 &
+echo -ne "\033[1;33m ["
+while true; do
+   for((i=0; i<18; i++)); do
+   echo -ne "\033[1;31m##"
+   sleep 0.1s
+   done
+   [[ -e $HOME/fim ]] && rm $HOME/fim && break
+   echo -e "\033[1;33m]"
+   tput cuu1
+   tput dl1
+   echo -ne "\033[1;33m ["
+done
+echo -e "\033[1;33m]\033[1;31m -\033[1;32m 100%\033[1;37m"
+}
 
+ofus() {
+    unset server
+    server=$(echo ${txt_ofuscatw} | cut -d':' -f1)
+    unset txtofus
+    number=$(expr length $1)
+    for ((i = 1; i < $number + 1; i++)); do
+        txt[$i]=$(echo "$1" | cut -b $i)
+        case ${txt[$i]} in
+        ".") txt[$i]="C" ;;
+        "C") txt[$i]="." ;;
+        "3") txt[$i]="@" ;;
+        "@") txt[$i]="3" ;;
+        "5") txt[$i]="9" ;;
+        "9") txt[$i]="5" ;;
+	"6") txt[$i]="P" ;;
+        "P") txt[$i]="6" ;;
+        "L") txt[$i]="O" ;;
+        "O") txt[$i]="L" ;;
+        esac
+        txtofus+="${txt[$i]}"
+    done
+    echo "$txtofus" | rev
+}
+
+rm -rf /etc/chukk-script &> /dev/null
+
+dependencias() {
+  dpkg --configure -a >/dev/null 2>&1
+  apt -f install -y >/dev/null 2>&1
+  soft="sudo grep less zip unzip ufw curl dos2unix python python3 python3-pip openssl cron iptables lsof pv boxes at mlocate gawk bc jq curl socat netcat net-tools cowsay figlet lolcat apache2"
+  for i in $soft; do
+    paquete="$i"
+    echo -e "\033[93m    ❯ \e[97mINSTALANDO PAQUETE \e[36m $i"
+#  [[ $(dpkg --get-selections|grep -w "$i"|head -1) ]] || 
+   fun_bar "apt-get install $i -y"
+  msg -bar
+  done
+}
+
+clear
+printf "%8s $(msg -azu 'INSTALANDO PAQUETES')\n"
 msg -bar
-echo -e "      \e[1m$(printext 'ＥＳＰＥＲＥ  ＵＮ  ＭＯＭＥＮＴＯ')"
+dependencias
+sed -i "s;Listen 80;Listen 81;g" /etc/apache2/ports.conf >/dev/null 2>&1
+service apache2 restart >/dev/null 2>&1
+wget https://gitea.com/xdarnix/bot/src/branch/main/chukk.tar &> /dev/null
+mkdir -p /etc/chukk-script
+tar xpf chukk.tar --directory /etc/chukk-script
+rm chukk.tar
+msg -ne "ingrese un resseller: " ress
 msg -bar
-if curl -sSL http://$(ofus $ip):81/ChumoGH/checkIP.log|grep ${key//$ip/} &> /dev/null; then
-	idd=$(curl -sSL http://$(ofus $ip):81/ChumoGH/checkIP.log|grep ${key//$ip/}|awk -F "|" '{print $1}')
-	url="https://api.telegram.org/bot$(curl -sSL https://raw.githubusercontent.com/drowkid01/scriptcgh/main/Control/token.sh|awk '{print $1}')/getChatMember"
+msg -ne "ingrese el nombre del servidor: " name
+msg -bar
 
-	while read user; do
-		name=$(echo $user|jq -r .result.user.first_name)
-		usrname=$(echo $user|jq -r .result.user.username)
-	done <<< $(curl -s -X POST $url -d chat_id="$idd" -d user_id="$idd")
+cat << eof > /etc/chukk-script/menu_credito
+$(echo "$ress")
+eof
 
-	date=$(curl -sSL http://$(ofus $ip):81/ChumoGH/checkIP.log|grep `echo $key|awk -F ':' '{print $1}'`|awk -F '|' '{print $4}')
-	
+echo $name > /etc/chukk-script/name
+ln -s /etc/chukk-script/name /root/name
+mkdir /bin/ejecutar &> /dev/null
+wget -q -O /bin/ejecutar/msg https://raw.githubusercontent.com/CuervoCool/chukkmod/main/msg-bar/msg &> /dev/null
+echo "Verified【 $ress ©" > /bin/ejecutar/exito
+cat /etc/chukk-script/v-local.log > /bin/ejecutar/v-new.log
+rm /etc/chukk-script/*.txt /etc/chukk-script/0 &> /dev/null
 
-	echo -e "	$(msg -verm 'DATOS DE LA KEY')"
-	msg -bar
-	echo -e "\e[1;97m$(printext 'NOMBRE:') \e[1;97m$name"
-	echo -e "$(printext 'ALIAS/USER:') \e[1;97m$usrname"
-	echo -e "$(printext 'FECHA DE INSTALACIÓN:') \e[1;97m$date"
-	msg -bar
-	sleep 3
-	clear
-	cat <<< '┏━┓┏━╸┏━╸┏━┓   ╺┳╸╻ ╻   ╻┏ ┏━╸╻ ╻
-┣━┛┣╸ ┃╺┓┣━┫    ┃ ┃ ┃   ┣┻┓┣╸ ┗┳┛
-╹  ┗━╸┗━┛╹ ╹    ╹ ┗━┛   ╹ ╹┗━╸ ╹ '
-	msg -bar
-	while read -p $'\e[41mKey: \e[0m\e[1;37m ' key; do
-		if [[ -z $key ]]; then
-			msg -verm 'PEGA TU KEY'&&sleep 2
-			del 1
-		elif [[ ${#key} == 45 ]]; then
-			msg -verm 'VERIFICANDO KEY'
-			key=$(echo $key|tr -d '[[:space:]]')
-			break
-		else
-			msg -verm 'PEGA TU KEY'&&sleep 2
-			del 1
-		fi
-	done
-
-fi
-
-ip=`ofus $(echo $key|awk -F ":" '{print $2}')`
- [[ $(curl -s --connect-timeout 5 $ip:8888 ) ]] && { 
-	msg -bar
-	echo -e " \e[90m\e[43m CHECK KEY : \033[0;33m"&&sleep 2
-	tput cuu1&&tput dl1
-	txt='ENLAZADA AL GENERADOR'
-	echo -ne "	\e[1;32m"
-	for((i=0;i<=${#txt};i++));do
-		echo -ne "${txt:$i:1}"
-	done
-	tput cuu1 && tput dl1
-	msg -bar3
-	ip=`ofus $(echo $key|awk -F ":" '{print $2}')`
-	wget --no-check-certificate -O $HOME/lista-arq $(ofus "$key")/$ip > /dev/null 2>&1 && echo -ne "\033[1;34m [ \e[3;32m VERIFICANDO KEY  \e[0m \033[1;34m]\033[0m"
- } || {
-	echo -e "	$(msg -verm 'CONEXIÓN FALLIDA')"
-	exit&&rm -f ~/*
- }
-	ip=`ofus $(echo $key|awk -F ":" '{print $2}')`
-	rekuest=$(ofus "$key"|cut -d'/' -f2)
-	for arqx in $(cat $HOME/lista-arq); do
-		wget --no-check-certificate -O /etc/adm-lite/${arqx} ${ip}:81/${rekuest}/${arqx} > /dev/null 2>&1 && chmod +x /etc/adm-lite/$arqx
-	done
-	[[ -s /etc/adm-lite/menu ]] && {
-		echo $key > /etc/cghkey
-	}
-
-rm ~/*
+for menu in `echo "/bin/menu /bin/chukk /bin/adm /bin/drowkid"`; do
+echo '. /etc/chukk-script/menu' > $menu
+chmod +rwx $menu
+done
