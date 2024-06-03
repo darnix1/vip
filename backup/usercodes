@@ -6,6 +6,16 @@
 source <(curl -sSL https://raw.githubusercontent.com/emirjorge/Script-Z/master/CHUMO/msg-bar/msg)
 
 #LLENA USUARIO EN ARRAY $select_name DEL USUARIO
+
+number_var () {
+unset var_number
+if (echo "$1" | egrep '[^0-9]' &> /dev/null); then
+echo -e "${cor[5]} SOLO NUMEROS!"
+else
+var_number="$1"
+fi
+}
+
 select_users () {
 clear&&clear
 msg -bar3
