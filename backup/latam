@@ -32,6 +32,19 @@ dropbear_pids () {
 done
 }
 
+_on="\033[0;31m [\033[0;32mON\033[0;31m]"
+_off="\033[0;31m [OFF]"
+meu_ip () {
+  if [[ -e /bin/ejecutar/IPcgh ]]; then
+    IP="$(cat /bin/ejecutar/IPcgh)"
+  else
+    MEU_IP=$(ip addr | grep 'inet' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | grep -o -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | head -1)
+    MEU_IP2=$(wget -qO- ipv4.icanhazip.com)
+    [[ "$MEU_IP" != "$MEU_IP2" ]] && IP="$MEU_IP2" && echo "$MEU_IP2" || IP="$MEU_IP" && echo "$MEU_IP"
+    echo "$MEU_IP2" > /bin/ejecutar/IPcgh
+	IP="$MEU_IP2"
+  fi
+}
 
 ports_ () {
 unset puertos texto texto_ svcs porta
@@ -43,120 +56,80 @@ local PT=$(lsof -V -i tcp -P -n | grep -v "ESTABLISHED" |grep -v "COMMAND" | gre
 local _ps="$(ps x)"
 x=1
 for porta in `echo -e "$PT" | cut -d: -f2 | cut -d' ' -f1 |sort -n | uniq`; do
-	[[ -z $porta ]] && continue
-	porta[$x]="$porta"
-	#echo "$porta - $(echo -e "$PT" | grep -w "$porta" | awk '{print $1}' | uniq | tail -1)"
-	svcs[$x]="$(echo -e "$PT" | grep -w "$porta" | awk '{print $1}' | uniq | tail -1)"
-	let x++;
+    [[ -z $porta ]] && continue
+    porta[$x]="$porta"
+    svcs[$x]="$(echo -e "$PT" | grep -w "$porta" | awk '{print $1}' | uniq | tail -1)"
+    let x++;
 done
 
 for((i=1; i<$x; i++)); do
-[[ ! -z ${svcs[$i]} ]] && texto="\033[1;34m ${pPIniT} \033[1;37m${svcs[$i]}: \033[1;31m${porta[$i]}" || texto=''
-[[ ${svcs[$i]} = "apache2" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mAPACHE: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "node" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mWebSocket: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "clash" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mClash: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "psiphond" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mPSIPHON: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "xray-v2-u" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mXRAY/UI: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "v2-ui" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mV2-UI/WEB: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "xray-linu" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mXRAY/UI: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "x-ui" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mXUI/WEB: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "openvpn" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mOPENVPN-TCP: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "squid" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mSQUID: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "squid3" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mSQUID: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "dropbear" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mDROPBEAR: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "python3" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mSOCKS/PYTHON3: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "python" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mSOCKS/PYTHON: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "obfs-serv" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mSSR (OBFS): \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "ss-server" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mSSR (LIV): \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "sshd" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mSSH: ${porta[$i]}"
-[[ ${svcs[$i]} = "ssh" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mSSH: ${porta[$i]}"
-[[ ${svcs[$i]} = "systemd-r" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mSystem-DNS: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "stunnel4" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mSSL: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "stunnel" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mSSL: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "v2ray" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mV2RAY: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "xray" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mXRAY: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "badvpn-ud" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mBadVPN: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "trojan" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mTrojan-GO: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "sslh" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mSSLH: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "nc.tradit" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mKeyGen: \033[1;31mON"
-[[ ${svcs[$i]} = "filebrows" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mFileBrowser: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "rpcbind" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mRPCBind: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "snell-ser" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mSNell: \033[1;31m${porta[$i]}"
-    i=$(($i+1))
-[[ ! -z ${svcs[$i]} ]] && texto_="\033[1;34m ${pPIniT} \033[1;37m${svcs[$i]}: \033[1;31m${porta[$i]}" || texto_=''
-[[ ${svcs[$i]} = "apache2" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mAPACHE: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "node" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mWebSocket: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "clash" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mClash: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "psiphond" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mPSIPHON: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "xray-v2-u" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mXRAY/UI: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "v2-ui" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mV2-UI/WEB: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "xray-linu" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mXRAY/UI: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "x-ui" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mXUI/WEB: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "openvpn" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mOPENVPN-TCP: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "squid" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mSQUID: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "squid3" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mSQUID: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "dropbear" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mDROPBEAR: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "python3" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mSOCKS/PYTHON3: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "python" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mSOCKS/PYTHON: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "obfs-serv" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mSSR (OBFS): \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "ss-server" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mSSR (LIV): \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "sshd" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mSSH: ${porta[$i]}"
-[[ ${svcs[$i]} = "ssh" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mSSH: ${porta[$i]}"
-[[ ${svcs[$i]} = "systemd-r" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mSystem-DNS: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "stunnel4" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mSSL: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "stunnel" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mSSL: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "v2ray" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mV2RAY: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "xray" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mXRAY: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "badvpn-ud" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mBadVPN: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "trojan" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mTrojan-GO: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "sslh" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mSSLH: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "nc.tradit" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mKeyGen: \033[1;31mON"
-[[ ${svcs[$i]} = "filebrows" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mFileBrowser: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "rpcbind" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mRPCBind: \033[1;31m${porta[$i]}"
-[[ ${svcs[$i]} = "snell-ser" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mSNell: \033[1;31m${porta[$i]}"
-#[[ -z $texto_ ]] && {
-#[[ -z $(echo -e "${_ps}"| grep slowdns | grep -v grep) ]] || texto_="\033[1;34m ∘ \033[1;37mSlowDNS: \033[1;33m5300"
-#					}
-#[[ -z $(echo -e "${_ps}"| grep slowdns | grep -v grep) ]] || texto="\033[1;34m ∘ \033[1;37mSlowDNS: \033[1;33m5300"
-puertos+="${texto}|${texto_}\n"
-done 
+    [[ ! -z ${svcs[$i]} ]] && texto="\033[1;34m ∘ \033[1;37m${svcs[$i]}: \033[1;31m${porta[$i]}" || texto=''
+    case ${svcs[$i]} in
+        apache2) texto="\033[1;34m ∘ \033[1;37mAPACHE: \033[1;31m${porta[$i]}" ;;
+        node) texto="\033[1;34m ∘ \033[1;37mWebSocket: \033[1;31m${porta[$i]}" ;;
+        clash) texto="\033[1;34m ∘ \033[1;37mClash: \033[1;31m${porta[$i]}" ;;
+        psiphond) texto="\033[1;34m ∘ \033[1;37mPSIPHON: \033[1;31m${porta[$i]}" ;;
+        xray-v2-u|xray-linu) texto="\033[1;34m ∘ \033[1;37mXRAY/UI: \033[1;31m${porta[$i]}" ;;
+        v2-ui) texto="\033[1;34m ∘ \033[1;37mV2-UI/WEB: \033[1;31m${porta[$i]}" ;;
+        x-ui) texto="\033[1;34m ∘ \033[1;37mXUI/WEB: \033[1;31m${porta[$i]}" ;;
+        openvpn) texto="\033[1;34m ∘ \033[1;37mOPENVPN-TCP: \033[1;31m${porta[$i]}" ;;
+        squid|squid3) texto="\033[1;34m ∘ \033[1;37mSQUID: \033[1;31m${porta[$i]}" ;;
+        dropbear) texto="\033[1;34m ∘ \033[1;37mDROPBEAR: \033[1;31m${porta[$i]}" ;;
+        python3) texto="\033[1;34m ∘ \033[1;37mSOCKS/PYTHON3: \033[1;31m${porta[$i]}" ;;
+        python) texto="\033[1;34m ∘ \033[1;37mSOCKS/PYTHON: \033[1;31m${porta[$i]}" ;;
+        obfs-serv) texto="\033[1;34m ∘ \033[1;37mSSR (OBFS): \033[1;31m${porta[$i]}" ;;
+        ss-server) texto="\033[1;34m ∘ \033[1;37mSSR (LIV): \033[1;31m${porta[$i]}" ;;
+        sshd|ssh) texto="\033[1;34m ∘ \033[1;37mSSH: ${porta[$i]}" ;;
+        systemd-r) texto="\033[1;34m ∘ \033[1;37mSystem-DNS: \033[1;31m${porta[$i]}" ;;
+        stunnel4|stunnel) texto="\033[1;34m ∘ \033[1;37mSSL: \033[1;31m${porta[$i]}" ;;
+        v2ray) texto="\033[1;34m ∘ \033[1;37mV2RAY: \033[1;31m${porta[$i]}" ;;
+        xray) texto="\033[1;34m ∘ \033[1;37mXRAY: \033[1;31m${porta[$i]}" ;;
+        badvpn-ud) texto="\033[1;34m ∘ \033[1;37mBadVPN: \033[1;31m${porta[$i]}" ;;
+        trojan) texto="\033[1;34m ∘ \033[1;37mTrojan-GO: \033[1;31m${porta[$i]}" ;;
+        sslh) texto="\033[1;34m ∘ \033[1;37mSSLH: \033[1;31m${porta[$i]}" ;;
+        nc.tradit) texto="\033[1;34m ∘ \033[1;37mKeyGen: \033[1;31mON" ;;
+        filebrows) texto="\033[1;34m ∘ \033[1;37mFileBrowser: \033[1;31m${porta[$i]}" ;;
+        rpcbind) texto="\033[1;34m ∘ \033[1;37mRPCBind: \033[1;31m${porta[$i]}" ;;
+        snell-ser) texto="\033[1;34m ∘ \033[1;37mSNell: \033[1;31m${porta[$i]}" ;;
+    esac
+    puertos+="${texto}\n"
+done
+
 local _PT=$(lsof -V -i UDP -P -n | grep -v "ESTABLISHED" |grep -v "COMMAND"|grep -E 'openvpn|dns-serve|udpServer|hysteria|UDP-Custo|Hysteria2')
 x=1
 for porta in `echo -e "$_PT" | cut -d: -f2 | cut -d' ' -f1 |sort -n | uniq`; do
-	[[ -z $porta ]] && continue
-	_porta[$x]="$porta"
-	_svcs[$x]="$(echo -e "$_PT" | grep -w "$porta" | awk '{print $1}' | uniq | tail -1)"
-	let x++;
+    [[ -z $porta ]] && continue
+    _porta[$x]="$porta"
+    _svcs[$x]="$(echo -e "$_PT" | grep -w "$porta" | awk '{print $1}' | uniq | tail -1)"
+    let x++;
 done
 for((i=1; i<$x; i++)); do
-[[ ! -z ${_svcs[$i]} ]] && texto="\033[1;34m ${pPIniT} \033[1;37m${_svcs[$i]}: \033[1;31m${_porta[$i]}" || texto=''
-[[ ${_svcs[$i]} = "dns-serve" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mSlowDNS: \033[1;31m${_porta[$i]}"
-[[ ${_svcs[$i]} = "openvpn" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mOPENVPN-UDP: \033[1;31m${_porta[$i]}"
-[[ ${_svcs[$i]} = "udpServer" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mUDPServer: \033[1;31m${_porta[$i]}"
-[[ ${_svcs[$i]} = "hysteria" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mHysteriaUDP: \033[1;31m${_porta[$i]}"
-[[ ${_svcs[$i]} = "UDP-Custo" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mUDP-Custom: \033[1;31m${_porta[$i]}"
-i=$(($i+1))
-[[ ! -z ${_svcs[$i]} ]] && texto_="\033[1;34m ${pPIniT} \033[1;37m${_svcs[$i]}: \033[1;31m${_porta[$i]}" || texto_=''
-[[ ${_svcs[$i]} = "dns-serve" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mSlowDNS: \033[1;31m${_porta[$i]}"
-[[ ${_svcs[$i]} = "openvpn" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mOPENVPN-UDP: \033[1;31m${_porta[$i]}"
-[[ ${_svcs[$i]} = "udpServer" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mUDPServer: \033[1;31m${_porta[$i]}"
-[[ ${_svcs[$i]} = "hysteria" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mHysteriaUDP: \033[1;31m${_porta[$i]}"
-[[ ${_svcs[$i]} = "UDP-Custo" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mUDP-Custom: \033[1;31m${_porta[$i]}"
-puertos+="${texto}|${texto_}\n"
+    [[ ! -z ${_svcs[$i]} ]] && texto="\033[1;34m ∘ \033[1;37m${_svcs[$i]}: \033[1;31m${_porta[$i]}" || texto=''
+    case ${_svcs[$i]} in
+        dns-serve) texto="\033[1;34m ∘ \033[1;37mSlowDNS: \033[1;31m${_porta[$i]}" ;;
+        openvpn) texto="\033[1;34m ∘ \033[1;37mOPENVPN-UDP: \033[1;31m${_porta[$i]}" ;;
+        udpServer) texto="\033[1;34m ∘ \033[1;37mUDPServer: \033[1;31m${_porta[$i]}" ;;
+        hysteria) texto="\033[1;34m ∘ \033[1;37mHysteriaUDP: \033[1;31m${_porta[$i]}" ;;
+        UDP-Custo) texto="\033[1;34m ∘ \033[1;37mUDP-Custom: \033[1;31m${_porta[$i]}" ;;
+    esac
+    puertos+="${texto}\n"
 done
 
 [[ $(echo -e "$puertos" | grep 'SSH: 22') ]] && {
-export PATH=$PATH:/usr/sbin:/usr/local/sbin:/usr/local/bin:/usr/bin:/sbin:/bin:/usr/games
-[[ -z $(locale | grep "LANG=" | cut -d "=" -f2) ]] && export LANG=en_US.UTF-8
-echo -e "$puertos"|column -s "|"  -t 
-} || echo -e "     ⚠️ PUERTOS SSH TRUNCADO POR DROPBEAR ⚠️   \n		Coloca : sudo -i \n	    Ve al menu 7, opcion 7 " 
+    export PATH=$PATH:/usr/sbin:/usr/local/sbin:/usr/local/bin:/usr/bin:/sbin:/bin:/usr/games
+    [[ -z $(locale | grep "LANG=" | cut -d "=" -f2) ]] && export LANG=en_US.UTF-8
+    echo -e "$puertos"
+} || echo -e "⚠️ PUERTOS SSH TRUNCADO POR DROPBEAR ⚠️\nColoca: sudo -i\nVe al menu 7, opción 7"
+
 local PIDGEN=$(echo -e "${_ps}"| grep "BotGen.sh" | grep -v grep |awk '{print $1}')
 [[ ! -z $PIDGEN ]] && {
-local botG="\033[1;34m ${pPIniT} \033[1;37m BotGen Telegram 🤖 : \033[1;31m ⚡ ACTIVO ⚡"
-msg -bar3
-echo -e "$botG"
-unset svcs porta puertos i x
+    local botG="\033[1;34m ∘ \033[1;37m BotGen Telegram 🤖 : \033[1;31m ⚡ ACTIVO ⚡"
+    echo -e "$botG"
+    unset svcs porta puertos i x
 }
 }
+
+ports_
+
 echo -e " Hola "
 ports_
