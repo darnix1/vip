@@ -1,5 +1,16 @@
 #!/bin/bash
 source <(curl -sSL https://raw.githubusercontent.com/emirjorge/Script-Z/master/CHUMO/msg-bar/msg)
+in_opcion_down(){
+  dat=$1
+  length=${#dat}
+  cal=$(( 22 - $length / 2 ))
+  line=''
+  for (( i = 0; i < $cal; i++ )); do
+    line+='╼'
+  done
+  echo -e " $(msg -verm3 "╭$line╼[")$(msg -azu "$dat")$(msg -verm3 "]")"
+  echo -ne " $(msg -verm3 "╰╼")\033[37;1m> " && read opcion
+}
 
 fun_trans(){ 
 	local texto
