@@ -4,6 +4,41 @@
 # NUNCA  DEJES DE APRENDER
 # POWER BY @CHUMOGH
 source <(curl -sSL https://raw.githubusercontent.com/emirjorge/Script-Z/master/CHUMO/msg-bar/msg)
+mostrar_usuarios () {
+for u in `cat "/etc/passwd"|grep 'home'|grep 'false'|grep -v 'syslog' | cut -d: -f1`; do
+echo "$u"
+done
+}
+
+function_onlines () {
+local users=$(cat /etc/passwd|grep 'home'|grep 'false'|grep -v 'syslog'|awk -F ':' '{print $1}')
+	#	dpids=$(dropbear_pids)	users=$(cat /etc/passwd|grep 'home'|grep 'false'|grep -v 'syslog'|awk -F ':' '{print $1}')
+	dpids=$(dropbear_pids)
+	time=$(date +%s)
+	[[ -e /etc/openvpn/openvpn-status.log ]] && ovpn_log=$(cat /etc/openvpn/openvpn-status.log)
+	n='0'
+	i='0'
+	u='1'
+	conect='0'
+	_onlin='0'
+	for _user in $users; do
+		[[ -z "$(ps -u $_user|grep sshd)" ]] && sqd=0 || sqd=$(ps -u $_user|grep sshd | wc -l)
+		[[ -z "$(echo $ovpn_log|grep -E ,"$_user",)" ]] && ovp=0 || ovp=$(echo $ovpn_log|grep -E ,"$_user", | wc -l)
+        [[ -z "$(echo $dpids|grep -w "$_user")" ]] && drop=0 || drop=$(echo $dpids|grep -w "$_user" | wc -l)
+        _onlin=$(($sqd + $ovp + $drop))
+        #[[ $_onlin -ne 0 ]] && 
+		conect=$(($conect + $_onlin))
+		if [[ $(chage -l $_user |grep 'Account expires' |awk -F ': ' '{print $2}') != never ]]; then
+			[[ $time -gt $(date '+%s' -d "$(chage -l $_user |grep "Account expires" |awk -F ': ' '{print $2}')") ]] && let n++
+		fi
+		[[ $(passwd --status $_user|cut -d ' ' -f2) = "L" ]] && let i++
+	done
+_onlin="\033[1;31m${conect}"
+_userexp="\033[1;31m${n}"
+_userlock="${i}"
+_tuser="\033[1;31m$(echo -e "${users}" | wc -l)"
+}
+
 
 dropbear_pids () {
   port_dropbear=`ps aux|grep 'dropbear'|awk NR==1|awk '{print $17;}'`
