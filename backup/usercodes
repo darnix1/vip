@@ -1945,59 +1945,23 @@ source <(curl -sL https://raw.githubusercontent.com/emirjorge/Script-Z/master/CH
 
 selection=$(selection_fun 14)
 case ${selection} in
-1)
-cd /etc/adm-lite/ && fun_us
-echo -ne "${cor[5]}"
-read -p " ¡Enter, para volver!"
-source /etc/adm-lite/usercodes
+1) fun_us ;;
+2) function_2
 ;;
-2)
-cd /etc/adm-lite/ && function_2
-echo -ne "${cor[5]}"
-read -p " ¡Enter, para volver!"
-source /etc/adm-lite/usercodes
+3) function_3
 ;;
-3)
-cd /etc/adm-lite/ && function_3
-echo -ne "${cor[5]}"
-read -p " ¡Enter, para volver!"
-source /etc/adm-lite/usercodes
+4) function_4
 ;;
-4)
-cd /etc/adm-lite/ && function_4
-echo -ne "${cor[5]}"
-read -p " ¡Enter, para volver!"
-source /etc/adm-lite/usercodes
+5) function_5
+
 ;;
-5)
-cd /etc/adm-lite/ && function_5
-echo -ne "${cor[5]}"
-read -p " ¡Enter, para volver!"
-source /etc/adm-lite/usercodes
+6) function_7
 ;;
-6)
-cd /etc/adm-lite/ && function_7
-echo -ne "${cor[5]}"
-read -p " ¡Enter, para volver!"
-source /etc/adm-lite/usercodes
+7) net_meter
 ;;
-7)
-cd /etc/adm-lite/ && net_meter
-echo -ne "${cor[5]}"
-read -p " ¡Enter, para volver!"
-source /etc/adm-lite/usercodes
+8) block_user
 ;;
-8)
-cd /etc/adm-lite/ && block_user
-echo -ne "${cor[5]}"
-read -p " ¡Enter, para volver!"
-source /etc/adm-lite/usercodes
-;;
-9)
-cd /etc/adm-lite/ && recuva1
-echo -ne "${cor[5]}"
-read -p " ¡Enter, para volver!"
-source /etc/adm-lite/usercodes
+9) recuva1
 ;;
 10)
 cd /etc/adm-lite/ && ssrmenu
