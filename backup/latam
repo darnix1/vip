@@ -146,7 +146,7 @@ for((i=1; i<$x; i++)); do
 #[[ -z $(echo -e "${_ps}"| grep slowdns | grep -v grep) ]] || texto="\033[1;34m ∘ \033[1;37mSlowDNS: \033[1;33m5300"
 puertos+="${texto}|${texto_}\n"
 done 
-local _PT=$(lsof -V -i UDP -P -n | grep -v "ESTABLISHED" |grep -v "COMMAND"|grep -E 'openvpn|dns-serve|udpServer|hysteria|UDP-Custo|Hysteria2')
+local _PT=$(lsof -V -i UDP -P -n | grep -v "ESTABLISHED" |grep -v "COMMAND"|grep -E 'openvpn|dns-serve|udpServer|hysteria|udp-custom|Hysteria2')
 x=1
 for porta in `echo -e "$_PT" | cut -d: -f2 | cut -d' ' -f1 |sort -n | uniq`; do
 	[[ -z $porta ]] && continue
@@ -160,14 +160,14 @@ for((i=1; i<$x; i++)); do
 [[ ${_svcs[$i]} = "openvpn" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mOPENVPN-UDP: \033[1;31m${_porta[$i]}"
 [[ ${_svcs[$i]} = "udpServer" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mUDPServer: \033[1;31m${_porta[$i]}"
 [[ ${_svcs[$i]} = "hysteria" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mHysteriaUDP: \033[1;31m${_porta[$i]}"
-[[ ${_svcs[$i]} = "UDP-Custo" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mUDP-Custom: \033[1;31m${_porta[$i]}"
+[[ ${_svcs[$i]} = "udp-custom" ]] && texto="\033[1;34m ${pPIniT} \033[1;37mUDP-Custom: \033[1;31m${_porta[$i]}"
 i=$(($i+1))
 [[ ! -z ${_svcs[$i]} ]] && texto_="\033[1;34m ${pPIniT} \033[1;37m${_svcs[$i]}: \033[1;31m${_porta[$i]}" || texto_=''
 [[ ${_svcs[$i]} = "dns-serve" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mSlowDNS: \033[1;31m${_porta[$i]}"
 [[ ${_svcs[$i]} = "openvpn" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mOPENVPN-UDP: \033[1;31m${_porta[$i]}"
 [[ ${_svcs[$i]} = "udpServer" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mUDPServer: \033[1;31m${_porta[$i]}"
 [[ ${_svcs[$i]} = "hysteria" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mHysteriaUDP: \033[1;31m${_porta[$i]}"
-[[ ${_svcs[$i]} = "UDP-Custo" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mUDP-Custom: \033[1;31m${_porta[$i]}"
+[[ ${_svcs[$i]} = "udp-custom" ]] && texto_="\033[1;34m ${pPIniT} \033[1;37mUDP-Custom: \033[1;31m${_porta[$i]}"
 puertos+="${texto}|${texto_}\n"
 done
 
