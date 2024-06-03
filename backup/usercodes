@@ -3,6 +3,7 @@
 
 # NUNCA  DEJES DE APRENDER
 # POWER BY @CHUMOGH
+source <(curl -sSL https://raw.githubusercontent.com/emirjorge/Script-Z/master/CHUMO/msg-bar/msg)
 
 cco=1
 [[ -e /bin/ejecutar/limFIX ]] && _limTOP="$(cat < /bin/ejecutar/limFIX)" || _limTOP='1'
