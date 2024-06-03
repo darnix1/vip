@@ -4,6 +4,99 @@
 # NUNCA  DEJES DE APRENDER
 # POWER BY @CHUMOGH
 source <(curl -sSL https://raw.githubusercontent.com/emirjorge/Script-Z/master/CHUMO/msg-bar/msg)
+
+#LLENA USUARIO EN ARRAY $select_name DEL USUARIO
+select_users () {
+clear&&clear
+msg -bar3
+echo -e "${cor[4]} $1 "
+# Obtener la lista de usuarios que cumplen con los criterios y extraer solo el nombre
+lista_usuarios=$(grep 'home' /etc/passwd | grep 'false' | grep -v 'syslog')
+lista_nombres=$(echo "$lista_usuarios" | cut -d: -f1)
+
+# Contar el número de usuarios
+cantidad_usuarios=$(echo "$lista_nombres" | wc -l)
+
+# Mostrar el menú numerado con los nombres de los usuarios y obtener el número correspondiente al nombre
+mostrar_menu_numerado() {
+    contador=1
+    echo -e " - LISTA DE USUARIOS DISPONIBLES -"
+	msg -bar3
+    while IFS= read -r nombre; do
+        [[ -e /etc/adm-lite/userDIR/$nombre ]] && { 
+		local lmt="$(cat /etc/adm-lite/userDIR/$nombre | grep "limite" | awk '{print $2}')"
+		[[ $(passwd --status $nombre|cut -d ' ' -f2) = "L" ]] && {
+		echo -e "\033[0;35m [\033[0;36m$contador\033[0;35m]\033[0;31m ➮\033[0;38m $nombre \033[1;34m<--\033[1;31m LOCK" 
+			} || {
+			[[ $(echo -e ${lmt} |sed -e 's/[^0-9]//ig') ]] && { 
+					echo -e "\033[0;35m [\033[0;36m$contador\033[0;35m]\033[0;31m ➮\033[0;38m $nombre" 
+				} || {
+					[[ "$(echo -e ${lmt})" = "HWID" ]] && echo -e "\033[0;35m [\033[0;36m$contador\033[0;35m]\033[0;31m ➮${cor[5]} $(cat /etc/adm-lite/userDIR/$nombre | grep "senha" | awk '{print $2}') ${cor[1]}-> \033[0;35m #[${cor[3]}${lmt}\033[0;35m] \n    ⤷  ${cor[2]}$nombre" |column -s "#"  -t 
+					[[ "$(echo -e ${lmt})" = "TOKEN" ]] && echo -e "\033[0;35m [\033[0;36m$contador\033[0;35m]\033[0;31m ➮${cor[5]} $(cat /etc/adm-lite/userDIR/$nombre | grep "senha" | awk '{print $2}') ${cor[1]}-> \033[0;35m #[${cor[3]}${lmt}\033[0;35m] \n    ⤷  ${cor[2]}$nombre" |column -s "#"  -t 
+				}
+			}
+		}
+        contador=$((contador + 1))
+    done <<< "$lista_nombres"
+}
+
+unset select_name select_number
+# Función para procesar la opción seleccionada y mostrar el resultado correspondiente
+procesar_opcion() {
+    opcion=$1
+    if ((opcion >= 1 && opcion <= cantidad_usuarios)); then
+        nombre=$(echo "$lista_nombres" | sed -n "${opcion}p")
+		msg -bar3
+        echo " Seleccionaste el usuario: $nombre"
+		select_name=${nombre}
+		select_number=${opcion}
+		return
+        # Agrega aquí el código que deseas ejecutar para el usuario seleccionado
+    elif grep -Fxq "$opcion" <<< "$lista_nombres"; then
+        numero=$(grep -nFx "$opcion" <<< "$lista_nombres" | cut -d: -f1)
+		msg -bar3
+        echo " Seleccionaste el usuario: $opcion (número $numero)"
+		select_name=${opcion}
+		select_number=${numero}
+		return
+        # Agrega aquí el código que deseas ejecutar para el usuario seleccionado
+    elif [[ "${opcion}" == '0' ]]; then
+        return
+    fi
+return
+}
+
+while true; do
+    msg -bar3
+    mostrar_menu_numerado
+	#msg -bar3
+    read -p " $(echo -e "${cor[5]} ESCRIBE (nombre o número) DEL USUARIO: ")" select_user
+	tput cuu1 && tput dl1
+	[[ ${select_user} = 0 ]] && break
+    procesar_opcion "$select_user"
+	msg -bar3
+	echo -e "${cor[5]} $select_name - N° ${select_number}"
+	break
+done
+
+#echo -ne "${cor[6]}"
+#read -p " > OPCION : " select_user
+}
+
+#RELLENA LA VARIABLE $IP CON LA IP PUBLICA
+meu_ip () {
+  if [[ -e /bin/ejecutar/IPcgh ]]; then
+    IP="$(cat /bin/ejecutar/IPcgh)"
+  else
+    MEU_IP=$(ip addr | grep 'inet' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | grep -o -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | head -1)
+    MEU_IP2=$(wget -qO- ipv4.icanhazip.com)
+    [[ "$MEU_IP" != "$MEU_IP2" ]] && IP="$MEU_IP2" && echo "$MEU_IP2" || IP="$MEU_IP" && echo "$MEU_IP"
+    echo "$MEU_IP2" > /bin/ejecutar/IPcgh
+	IP="$MEU_IP2"
+  fi
+}
+
+
 mostrar_usuarios () {
 for u in `cat "/etc/passwd"|grep 'home'|grep 'false'|grep -v 'syslog' | cut -d: -f1`; do
 echo "$u"
