@@ -1512,8 +1512,8 @@ if [ "$namer" = "" ]; then
 break
 fi
 if [ -e $dir_user/$namer ]; then
-_sen=$(cat $dir_user/$namer | grep "senha" | awk '{print $2}')
-_limit=$(cat $dir_user/$namer | grep "limite" | awk '{print $2}')
+_sen=$(cat $dir_user/$namer | grep "Pass" | awk '{print $2}')
+_limit=$(cat $dir_user/$namer | grep "iplim" | awk '{print $2}')
 [[ ${_limit} = "HWID" ]] && token="$_sen"
 else
 _limit="∞"
@@ -1566,8 +1566,8 @@ _cont=$(($_cont + 1))
 if [ "$open_vpn" != "" ]; then
 #user ssh
 [[ -e $dir_user/$namer ]] && [[ $(cat $dir_user/$namer | grep "limite" | awk '{print $2}') = "HWID" || $(cat $dir_user/$namer | grep "limite" | awk '{print $2}') = "TOKEN" ]] && { 
-	[[ $(cat $dir_user/$namer | grep "limite" | awk '{print $2}') = "HWID" ]] && echo -e "\033[0;35m [\033[0;36m$_cont\033[0;35m]\033[0;31m ${cor[7]} ${txto[2]}            ${txto[3]} ${txto[4]} ${txto[5]}" && echo -e "     \033[1;32m ⤷ HWID ${cor[2]}- \033[1;31m${txto[1]} "
-	[[ $(cat $dir_user/$namer | grep "limite" | awk '{print $2}') = "TOKEN" ]] && echo -e "\033[0;35m [\033[0;36m$_cont\033[0;35m]\033[0;31m ${cor[7]} ${txto[2]}            ${txto[3]} ${txto[4]} ${txto[5]}" && echo -e "     \033[1;32m ⤷ TOKEN ${cor[2]}- \033[1;31m${txto[1]} " 
+	[[ $(cat $dir_user/$namer | grep "iplim" | awk '{print $2}') = "HWID" ]] && echo -e "\033[0;35m [\033[0;36m$_cont\033[0;35m]\033[0;31m ${cor[7]} ${txto[2]}            ${txto[3]} ${txto[4]} ${txto[5]}" && echo -e "     \033[1;32m ⤷ HWID ${cor[2]}- \033[1;31m${txto[1]} "
+	[[ $(cat $dir_user/$namer | grep "iplim" | awk '{print $2}') = "TOKEN" ]] && echo -e "\033[0;35m [\033[0;36m$_cont\033[0;35m]\033[0;31m ${cor[7]} ${txto[2]}            ${txto[3]} ${txto[4]} ${txto[5]}" && echo -e "     \033[1;32m ⤷ TOKEN ${cor[2]}- \033[1;31m${txto[1]} " 
 	} || {
 	echo -e "\033[0;35m [\033[0;36m$_cont\033[0;35m]\033[0;31m ${cor[2]}${cor[7]} ${txto[1]} ${txto[2]} ${txto[3]} ${txto[4]} ${txto[5]}"
 	}
