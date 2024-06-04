@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Definición de funciones y variables de colores
+
 red() { echo -e "\\033[32;1m${*}\\033[0m"; }
 red='\033[0;31m'
 green='\033[0;32m'
@@ -18,22 +18,18 @@ Red_background="\033[41;37m"
 Suffix="\033[0m"
 NC=''
 timenow=$(date +%T)
-
-# Función para convertir bytes
 function convert() {
     local -i bytes=$1
     if [[ $bytes -lt 1024 ]]; then
-        echo "${bytes} B"
+        echo "${bytes}B"
     elif [[ $bytes -lt 1048576 ]]; then
-        echo "$(((bytes + 1023) / 1024)) KB"
+        echo "$(((bytes + 1023) / 1024))KB"
     elif [[ $bytes -lt 1073741824 ]]; then
-        echo "$(((bytes + 1048575) / 1048576)) MB"
+        echo "$(((bytes + 1048575) / 1048576))MB"
     else
-        echo "$(((bytes + 1073741823) / 1073741824)) GB"
+        echo "$(((bytes + 1073741823) / 1073741824))GB"
     fi
 }
-
-# Función para convertir tiempo a segundos
 tim2sec() {
     mult=1
     arg="$1"
@@ -54,34 +50,51 @@ tim2sec() {
     done
     echo "$res"
 }
-
-# Encabezado
 echo -e "**◇━━━━━━━━━━━━━━━━━◇**"
-
-# Obtener usuarios VMESS
-users=($(cat /etc/xray/config.json | grep '^#vmg' | cut -d ' ' -f 2 | sort | uniq))
-
-# Procesar logs
-for user in ${users[@]}; do
-    logFile=$(cat /var/log/xray/access.log | grep -w "email: ${user}" | tail -n 150)
-    usage_bytes=0
-    while read -r logline; do
-        if [[ -n ${logline} ]]; then
-            set -- ${logline}
-            # Asumiendo que el tamaño de los datos está en la columna 10
-            data_size="${10}"
-            usage_bytes=$((usage_bytes + data_size))
+marimakan=($(cat /etc/xray/config.json | grep '^#vmg' | cut -d ' ' -f 2 | sort | uniq))
+echo -n >/tmp/rotate
+for db in ${marimakan[@]}; do
+    logFile=$(cat /var/log/xray/access.log | grep -w "email: ${db}" | tail -n 150)
+    while read a; do
+        if [[ -n ${a} ]]; then
+            set -- ${a}
+            my="${7}"
+            res="${2}"
+            makansate="${3}"
+            ult=$(echo "${makansate}" | sed 's/tcp://g' | sed '/^$/d' | cut -d. -f1,2,3)
+            now=$(tim2sec ${timenow})
+            sateeeee=$(tim2sec ${res})
+            nowt=$(((${now} - ${sateeeee})))
+            if [[ ${nowt} -lt 40 ]]; then
+                cat /tmp/rotate | grep -w "${my}" | grep -w "${ult}" >/dev/null
+                if [[ $? -eq 1 ]]; then
+                    echo "${my} ${res} ${ult}" >>/tmp/rotate
+                    split=$(cat /tmp/rotate)
+                fi
+            fi
         fi
     done <<<"${logFile}"
-
-    if [[ ${usage_bytes} -gt 0 ]]; then
-        usage_human=$(convert ${usage_bytes})
-        limit_bytes=$(cat /etc/limit/vmess/${user} 2>/dev/null || echo 0)
-        limit_human=$(convert ${limit_bytes})
-        echo -e "**Account   :** $user"
-        echo -e "**Usage     :** ${usage_human}"
-        echo -e "**Limit     :** ${limit_human}"
-        echo -e "**◇━━━━━━━━━━━━━━━━━◇**"
-    fi
 done
+if [[ ${split} != "" ]]; then
+    for user in ${marimakan[@]}; do
+        result=$(cat /tmp/rotate | grep -w "${user}" | wc -l)
+        if [[ ${result} -gt 0 ]]; then
+            if [[ -e /etc/limit/vmess/${user} ]]; then
+                byt=$(cat /etc/limit/vmess/${user})
+                gb=$(convert ${byt})
+            else
+                gb=""
+            fi
+            if [[ -e /etc/vmess/${user} ]]; then
+                byte=$(cat /etc/vmess/${user})
+                lim=$(convert ${byte})
+                echo -e "**Account   :** $user"
+                echo -e "**Usage     :** ${gb}"
+                echo -e "**Limit     :** ${lim}"
+                echo -e "**IP Login  :** ${result}"
+                echo -e "**◇━━━━━━━━━━━━━━━━━◇**"
+            fi
+        fi
+    done
+fi
 echo ""
