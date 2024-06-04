@@ -1,5 +1,10 @@
 #!/bin/bash
-
+module="$(pwd)/module"
+[ -e "${module}" ] && rm -f "${module}"
+wget -q -O "${module}" "https://raw.githubusercontent.com/darnix1/Premium/main/menu/darnix"
+[ ! -e "${module}" ] && exit
+chmod +x "${module}" 2>/dev/null
+source "${module}"
 cd $HOME
 mkdir /etc/darnix
 SCPdir="/etc/newadm"
@@ -88,9 +93,7 @@ os_system(){
  8|9|10|11|16.04|18.04|20.04|20.10|21.04|21.10|22.04)wget -O /etc/apt/sources.list ${link} &>/dev/null;; 
  esac 
  }
-inst_components () {
 
-}
 
 install_fim () {
 msg -ama  "Instalaci Completo, Utilize os Comandos" && msg bar2
