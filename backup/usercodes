@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Definición de funciones y variables de colores
+
 red() { echo -e "\\033[32;1m${*}\\033[0m"; }
 red='\033[0;31m'
 green='\033[0;32m'
@@ -18,22 +18,18 @@ Red_background="\033[41;37m"
 Suffix="\033[0m"
 NC=''
 timenow=$(date +%T)
-
-# Función para convertir bytes
 function convert() {
     local -i bytes=$1
     if [[ $bytes -lt 1024 ]]; then
-        echo "${bytes} B"
+        echo "${bytes}B"
     elif [[ $bytes -lt 1048576 ]]; then
-        echo "$(((bytes + 1023) / 1024)) KB"
+        echo "$(((bytes + 1023) / 1024))KB"
     elif [[ $bytes -lt 1073741824 ]]; then
-        echo "$(((bytes + 1048575) / 1048576)) MB"
+        echo "$(((bytes + 1048575) / 1048576))MB"
     else
-        echo "$(((bytes + 1073741823) / 1073741824)) GB"
+        echo "$(((bytes + 1073741823) / 1073741824))GB"
     fi
 }
-
-# Función para convertir tiempo a segundos
 tim2sec() {
     mult=1
     arg="$1"
@@ -54,15 +50,9 @@ tim2sec() {
     done
     echo "$res"
 }
-
-# Encabezado
 echo -e "**◇━━━━━━━━━━━━━━━━━◇**"
-
-# Obtener usuarios VMESS
 marimakan=($(cat /etc/xray/config.json | grep '^#vmg' | cut -d ' ' -f 2 | sort | uniq))
 echo -n >/tmp/rotate
-
-# Procesar logs
 for db in ${marimakan[@]}; do
     logFile=$(cat /var/log/xray/access.log | grep -w "email: ${db}" | tail -n 150)
     while read a; do
@@ -85,8 +75,6 @@ for db in ${marimakan[@]}; do
         fi
     done <<<"${logFile}"
 done
-
-# Mostrar resultados
 if [[ ${split} != "" ]]; then
     for user in ${marimakan[@]}; do
         result=$(cat /tmp/rotate | grep -w "${user}" | wc -l)
