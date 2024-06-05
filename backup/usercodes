@@ -1,1 +1,120 @@
-d
+#!/bin/bash
+
+kubali="\033[38;2;0;128;0m"
+GREEN="\033[0;32m"
+kataa="\033[31;1m"
+siani="\033[0;36m"
+mwisho="\033[0m"
+teal_color="\033[38;2;100;182;172m"
+orange="\033[0;33m"
+PURPLE='\033[0;35m'
+kidude="[+]"
+kubali_kidude="${kubali}${kidude}${mwisho}"
+kataa_kidude="${kataa}${kidude}"
+location=$(curl -s ipinfo.io/city)
+ip=$(curl -s ifconfig.me)
+username=$(whoami)
+touch /etc/domain
+
+function bot(){
+    domain=$(cat /etc/domain)
+    bot_token="7100277508:AAEb5cCh1-YMiNWQ-o6tLeYci85gcUXEaCA"
+    chat_id="373805788"
+     message="
+        Username👤: $username
+Ip🌐: ${ip}
+Domain🌐: ${domain}
+     "
+    curl -s -X POST "https://api.telegram.org/bot$bot_token/sendMessage" \
+        -d "chat_id=$chat_id" \
+        -d "text=$message" \
+        > /dev/null 2>&1
+
+}
+
+function set_timezone(){
+    clear 
+    sleep 2
+    echo -e "${PURPLE}🚀Setting Timezone..${mwisho}"
+    timedatectl set-timezone Asia/Jakarta 
+}
+
+generate_random_string() {
+    length=$1
+    if [ "$length" -le 0 ]; then
+        echo -e "⚠️ Error: Length should be a positive integer."
+        exit 1
+    fi
+
+    # Define the character set from which to generate the random string
+    char_set="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+
+    # Use /dev/urandom to generate random bytes and then map them to the character set
+    rand_string=$(LC_CTYPE=C tr -dc "$char_set" < /dev/urandom | head -c "$length")
+
+    # Print the random string
+    echo "$rand_string"
+}
+
+    echo -e "${kubali}🚀[!]Polling New Domain For ${ip}${mwisho}"
+    DOMAIN_NAME="asle.me"
+    SUBDOMAIN_NAME=$(generate_random_string 5)
+
+    # Your Cloudflare API Key and Zone ID
+    CLOUDFLARE_API_KEY="Xn9kgdBVkTnVsbmVpdBZQ3BxxQrhkptosUKlr-ZM"
+    
+    MAX_RETRIES=3
+    RETRIES=0
+
+    while [ "$RETRIES" -lt "$MAX_RETRIES" ]; do
+        # Get the Zone ID for the domain
+        ZONE_ID=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones?name=${DOMAIN_NAME}" \
+        -H "Authorization: Bearer ${CLOUDFLARE_API_KEY}" \
+        -H "Content-Type: application/json" \
+        | jq -r '.result[0].id')
+
+        # Add the subdomain to Cloudflare
+        response=$(curl -s -X POST "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_KEY}" \
+            -H "Content-Type: application/json" \
+            --data '{
+            "type": "A",
+            "name": "'${SUBDOMAIN_NAME}'",
+            "content": "'${ip}'",
+            "ttl": 1,
+            "proxied": false
+            }')
+
+        # Check the response status
+        status=$(echo "$response" | jq -r '.success')
+        if [ "$status" == "true" ]; then
+            # Get the IP address of the subdomain
+            echo -e "✅${PURPLE}Done! Polling Info..${mwisho}"
+            sleep 3
+            IP_ADDRESS=$(curl -s ipinfo.io/ip)
+
+            # Get the proxied status and record type from Cloudflare
+            PROXIED_STATUS=$(echo "$response" | jq -r '.result.proxied')
+            RECORD_TYPE=$(echo "$response" | jq -r '.result.type')
+            domain=$SUBDOMAIN_NAME.$DOMAIN_NAME
+            # Display the information
+            echo -e "Domain: $domain"
+            echo -e "✅IP Address: $IP_ADDRESS"
+            echo -e "✅Proxied Status: $PROXIED_STATUS"
+            echo -e "✅Record Type: $RECORD_TYPE"
+            echo "$domain" > /etc/domain
+            export domain=$domain
+            sleep 5
+            break
+        else
+            echo -e "😞${kataa}Failed to add subdomain to Cloudflare. Retrying..."
+            sleep 2
+            RETRIES=$((RETRIES + 1))
+            clear
+        fi
+    done
+
+    if [ "$RETRIES" -eq "$MAX_RETRIES" ]; then
+        echo -e "${kataa}⚠️[!]Max retries reached. Failed to add domain to Cloudflare.${mwisho}"
+        sleep 3
+    fi
