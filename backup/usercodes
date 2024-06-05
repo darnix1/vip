@@ -26,7 +26,7 @@ echo -e "$biru│$NC [${biru}12$NC]$NC vpnssh.biz.id                       $NC$b
 echo -e "$biru│$NC [${biru}13$NC]$NC vpssantri.my.id                     $NC$biru│$NC"
 echo -e "$biru│$NC [${biru}14$NC]$NC vpsvpn.my.id                        $NC$biru│$NC"
 echo -e "$biru│$NC [${biru}15$NC]$NC wush.my.id                          $NC$biru│$NC"
-echo -e "$biru│$NC [${biru}16$NC]$NC wussh.my.id                         $NC$biru│$NC"
+echo -e "$biru│$NC [${biru}16$NC]$NC darnixmx.com                         $NC$biru│$NC"
 echo -e "$biru└──────────────────────────────────────────┘$NC"
 echo -e ""
 read -rp "pilih salah satu (1-16): " host
@@ -1280,20 +1280,20 @@ pointing
 elif [ $host -eq 16 ]
 then
   clear
-DOMAIN16=wussh.my.id
+DOMAIN16=darnixmx.com
   echo -e ""
   echo -e "$biru┌──────────────────────────────────────────┐$NC"
   echo -e "$biru│      ${hijau} POINTING DOMAIN BY ALAWI VPN       $biru│$NC"
   echo -e "$biru└──────────────────────────────────────────┘$NC"
   echo -e "$biru------>$NC  ${hijau}xxx.${DOMAIN16}  $biru<------$NC"
   echo -e ""
-  read -rp "masukkan subdomain kamu: " -e sub1
-  read -rp "masukkan ip vps kamu   : " -e ip1
+  read -rp "ingresa tu subdominio: " -e sub1
+  read -rp "Ingrese su IP de VPS   : " -e ip1
 
 SUB_DOMAIN16=${sub1}.${DOMAIN16}
 SUB_DOMAIN016=zoomcares.zoom.us.${sub1}.${DOMAIN16}
-CF_ID=vpsvpsku@gmail.com
-CF_KEY=cb9b858e75a955df979cf4bff74839df1943d
+CF_ID=cisdan96@gmail.com
+CF_KEY=37ea2a527d9e338a09e53fd8977f3d2a8a733
 
 set -euo pipefail
 IP1=${ip1};
