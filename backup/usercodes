@@ -1,11 +1,1 @@
-#!/bin/bash
-    del_KILL
-    for arqs in $(ls $DIR | grep -v "ERROR-KEY" | grep -v ".name"); do
-        arqsx=$(ofus "$IP:8888/$arqs/$LIST")
-        if [[ ! -e ${DIR}/${arqs}/used.date ]]; then
-            echo -e "\033[1;32mRemoviendo $arqsx ($(cat ${DIR}/${arqs}.name)) (Key Activa)\033[0m" || rm -rf ${DIR}/${arqs}
-        else
-            echo -e "\033[1;31mNo se puede eliminar $arqsx ($(cat ${DIR}/${arqs}.name)) ($(cat ${DIR}/${arqs}/used.date) IP: $(cat ${DIR}/${arqs}/used))\033[0m"
-        fi
-        [[ -d "$DIR/${arqs}" ]] && rm -rf "$DIR/${arqs}"*
-    done
+d
