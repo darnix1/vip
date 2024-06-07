@@ -23,3 +23,8 @@ fi
 
 # Incluir el archivo msg descargado
 source "$MSG_LOCAL_FILE"
+
+msg -bar
+print_center " Hola mundo "
+
+msg -bar
