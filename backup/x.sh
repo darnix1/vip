@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Archivo para almacenar el contenido de msg y su timestamp
+# Archivo para almacena el contenido de msg y su timestamp
 DIR="/etc/xdarnix" 
 MSG_LOCAL_FILE="/etc/xdarnix/msg"
 MSG_URL="https://gitea.com/xdarnix/msg/raw/branch/main/msg"
