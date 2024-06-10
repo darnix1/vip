@@ -74,7 +74,7 @@ systemctl restart xray
 fi
 xraylimit
 echo -e "$COLOR1┌─────────────────────────────────────────────────┐${NC}"
-echo -e "$COLOR1│${NC}${COLBG1}             ${WH}• VMESS USER ONLINE •               ${NC}$COLOR1│ $NC"
+echo -e "$COLOR1│${NC}${COLBG1}             ${WH}• VMESS USER ONLINES •               ${NC}$COLOR1│ $NC"
 echo -e "$COLOR1└─────────────────────────────────────────────────┘${NC}"
 echo -e "$COLOR1┌─────────────────────────────────────────────────┐${NC}"
 vm=($(cat /etc/xray/config.json | grep "^#vmg" | awk '{print $2}' | sort -u))
