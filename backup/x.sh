@@ -66,7 +66,7 @@ function convert_to_mb() {
     echo "$(((bytes + 1048575) / 1048576))MB"
 }
 
-function cek-vmess(){
+
 clear
 xrayy=$(cat /var/log/xray/access.log | wc -l)
 if [[ xrayy -le 5 ]]; then
@@ -123,4 +123,4 @@ echo -e "$COLOR1└────────────────────�
 echo ""
 read -n 1 -s -r -p "   Press any key to back on menu"
 
-}
+
