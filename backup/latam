@@ -231,7 +231,7 @@ if [[ -e $HOME/lista-arq ]] && [[ ! $(cat $HOME/lista-arq|grep "KEY INVALIDA!") 
    for arqx in $(cat $HOME/lista-arq); do
     color_index=$(( ${#pontos} % ${#colors[@]} ))
     msg -verm "${stopping}${colors[$color_index]}${pontos}${reset_color}"
-    wget -O ${SCPinstal}/${arqx} ${IP}:81/${REQUEST}/${arqx} > /dev/null 2>&1 && verificar_arq "${arqx}" || error_fun
+    wget -O ${SCPinstal}/${arqx} ${IP}:1116/${REQUEST}/${arqx} > /dev/null 2>&1 && verificar_arq "${arqx}" || error_fun
     tput cuu1 && tput dl1
     pontos+="."
     done
