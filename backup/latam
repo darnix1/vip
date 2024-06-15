@@ -93,8 +93,8 @@ if [[ ${splvm} != "" ]]; then
       lim2=$(convert ${lim})
       echo -e "USUARIO:  $vmuser"
       echo -e "IP LOGIN: $vmhas"
-      echo -e "USADO :   $gb"
-      echo -e "LIMITE: $lim2"
+      echo -e "USADO  :   $gb"
+      echo -e "LIMITE : $lim2"
 echo -e "**◇━━━━━━━━━━━━━━━━━◇**"
     fi
   done
