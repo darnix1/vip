@@ -91,7 +91,7 @@ if [[ ${splvm} != "" ]]; then
       gb=$(convert ${byt})
       lim=$(cat /etc/vmess/${vmuser})
       lim2=$(convert ${lim})
-      echo -e "USUARIO:  $vmuser"
+      echo -e "USUARIO :  $vmuser"
       echo -e "IP LOGIN: $vmhas"
       echo -e "USADO  :   $gb"
       echo -e "LIMITE : $lim2"
