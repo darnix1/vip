@@ -71,11 +71,10 @@ if [[ ${splvm} != "" ]]; then
       gb=$(convert ${byt})
       lim=$(cat /etc/vmess/${vmuser})
       lim2=$(convert ${lim})
-      echo -e "$COLOR1${NC} USERNAME : \033[0;33m$vmuser"
-      echo -e "$COLOR1${NC} IP LOGIN : \033[0;33m$vmhas"
-      echo -e "$COLOR1${NC} USAGE : \033[0;33m$gb"
-      echo -e "$COLOR1${NC} LIMIT : \033[0;33m$lim2"
-      echo -e ""
+      echo -e "USUARIO:  $vmuser"
+      echo -e "IP LOGIN: $vmhas"
+      echo -e "USADO :   $gb"
+      echo -e "LIMITE: $lim2"
     fi
   done
 fi
