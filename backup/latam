@@ -1,4 +1,23 @@
 #!/bin/bash
+
+red='\033[0;31m'
+green='\033[0;32m'
+yellow='\033[0;33m'
+plain='\033[0m'
+blue='\033[0;34m'
+ungu='\033[0;35m'
+Green="\033[32m"
+Red="\033[31m"
+WhiteB="\e[5;37m"
+BlueCyan="\e[5;36m"
+MYIP=$(wget -qO- ipv4.icanhazip.com)
+Green_background="\033[42;37m"
+Red_background="\033[41;37m"
+Suffix="\033[0m"
+NC=''
+timenow=$(date +%T)
+
+
 tim2sec() {
 mult=1
 arg="$1"
@@ -38,6 +57,7 @@ if [[ xrayy -le 5 ]]; then
   systemctl restart xray
 fi
 xraylimit
+echo -e "**◇━━━━━━━━━━━━━━━━━◇**"
 vm=($(cat /etc/xray/config.json | grep "^#vmg" | awk '{print $2}' | sort -u))
 echo -n >/tmp/vm
 for db1 in ${vm[@]}; do
@@ -75,6 +95,7 @@ if [[ ${splvm} != "" ]]; then
       echo -e "IP LOGIN: $vmhas"
       echo -e "USADO :   $gb"
       echo -e "LIMITE: $lim2"
+echo -e "**◇━━━━━━━━━━━━━━━━━◇**"
     fi
   done
 fi
