@@ -20,7 +20,7 @@ dayleft=$(( ($d1 - $d2) / 86400 ))
 TOKEN="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"
 REPO="https://github.com/darnix1/permission.git"
 EMAIL="fdanx@yahoo.com"
-USER="Tomketstore"
+USER="darnix1"
 today=$(date -d "0 days" +"%Y-%m-%d")
 
 # Clonar el repositorio
