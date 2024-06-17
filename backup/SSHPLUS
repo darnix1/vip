@@ -5,7 +5,7 @@ export HOME=/root
 export TERM=xterm
 NC='\e[0m'
 dateFromServer=$(curl -v --insecure --silent https://google.com/ 2>&1 | grep Date | sed -e 's/< Date: //')
-biji=`date +"%Y-%m-%d" -d "$dateFromServer"`
+biji=$(date +"%Y-%m-%d" -d "$dateFromServer")
 ipsaya=$(curl -sS ipv4.icanhazip.com)
 
 Repo1="https://raw.githubusercontent.com/darnix1/permission/main/"
@@ -24,7 +24,7 @@ USER="Tomketstore"
 today=$(date -d "0 days" +"%Y-%m-%d")
 
 # Clonar el repositorio
-git clone ${REPO} /root/ipvps/
+git clone https://${TOKEN}@github.com/darnix1/permission.git /root/ipvps/
 
 echo -e ""
 echo -e ""
@@ -37,7 +37,7 @@ if [[ ${CLIENT_EXISTS} == '1' ]]; then
 fi
 
 echo -e ""
-read -p " Input usu : " name
+read -p " Input username : " name
 echo -e ""
 clear
 read -p " Masukan waktu expired : " exp
@@ -54,7 +54,7 @@ git init &> /dev/null
 git add . &> /dev/null
 git commit -m "Adding IP ${ip} with user ${name} expiring on ${exp2}" &> /dev/null
 git branch -M main &> /dev/null
-git remote add origin ${REPO}
+git remote add origin https://${TOKEN}@github.com/darnix1/permission.git
 
 # Mostrar detalles de los cambios antes del push
 git status
@@ -70,7 +70,7 @@ fi
 rm -rf /root/ipvps
 
 echo -e "━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo -e "🍀VPS SUCCESSFULLY REGISTERED🍀"
+echo -e "🍀VPS SUCCESSFULLY REGISTdERED🍀"
 echo -e "━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo -e "🌹NAME AUTHOR : $name"
 echo -e "🏵️SCRIPT TIME : $exp2"
