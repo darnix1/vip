@@ -9,9 +9,19 @@ msg -tit
 msg -bar
 amacen " CONFIGURACION VMESS CLIENTES "
 echo ""
-menu_func "-vd Este es un mensaje verde" 
-"-vm Este es un mensaje rojo" 
-"-fi Primero Segundo" 
-"-bar Una barra"
+menu_func "NUEVO CLIENTE VMESS 👤 " \
+"USUARIO TEMPORAL VMESS " \
+"$(msg -verd "RENOVAR USUARIOS XRAY") " \
+"⚠️ ELIMINAR CLIENTE ⚠️" \
+"$(dnxver "VER CLIENTES EN LINEA ") " \
+"CONFIGURACION DE USUARIOS" \
+" $(msg -ama "EDITAR LIMITE DE IP A USUARIOS") " \
+"AUTO ELIMINAR O BLOQUEAR VMESS" \
+" $(msg -verm2 "DESBLOQUEAR LOGIN VMESS") " \
+"DESBLOQUEAR CUOTA A USUARIOS VMESS " \
+"RESTAURAR USUARIOS VMESS" \
+#"CAMBIAR A MODO SSH/TOKEN"
 back
+echo -e ""
+sres
 echo -e ""
