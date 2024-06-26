@@ -1,0 +1,7 @@
+ad.doubleclick.net
+googleadservices.com
+pagead2.googlesyndication.com
+google-analytics.com
+googlesyndication.com
+gstatic.com
+adservices.google.com
