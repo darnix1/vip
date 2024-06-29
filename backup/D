@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Variables
-DOMAIN="pi.darnixmx.com"
+DOMAIN="pih.darnixmx.com"
 EMAIL="cisdan96@gmail.com"
 PIHOLE_IP="127.0.0.1"
 PIHOLE_PORT="80"
