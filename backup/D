@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# Variables
+DOMAIN="pi.darnixmx.com"
+EMAIL="cisdan96@gmail.com"
+PIHOLE_IP="127.0.0.1"
+PIHOLE_PORT="80"
+
+# Actualizar el sistema
+sudo apt update
+sudo apt upgrade -y
+
+# Instalar Nginx y Certbot
+sudo apt install -y nginx certbot python3-certbot-nginx
+
+# Crear archivo de configuración de Nginx para Pi-hole
+sudo tee /etc/nginx/sites-available/$DOMAIN <<EOF
+server {
+    listen 80;
+    server_name $DOMAIN;
+
+    location / {
+        proxy_pass http://$PIHOLE_IP:$PIHOLE_PORT;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOF
+
+# Habilitar la configuración del sitio en Nginx
+sudo ln -s /etc/nginx/sites-available/$DOMAIN /etc/nginx/sites-enabled/
+
+# Verificar la configuración de Nginx
+sudo nginx -t
+
+# Reiniciar Nginx
+sudo systemctl restart nginx
+
+# Obtener y configurar el certificado SSL con Certbot
+sudo certbot --nginx -d $DOMAIN --email $EMAIL --agree-tos --no-eff-email
+
+# Verificar la configuración de Nginx con SSL
+sudo nginx -t
+
+# Reiniciar Nginx
+sudo systemctl restart nginx
+
+echo "La instalación y configuración se han completado. Puedes acceder a Pi-hole en https://$DOMAIN/admin"
