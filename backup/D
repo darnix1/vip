@@ -1,50 +1,37 @@
-#!/bin/bash
+start_boti () {
+[[ ! -e "${CIDdir}/token" ]] && echo "null" > ${CIDdir}/token
+unset PIDGEN
+PIDGEN=$(ps aux|grep -v grep|grep "BotGen.sh")
+if [[ ! $PIDGEN ]]; then
+echo -e "[Unit]
+Description=BotGen Service by @ChumoGH
+After=network.target
+StartLimitIntervalSec=0
 
-# Variables
-DOMAIN="pih.darnixmx.com"
-EMAIL="cisdan96@gmail.com"
-PIHOLE_IP="127.0.0.1"
-PIHOLE_PORT="80"
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root
+ExecStart=/bin/bash ${CIDdir}/BotGen.sh -start
+Restart=always
+RestartSec=3s
 
-# Actualizar el sistema
-sudo apt update
-sudo apt upgrade -y
+[Install]
+WantedBy=multi-user.target" > /etc/systemd/system/BotGen-server.service
 
-# Instalar Nginx y Certbot
-sudo apt install -y nginx certbot python3-certbot-nginx
+		systemctl enable BotGen-server &>/dev/null
+    	systemctl start BotGen-server &>/dev/null
+else
+killall BotGen.sh &>/dev/null
+systemctl stop BotGen-server &>/dev/null
+systemctl disable BotGen-server &>/dev/null
+rm /etc/systemd/system/BotGen-server.service &>/dev/null
+clear
+msgi -bar
+echo -e "\033[1;31m            BotGen fuera de linea"
+msgi -bar
+fi
+read -p "Presione Enter para continuar "
 
-# Crear archivo de configuración de Nginx para Pi-hole
-sudo tee /etc/nginx/sites-available/$DOMAIN <<EOF
-server {
-    listen 80;
-    server_name $DOMAIN;
-
-    location / {
-        proxy_pass http://$PIHOLE_IP:$PIHOLE_PORT;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
+bot_gen
 }
-EOF
-
-# Habilitar la configuración del sitio en Nginx
-sudo ln -s /etc/nginx/sites-available/$DOMAIN /etc/nginx/sites-enabled/
-
-# Verificar la configuración de Nginx
-sudo nginx -t
-
-# Reiniciar Nginx
-sudo systemctl restart nginx
-
-# Obtener y configurar el certificado SSL con Certbot
-sudo certbot --nginx -d $DOMAIN --email $EMAIL --agree-tos --no-eff-email
-
-# Verificar la configuración de Nginx con SSL
-sudo nginx -t
-
-# Reiniciar Nginx
-sudo systemctl restart nginx
-
-echo "La instalación y configuración se han completado. Puedes acceder a Pi-hole en https://$DOMAIN/admin"
