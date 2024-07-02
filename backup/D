@@ -1,4 +1,4 @@
-start_boti () {
+
 [[ ! -e "${CIDdir}/token" ]] && echo "null" > ${CIDdir}/token
 unset PIDGEN
 PIDGEN=$(ps aux|grep -v grep|grep "BotGen.sh")
@@ -34,4 +34,4 @@ fi
 read -p "Presione Enter para continuar "
 
 bot_gen
-}
+
