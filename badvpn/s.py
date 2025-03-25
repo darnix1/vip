@@ -67,7 +67,7 @@ def print_sum(data, prefix):
         table.add_row("──────────────────────", "────────────")  # Línea separadora entre cada usuario
 
     # Línea final separadora y totales
-    table.add_row("TOTAL", human_readable_size(total_down), style="bold white")
+    table.add_row("TOTAL", human_readable_size(total_down), style="bold yellow)
 
     console.print(table)
 
