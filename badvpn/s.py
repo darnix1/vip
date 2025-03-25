@@ -2,9 +2,7 @@ import subprocess
 import json
 import pandas as pd
 from rich.console import Console
-from rich.table import Table, box
-from rich.panel import Panel
-from rich.align import Align
+from rich.table import Table
 
 APISERVER = "127.0.0.1:10000"
 XRAY = "/usr/local/bin/xray"
@@ -31,7 +29,7 @@ def apidata(reset=False):
                 if len(name_parts) > 3:
                     direction = name_parts[0]
                     link = name_parts[1]
-                    entity = name_parts[2]  # Usuario
+                    entity = name_parts[2]
                     type_ = name_parts[3]
                     value = item["value"]
                     parsed_data.append({"direction": direction, "link": link, "entity": entity, "type": type_, "value": int(value)})
@@ -46,32 +44,29 @@ def human_readable_size(size, decimal_places=1):
 
 def print_sum(data, prefix):
     df = pd.DataFrame(data)
-    df_filtered = df[df['direction'] == prefix]
+    df_filtered = df[(df['direction'] == prefix) & (df['type'] == 'downlink')]  # Solo downlink
+    df_sorted = df_filtered.sort_values(by='value', ascending=False)
 
-    users = df_filtered['entity'].unique()
+    total_down = df_sorted['value'].sum()
+    df_sorted['value'] = df_sorted['value'].apply(human_readable_size)
 
-    panels = []
+    # Crear tabla con rich
+    table = Table(show_header=True, header_style="bold cyan")
+    table.add_column("Usuario", justify="left", style="cyan", no_wrap=True)
+    table.add_column("Tráfico", justify="right", style="magenta", no_wrap=True)
 
-    for user in users:
-        user_data = df_filtered[df_filtered['entity'] == user]
+    for _, row in df_sorted.iterrows():
+        entity = f"{row['direction']}:{row['link']}->downlink"
+        value = row['value']
+        table.add_row(entity, value)
 
-        up_sum = user_data[user_data['type'] == 'uplink']['value'].sum()
-        down_sum = user_data[user_data['type'] == 'downlink']['value'].sum()
-        total_sum = up_sum + down_sum
+    # Línea separadora para los totales
+    table.add_row("──────────────────────", "────────────", end_section=True)
+    table.add_row("TOTAL", human_readable_size(total_down), style="bold yellow")
 
-        table = Table(box=box.SIMPLE, show_header=False)
-        table.add_column("Type", justify="left", style="cyan")
-        table.add_column("Traffic", justify="right", style="magenta")
-
-        table.add_row("Upload", human_readable_size(up_sum))
-        table.add_row("Download", human_readable_size(down_sum))
-        table.add_row("Total", human_readable_size(total_sum))
-
-        panels.append(Panel(Align.center(table), title=f"[bold green]{user}[/]", border_style="blue"))
-
-    console.print(*panels, justify="center")
+    console.print(table)
 
 if __name__ == "__main__":
     data = apidata(reset=False)
     print_sum(data, "user")
-                    
+    
