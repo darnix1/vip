@@ -55,12 +55,13 @@ def print_sum(data, prefix):
     white_text = Style(color="white")
 
     # Crear tabla con `rich`
-    table = Table(show_header=True, header_style=white_text, border_style="green")
+    #table = Table(show_header=True, header_style=white_text, border_style="green")
+    table = Table(title="Network Statistics", box=box.SQUARE, show_header=True, header_style="bold cyan")
     table.add_column("Usuario", justify="left", style=white_text, no_wrap=True)
     table.add_column("Tráfico", justify="right", style=white_text, no_wrap=True)
 
     for _, row in df_sorted.iterrows():
-        entity = f"{row['direction']}:{row['link']}->downlink"
+        entity = f"{row['direction']}:{row['link']}->Bajada"
         value = row['value']
         table.add_row(entity, value)
         table.add_row("──────────────────────", "────────────")  # Línea separadora entre cada usuario
