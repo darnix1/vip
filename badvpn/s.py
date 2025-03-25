@@ -60,7 +60,7 @@ def print_sum(data, prefix):
     table.add_column("Tráfico", justify="right", style=white_text, no_wrap=True)
 
     for _, row in df_sorted.iterrows():
-        entity = f"{row['direction']}:{row['link']}->downlink"
+        entity = f"{row['direction']}:{row['link']}->bajada"
         value = row['value']
         table.add_row(entity, value)
         table.add_row("──────────────────────", "────────────")  # Línea separadora entre cada usuario
