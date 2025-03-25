@@ -2,7 +2,9 @@ import subprocess
 import json
 import pandas as pd
 from rich.console import Console
-from rich.table import Table, box
+from rich.text import Text
+from rich.panel import Panel
+from rich.align import Align
 
 APISERVER = "127.0.0.1:10000"
 XRAY = "/usr/local/bin/xray"
@@ -18,7 +20,7 @@ def apidata(reset=False):
     try:
         data = json.loads(result.stdout)
     except json.JSONDecodeError:
-        console.print("Failed to parse JSON", style="bold red")
+        console.print("❌ [bold red]Failed to parse JSON[/bold red]")
         return []
 
     parsed_data = []
@@ -47,7 +49,6 @@ def print_sum(data, prefix):
     df_filtered = df[df['direction'] == prefix]
     df_sorted = df_filtered.sort_values(by='value', ascending=False)
 
-    # Agrupar por usuario
     users = df_sorted['link'].unique()
 
     for user in users:
@@ -55,27 +56,27 @@ def print_sum(data, prefix):
         if user_data.empty:
             continue
 
-        table = Table(title=f"Usuario: {user}", box=box.SQUARE, show_header=True, header_style="bold cyan")
-        table.add_column("Type", justify="center", style="cyan", no_wrap=True)
-        table.add_column("Traffic", justify="center", style="magenta", no_wrap=True)
+        up_value = user_data[user_data['type'] == 'uplink']['value'].sum()
+        down_value = user_data[user_data['type'] == 'downlink']['value'].sum()
+        total_value = up_value + down_value
 
-        up_sum = user_data[user_data['type'] == 'uplink']['value'].sum()
-        down_sum = user_data[user_data['type'] == 'downlink']['value'].sum()
-        total_sum = up_sum + down_sum
+        up_size = human_readable_size(up_value)
+        down_size = human_readable_size(down_value)
+        total_size = human_readable_size(total_value)
 
-        for _, row in user_data.iterrows():
-            traffic_type = f"{row['type']}"
-            value = human_readable_size(row['value'])
-            table.add_row(traffic_type, value)
+        # Ajustamos alineación y espaciamiento para centrar todo bien
+        content = Text()
+        content.append("─────────────────────────────\n", style="cyan")
+        content.append("      [bold magenta]Tipo[/bold magenta]   │ [bold green]Tráfico[/bold green]  \n", style="bold")
+        content.append("─────────────────────────────\n", style="cyan")
+        content.append(f"[bold yellow]   Usuario: {user}   [/bold yellow]\n", style="bold")
+        content.append(f"   [blue]downlink[/blue]  [white]{down_size}[/white]   [red]uplink[/red]  [white]{up_size}[/white]   \n")
+        content.append(f"   [bold magenta]SUM->TOTAL:[/bold magenta]  {total_size}   \n", style="bold")
+        content.append("─────────────────────────────\n", style="cyan")
 
-        table.add_row("", "")
-        table.add_row("SUM->up:", human_readable_size(up_sum))
-        table.add_row("SUM->down:", human_readable_size(down_sum))
-        table.add_row("SUM->TOTAL:", human_readable_size(total_sum))
-
-        console.print(table)
-        console.print("-" * 40)  # Separador entre tablas
+        console.print(Align.center(Panel(content, border_style="blue", padding=(1, 8))))
 
 if __name__ == "__main__":
     data = apidata(reset=False)
     print_sum(data, "user")
+                    
