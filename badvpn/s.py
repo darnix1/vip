@@ -45,7 +45,7 @@ def human_readable_size(size, decimal_places=1):
 
 def print_sum(data, prefix):
     df = pd.DataFrame(data)
-    df_filtered = df[(df['direction'] == prefix) & (df['type'] == 'downlink')]  # Solo downlink
+    df_filtered = df[(df['direction'] == prefix) & (df['type'] == 'bajada')]  # Solo downlink
     df_sorted = df_filtered.sort_values(by='value', ascending=False)
 
     total_down = df_sorted['value'].sum()
