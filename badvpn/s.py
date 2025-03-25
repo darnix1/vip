@@ -45,7 +45,7 @@ def human_readable_size(size, decimal_places=1):
 
 def print_sum(data, prefix):
     df = pd.DataFrame(data)
-    df_filtered = df[(df['direction'] == prefix) & (df['type'] == 'bajada')]  # Solo downlink
+    df_filtered = df[(df['direction'] == prefix) & (df['type'] == 'downlink')]  # Solo downlink
     df_sorted = df_filtered.sort_values(by='value', ascending=False)
 
     total_down = df_sorted['value'].sum()
@@ -55,22 +55,22 @@ def print_sum(data, prefix):
     white_text = Style(color="white")
 
     # Crear tabla con `rich`
-    table = Table(show_header=True, header_style=white_text, border_style="green")
+    table = Table(show_header=True, header_style=white_text, border_style="bold cyan")
     table.add_column("Usuario", justify="left", style=white_text, no_wrap=True)
     table.add_column("Tráfico", justify="right", style=white_text, no_wrap=True)
 
     for _, row in df_sorted.iterrows():
-        entity = f"{row['direction']}:{row['link']}->bajada"
+        entity = f"{row['direction']}:{row['link']}->downlink"
         value = row['value']
         table.add_row(entity, value)
         table.add_row("──────────────────────", "────────────")  # Línea separadora entre cada usuario
 
     # Línea final separadora y totales
-    table.add_row("TOTAL", human_readable_size(total_down), style="bold white")
+    table.add_row("TOTAL", human_readable_size(total_down), style="bold yellow")
 
     console.print(table)
 
 if __name__ == "__main__":
     data = apidata(reset=False)
     print_sum(data, "user")
-        
+    
