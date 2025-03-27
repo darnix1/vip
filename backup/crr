@@ -64,37 +64,7 @@ fun_bar() {
     tput cnorm
 }
         
-dependencias() {
-  soft="sudo  zip unzip ufw curl  screen cron python htop python3 python3-pip lsof pv  nano at mlocate gawk grep bc jq   socat cowsay figlet lolcat"
 
-  for i in $soft; do
-    leng="${#i}"
-    puntos=$((21 - $leng))
-    pts="."
-    for ((a = 0; a < $puntos; a++)); do
-      pts+="."
-    done
-    msg -nazu "    instalando $i$(msg -ama "$pts")"
-    if apt install $i -y &>/dev/null; then
-      msg -verd " INSTALADO"
-    else
-      msg -verm2 " ERROR"
-      sleep 2
-      tput cuu1 && tput dl1
-      print_center -ama "applying fix to $i"
-      dpkg --configure -a &>/dev/null
-      sleep 2
-      tput cuu1 && tput dl1
-
-      msg -nazu "    instalando $i$(msg -ama "$pts")"
-      if apt install $i -y &>/dev/null; then
-        msg -verd " INSTALADO"
-      else
-        msg -verm2 " ERROR"
-      fi
-    fi
-  done
-}
 clear&&clear
 echo -e "\033[1;31m———————————————————————————————————————————————————\033[1;37m"
 echo -e "\033[1;32m              WS+ SSL |2023 "
