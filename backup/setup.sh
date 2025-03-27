@@ -904,23 +904,23 @@ print_install "Enable Service"
 function instal(){
 clear
     first_setup
-    nginx_install
+    #nginx_install
     base_package
     make_folder_xray
-    pasang_domain
+    2pasang_domain
     password_default
     pasang_ssl
-    install_xray
+    #install_xray
     ssh
     udp_mini
-    ssh_slow
+    #ssh_slow
     ins_SSHD
     ins_dropbear
-    ins_vnstat
+    #ins_vnstat
     ins_openvpn
     ins_backup
     ins_swab
-    ins_Fail2ban
+    #ins_Fail2ban
     ins_epro
     ins_restart
     menu
