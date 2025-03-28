@@ -504,22 +504,22 @@ echo -e "${COLOR1} " | tee -a /user/xray-$user.log
 # AUTOMATIZAR CRONJOB (si no existe)
 # ==============================================
 
-CRON_JOB="*/30 * * * * /usr/local/bin/check_xray_limits.sh >> /var/log/xray_limits.log 2>&1"
-CRON_FILE="/var/spool/cron/crontabs/root"
+#CRON_JOB="*/30 * * * * /usr/local/bin/check_xray_limits.sh >> /var/log/xray_limits.log 2>&1"
+#CRON_FILE="/var/spool/cron/crontabs/root"
 
 # Verificar si el cronjob ya existe
-if ! sudo crontab -l | grep -q "check_xray_limits.sh"; then
+#if ! sudo crontab -l | grep -q "check_xray_limits.sh"; then
     # Configurar cronjob automáticamente
-    (sudo crontab -l 2>/dev/null; echo "$CRON_JOB") | sudo crontab -
+    #(sudo crontab -l 2>/dev/null; echo "$CRON_JOB") | sudo crontab -
     
     # Crear archivo de log y dar permisos
-    sudo touch /var/log/xray_limits.log
-    sudo chmod 644 /var/log/xray_limits.log
+    #sudo touch /var/log/xray_limits.log
+    #sudo chmod 644 /var/log/xray_limits.log
     
-    echo -e "${COLOR1}[✓] CronJob configurado automáticamente.${WH}"
-else
-    echo -e "${COLOR1}[i] CronJob ya estaba configurado.${WH}"
-fi
+    #echo -e "${COLOR1}[✓] CronJob configurado automáticamente.${WH}"
+#else
+    #echo -e "${COLOR1}[i] CronJob ya estaba configurado.${WH}"
+#fi
 
 
 BOT_TOKEN=$(cat /etc/bot_telegram)
