@@ -65,6 +65,8 @@ def human_readable_size(size, decimal_places=2):
             return f"{size:.{decimal_places}f} {unit}"
         size /= 1024
 
+# ... (código anterior igual hasta get_users) ...
+
 def main():
     data = apidata()
     if not data:
@@ -75,18 +77,26 @@ def main():
         console.print("No se encontraron usuarios activos.", style="bold yellow")
         return
 
-    console.print("\n[bold]Usuarios disponibles:[/]", style="green")
+    console.print("\n[bold green]Usuarios disponibles:[/]")
     for i, user in enumerate(users, 1):
         console.print(f"{i}. {user}")
 
-    # Corrección clave: Paréntesis correctamente balanceados
-    selected = Prompt.ask(
-        "\nSeleccione un usuario (número o nombre)",
-        choices=[str(i) for i in range(1, len(users)+1)] + users,  # <- Corregido aquí
-        default="1"
-    )
+    # Input limpio sin sugerencias
+    selected = Prompt.ask("\nSeleccione un usuario (número o nombre)", default="1")
 
-    user = users[int(selected)-1] if selected.isdigit() else selected
+    # Validación manual
+    if selected.isdigit():
+        selected = int(selected)
+        if selected < 1 or selected > len(users):
+            console.print("[red]¡Número inválido![/]")
+            return
+        user = users[selected-1]
+    else:
+        if selected not in users:
+            console.print("[red]¡Usuario no encontrado![/]")
+            return
+        user = selected
+
     print_user_traffic(data, user)
 
 if __name__ == "__main__":
