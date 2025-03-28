@@ -13,7 +13,7 @@ check_limit() {
     local user=$1 limit_gb=$2 exp=$3
     local limit_bytes=$(awk "BEGIN {print $limit_gb * 1024 * 1024 * 1024}")
     # Cambio clave: Usar xray_monitor_json.py en lugar de xray_monitor.py
-    local traffic_data=$(python3 /usr/local/bin/xray_monitor_json.py)
+    local traffic_data=$(python3 /usr/local/bin/xraymonitor_json.py)
     local consumption=$(echo "$traffic_data" | jq -r ".[] | select(.user == \"$user\") | .value")
 
     if [ "$(date +%Y-%m-%d)" == "$exp" ]; then
