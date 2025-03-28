@@ -26,7 +26,7 @@ def get_users(data):
         if "name" in item:
             parts = item["name"].split(">>>")
             if len(parts) > 1 and parts[0] == "user":
-                users.add(parts[1])  # Añade el email/usuario
+                users.add(parts[1])
     return sorted(users)
 
 def print_user_traffic(data, user):
@@ -47,12 +47,10 @@ def print_user_traffic(data, user):
         console.print(f"[bold red]No hay datos para el usuario: {user}[/]")
         return
 
-    # Calcular tráfico
     uplink = df[df['type'] == 'uplink']['value'].sum()
     downlink = df[df['type'] == 'downlink']['value'].sum()
     total = uplink + downlink
 
-    # Mostrar tabla
     table = Table(title=f"Tráfico de {user}", box=box.ROUNDED)
     table.add_column("Tipo", style="cyan")
     table.add_column("Consumo", style="magenta", justify="right")
@@ -77,15 +75,14 @@ def main():
         console.print("No se encontraron usuarios activos.", style="bold yellow")
         return
 
-    # Mostrar lista de usuarios
     console.print("\n[bold]Usuarios disponibles:[/]", style="green")
     for i, user in enumerate(users, 1):
         console.print(f"{i}. {user}")
 
-    # Selección interactiva
+    # Corrección clave: Paréntesis correctamente balanceados
     selected = Prompt.ask(
         "\nSeleccione un usuario (número o nombre)",
-        choices=[str(i) for i in range(1, len(users)+1] + users,
+        choices=[str(i) for i in range(1, len(users)+1)] + users,  # <- Corregido aquí
         default="1"
     )
 
