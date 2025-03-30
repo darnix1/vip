@@ -19,23 +19,16 @@ notify_telegram() {
         -d "parse_mode=HTML" > /dev/null
 }
 
-# Función para eliminar usuario (adaptada de tu script manual)
-delete_user() {
+# Función para deshabilitar usuario
+disable_user() {
     local user="$1"
     local exp=$(grep -wE "^#&@ $user" "$CONFIG_FILE" | cut -d ' ' -f 3 | sort | uniq)
     
-    # Eliminar de Xray
-    sed -i "/^#&@ $user $exp/,/^},{/d" "$CONFIG_FILE" 2>/dev/null
-    
-    # Eliminar archivos asociados
-    rm -f "/var/www/html/xray/xray-$user.html" 2>/dev/null
-    rm -f "/user/xray-$user.log" 2>/dev/null
-    
-    # Eliminar del CSV
-    sed -i "/^$user,/d" "$USER_LIMITS_FILE" 2>/dev/null
+    # Cambiar el UUID del usuario a "00000000-0000-0000-0000-000000000000"
+    sed -i "/^#&@ $user $exp/,/^},{/ s/\"id\": \"[^\"]*\"/\"id\": \"00000000-0000-0000-0000-000000000000\"/" "$CONFIG_FILE" 2>/dev/null
     
     # Registrar en log
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - Usuario $user eliminado (Expiración: $exp)" >> "$LOG_FILE"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - Usuario $user deshabilitado (Expiración: $exp)" >> "$LOG_FILE"
     
     return 0
 }
@@ -57,24 +50,18 @@ check_limits() {
         
         # Verificar expiración
         if [ "$(date +%Y-%m-%d)" == "$exp" ]; then
-            if delete_user "$user"; then
+            if disable_user "$user"; then
                 notify_telegram "⌛ <b>Usuario Expirado:</b> <code>$user</code>\n📅 <b>Fecha:</b> $exp"
             fi
         
         # Verificar límite de datos
         elif [ -n "$consumption" ] && [ "$consumption" -ge "$limit_bytes" ]; then
-            if delete_user "$user"; then
+            if disable_user "$user"; then
                 local consumo_gb=$(echo "scale=2; $consumption/1073741824" | bc)
-                notify_telegram "🚨 <b>Usuario Eliminado:</b> <code>$user</code>\n📊 <b>Consumo:</b> $consumo_gb GB\n⚖️ <b>Límite:</b> $limit_gb GB"
+                notify_telegram "🚨 <b>Usuario Deshabilitado:</b> <code>$user</code>\n📊 <b>Consumo:</b> $consumo_gb GB\n⚖️ <b>Límite:</b> $limit_gb GB"
             fi
         fi
     done < "$USER_LIMITS_FILE"
-    
-    # Reiniciar Xray si hubo cambios
-    if grep -q "eliminado" "$LOG_FILE"; then
-        systemctl restart xray
-        echo "$(date '+%Y-%m-%d %H:%M:%S') - Xray reiniciado" >> "$LOG_FILE"
-    fi
 }
 
 # Ejecutar
