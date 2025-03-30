@@ -50,7 +50,7 @@ def human_readable_size(size):
 def display_live_stats():
     """Muestra estadísticas en tiempo real con actualización automática"""
     with Progress(transient=True) as progress:
-        task = progress.add_task("[cyan]Obteniendo datos...", total=None)
+        task = progress.add_task("[cyan]🚀", total=None)
         
         while True:
             try:
