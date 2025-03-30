@@ -49,7 +49,7 @@ check_limits() {
         [ -z "$user" ] && continue  # Saltar líneas vacías
         
         # Obtener consumo actual (en bytes)
-        local consumption=$(python3 /usr/local/bin/xray_monitor_json.py 2>/dev/null | \
+        local consumption=$(python3 /usr/local/bin/xraymonitor_json.py 2>/dev/null | \
                           jq -r ".[] | select(.user == \"$user\") | .value")
         
         # Calcular límite en bytes
