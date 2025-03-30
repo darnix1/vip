@@ -27,7 +27,7 @@ if [ $(grep -c -E "^#&@ " "/usr/local/etc/xray/config/04_inbounds.json") -eq 0 ]
     echo -e "${WH}    NO HAY USUARIOS PARA ELIMINAR"
     echo -e "${COLOR1}————————————————————————"
     read -n 1 -s -r -p "Presiona cualquier tecla para continuar"
-    Sc_Credit
+    menu
 fi
 
 # Mostrar lista de usuarios
@@ -40,7 +40,7 @@ echo -e "${COLOR1}————————————————————�
 read -rp "Ingresa el nombre de usuario: " user
 
 if [ -z "$user" ]; then
-    Sc_Credit
+    menu
 else
     # Obtener datos del usuario
     exp=$(grep -wE "^#&@ $user" "/usr/local/etc/xray/config/04_inbounds.json" | cut -d ' ' -f 3)
