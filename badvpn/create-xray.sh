@@ -450,8 +450,8 @@ Fecha de Expiración : ${exp}</pre>
 END
 
 # Restart Xray Service
-#systemctl restart xray
-systemctl status xray
+systemctl restart xray
+
 
 # Clear Screen
 clear
