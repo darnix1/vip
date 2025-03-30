@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configuración
-PYTHON_SCRIPT="/usr/local/bin/xray-stats.py"  # Ajusta la ruta
+PYTHON_SCRIPT="/usr/local/bin/xraymonitor_json.py"  # Ajusta la ruta
 XRAY_API_CMD="/usr/local/bin/xray api statsquery --server 127.0.0.1:10000"
 STATS_DB="/var/lib/xray/stats_accumulated.json"
 
