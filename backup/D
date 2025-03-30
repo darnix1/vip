@@ -68,7 +68,7 @@ echo -e "$teal_color╘═══════════════════
 echo -e "$teal_color╒═════════════════════════════════════════════╕\033[0m"
 printf "%-5s %-15s %-15s\n" "No" "Username" "Expiration Date"
 
-grep -E "^### " "/usr/local/etc/xray/vmtls.json" | cut -d ' ' -f 2-3 | nl -w 5 -s ') ' | while IFS= read -r line; do
+grep -E "^### " "/usr/local/etc/xray/config/04_inbounds.json" | cut -d ' ' -f 2-3 | nl -w 5 -s ') ' | while IFS= read -r line; do
     no=$(echo "$line" | awk '{print $1}')
     username=$(echo "$line" | awk '{print $2}')
     expiration=$(echo "$line" | awk '{print $3}')
@@ -85,12 +85,12 @@ until [[ ${CLIENT_NUMBER} -ge 1 && ${CLIENT_NUMBER} -le ${NUMBER_OF_CLIENTS} ]];
     fi
 done
 
-user=$(grep -E "^### " "/usr/local/etc/xray/vmtls.json" | cut -d ' ' -f 2 | sed -n "${CLIENT_NUMBER}"p)
-exp=$(grep -E "^### " "/usr/local/etc/xray/vmtls.json" | cut -d ' ' -f 3 | sed -n "${CLIENT_NUMBER}"p)
+user=$(grep -E "^### " "/usr/local/etc/xray/config/04_inbounds.json" | cut -d ' ' -f 2 | sed -n "${CLIENT_NUMBER}"p)
+exp=$(grep -E "^### " "/usr/local/etc/xray/config/04_inbounds.json" | cut -d ' ' -f 3 | sed -n "${CLIENT_NUMBER}"p)
 
 # Remove the selected client from the config file
-sed -i "/^### $user $exp/,/^},{/d" /usr/local/etc/xray/vmtls.json
-sed -i "/^### $user $exp/,/^},{/d" /usr/local/etc/xray/vmntls.json
+sed -i "/^### $user $exp/,/^},{/d" /usr/local/etc/xray/config/04_inbounds.json
+sed -i "/^### $user $exp/,/^},{/d" /usr/local/etc/xray/config/04_inbounds.json
 
 # Remove the corresponding JSON files
 rm -rf /usr/local/etc/xray/backup/vmess/$user-tls.txt
