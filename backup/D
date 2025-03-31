@@ -1,89 +1,211 @@
-tim2sec() {
-mult=1
-arg="$1"
-inu=0
-while [ ${#arg} -gt 0 ]; do
-prev="${arg%:*}"
-if [ "$prev" = "$arg" ]; then
-curr="${arg#0}"
-prev=""
-else
-curr="${arg##*:}"
-curr="${curr#0}"
-fi
-curr="${curr%.*}"
-inu=$((inu + curr * mult))
-mult=$((mult * 60))
-arg="$prev"
-done
-echo "$inu"
+#!/bin/bash
+
+# --- Configuración de colores y estilos ---
+NC="\033[0m"
+RED="\033[0;31m"
+GREEN="\033[0;32m"
+YELLOW="\033[0;33m"
+CYAN="\033[0;36m"
+WHITE="\033[1;37m"
+COLOR1="\033[1;35m"
+COLBG1="\033[1;49;35m"
+
+# --- Mejora #1: Presentación de datos mejorada ---
+function display_header() {
+    echo -e "${COLOR1}╭──────────────────────────────────────────────────────────╮${NC}"
+    echo -e "${COLOR1}│${COLBG1}               MONITOR DE USUARIOS VMESS               ${NC}${COLOR1}│${NC}"
+    echo -e "${COLOR1}╰──────────────────────────────────────────────────────────╯${NC}"
 }
+
+function display_user_stats() {
+    local user=$1
+    local ips=$2
+    local max_ips=$3
+    local usage=$4
+    local limit=$5
+
+    # Calcular porcentaje de uso
+    local usage_percent=$(( (usage * 100) / limit ))
+    
+    # Determinar color según el uso
+    if [ $usage_percent -ge 90 ]; then
+        local color=$RED
+    elif [ $usage_percent -ge 50 ]; then
+        local color=$YELLOW
+    else
+        local color=$GREEN
+    fi
+
+    echo -e "${COLOR1}├──────────────────────────────────────────────────────────┤${NC}"
+    echo -e "${COLOR1}│ ${WHITE}USUARIO: ${CYAN}${user}${NC}"
+    echo -e "${COLOR1}│ ${WHITE}CONEXIONES: ${ips}/${max_ips} ${WHITE}(Límite IP)${NC}"
+    echo -e "${COLOR1}│ ${WHITE}USO DE DATOS: ${color}$(convert ${usage})${NC} ${WHITE}de $(convert ${limit}) ${NC}(${color}${usage_percent}%${NC})"
+}
+
+# --- Mejora #2: Optimizar procesamiento de logs ---
+function process_logs() {
+    local user=$1
+    local log_file="/var/log/xray/access.log"
+    local tmp_file="/tmp/vmess_tmp_$(date +%s)"
+    
+    # Filtrar logs para el usuario (últimas 100 líneas para eficiencia)
+    grep -w "email: ${user}" "${log_file}" | tail -n 100 > "${tmp_file}"
+    
+    # Extraer IPs únicas conectadas en los últimos 15 minutos
+    local current_time=$(date +%s)
+    local active_ips=$(awk -v now="${current_time}" '
+    {
+        # Convertir fecha del log a timestamp
+        cmd = "date -d \""$1" "$2"\" +%s 2>/dev/null";
+        cmd | getline log_time;
+        close(cmd);
+        
+        if ((now - log_time) <= 900) {  # 15 minutos
+            print $3;
+        }
+    }' "${tmp_file}" | sort | uniq | wc -l)
+    
+    rm -f "${tmp_file}"
+    echo "${active_ips}"
+}
+
+# --- Mejora #3: Estadísticas globales ---
+function global_stats() {
+    local total_users=$(grep -c "^#vmg" /etc/xray/config.json)
+    local connected_users=$(cat /tmp/vmess_ips.tmp 2>/dev/null | wc -l || echo 0)
+    
+    echo -e "${COLOR1}├─────────────── ESTADÍSTICAS GLOBALES ─────────────────┤${NC}"
+    echo -e "${COLOR1}│ ${WHITE}USUARIOS TOTALES: ${GREEN}${total_users}${NC}"
+    echo -e "${COLOR1}│ ${WHITE}USUARIOS CONECTADOS: ${GREEN}${connected_users}${NC}"
+    echo -e "${COLOR1}╰──────────────────────────────────────────────────────────╯${NC}"
+}
+
+# --- Mejora #4: Validar archivos críticos ---
+function validate_files() {
+    local user=$1
+    local critical_files=(
+        "/etc/xray/config.json"
+        "/etc/vmess/${user}IP"
+        "/etc/vmess/${user}"
+    )
+    
+    for file in "${critical_files[@]}"; do
+        if [ ! -f "${file}" ]; then
+            echo -e "${RED}ERROR: Archivo crítico no encontrado: ${file}${NC}" >&2
+            return 1
+        fi
+    done
+    return 0
+}
+
+# --- Mejora #5: Notificaciones Telegram detalladas ---
+function send_telegram_alert() {
+    local user=$1
+    local ips=$2
+    local max_ips=$3
+    local usage=$4
+    local limit=$5
+    
+    local KEY="6707733847:AAGmyG1bkb9BrKOjytnHfNjEpo1_aSr7cTo"
+    local CHAT_ID="6409531191"
+    local timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+    
+    local message="<b>🚨 ALERTA DE USO VMESS</b>\n\n"
+    message+="<b>🕒 Fecha:</b> <code>${timestamp}</code>\n"
+    message+="<b>👤 Usuario:</b> <code>${user}</code>\n"
+    message+="<b>🔢 Conexiones:</b> <b>${ips}/${max_ips}</b> (IPs activas/máximo)\n"
+    message+="<b>📊 Consumo:</b> <code>$(convert ${usage})/$(convert ${limit})</code>\n"
+    message+="<b>📡 Servidor:</b> <code>$(hostname)</code>"
+    
+    curl -s -X POST "https://api.telegram.org/bot${KEY}/sendMessage" \
+        -d chat_id="${CHAT_ID}" \
+        -d text="${message}" \
+        -d parse_mode="HTML" > /dev/null
+}
+
+# --- Mejora #6: Filtrado por usuario ---
+function check_specific_user() {
+    local user=$1
+    
+    # Validar existencia del usuario
+    if ! grep -q "^#vmg ${user} " /etc/xray/config.json; then
+        echo -e "${RED}ERROR: Usuario '${user}' no encontrado.${NC}" >&2
+        return 1
+    fi
+    
+    # Obtener límites
+    local max_ips=$(cat "/etc/vmess/${user}IP" 2>/dev/null || echo "0")
+    local limit=$(cat "/etc/vmess/${user}" 2>/dev/null || echo "999999999999")
+    
+    # Procesar logs
+    local active_ips=$(process_logs "${user}")
+    
+    # Obtener uso actual
+    local usage=$(cat "/etc/limit/vmess/${user}" 2>/dev/null || echo "0")
+    
+    # Mostrar estadísticas
+    display_header
+    display_user_stats "${user}" "${active_ips}" "${max_ips}" "${usage}" "${limit}"
+    
+    # Enviar alerta si se excede el límite
+    if [ "${active_ips}" -gt "${max_ips}" ] || [ "${usage}" -gt "${limit}" ]; then
+        send_telegram_alert "${user}" "${active_ips}" "${max_ips}" "${usage}" "${limit}"
+    fi
+}
+
+# --- Mejora #7: Limpieza automática de logs ---
+function cleanup() {
+    find /tmp/ -name "vmess_*.tmp" -mtime +1 -exec rm -f {} \;
+    :> /tmp/vmess_ips.tmp  # Limpiar archivo temporal
+}
+
+# --- Función auxiliar: Convertir bytes a formato legible ---
 function convert() {
-local -i bytes=$1
-if [[ $bytes -lt 1024 ]]; then
-echo "${bytes} B"
-elif [[ $bytes -lt 1048576 ]]; then
-echo "$(((bytes + 1023) / 1024)) KB"
-elif [[ $bytes -lt 1073741824 ]]; then
-echo "$(((bytes + 1048575) / 1048576)) MB"
-else
-echo "$(((bytes + 1073741823) / 1073741824)) GB"
-fi
+    local bytes=$1
+    if [ ${bytes} -ge 1073741824 ]; then
+        echo "$(( bytes / 1073741824 )) GB"
+    elif [ ${bytes} -ge 1048576 ]; then
+        echo "$(( bytes / 1048576 )) MB"
+    elif [ ${bytes} -ge 1024 ]; then
+        echo "$(( bytes / 1024 )) KB"
+    else
+        echo "${bytes} B"
+    fi
 }
-function cek-vmess(){
-clear
-xrayy=$(cat /var/log/xray/access.log | wc -l)
-if [[ xrayy -le 5 ]]; then
-systemctl restart xray
+
+# --- Main ---
+cleanup  # Limpieza inicial
+
+# Verificar si se solicita un usuario específico
+if [ $# -eq 1 ]; then
+    check_specific_user "$1"
+    exit $?
 fi
-xraylimit
-echo -e "$COLOR1╭═════════════════════════════════════════════════╮${NC}"
-echo -e "$COLOR1│${NC} ${COLBG1}            ${WH}• VMESS USER ONLINE •              ${NC} $COLOR1│ $NC"
-echo -e "$COLOR1╰═════════════════════════════════════════════════╯${NC}"
-echo -e "$COLOR1╭═══════════════════════════════════════════════════╮${NC}"
-vm=($(cat /etc/xray/config.json | grep "^#vmg" | awk '{print $2}' | sort -u))
-echo -n >/tmp/vm
-for db1 in ${vm[@]}; do
-logvm=$(cat /var/log/xray/access.log | grep -w "email: ${db1}" | tail -n 100)
-while read a; do
-if [[ -n ${a} ]]; then
-set -- ${a}
-ina="${7}"
-inu="${2}"
-anu="${3}"
-enu=$(echo "${anu}" | sed 's/tcp://g' | sed '/^$/d' | cut -d. -f1,2,3)
-now=$(tim2sec ${timenow})
-client=$(tim2sec ${inu})
-nowt=$(((${now} - ${client})))
-if [[ ${nowt} -lt 40 ]]; then
-cat /tmp/vm | grep -w "${ina}" | grep -w "${enu}" >/dev/null
-if [[ $? -eq 1 ]]; then
-echo "${ina} ${inu} WIB : ${enu}" >>/tmp/vm
-splvm=$(cat /tmp/vm)
-fi
-fi
-fi
-done <<<"${logvm}"
+
+# Proceso para todos los usuarios
+display_header
+
+# Obtener lista de usuarios
+users=$(grep "^#vmg" /etc/xray/config.json | awk '{print $2}' | sort -u)
+
+for user in ${users}; do
+    if validate_files "${user}"; then
+        max_ips=$(cat "/etc/vmess/${user}IP")
+        limit=$(cat "/etc/vmess/${user}")
+        active_ips=$(process_logs "${user}")
+        usage=$(cat "/etc/limit/vmess/${user}" 2>/dev/null || echo "0")
+        
+        # Registrar IPs para estadísticas globales
+        echo "${user}" >> /tmp/vmess_ips.tmp
+        
+        display_user_stats "${user}" "${active_ips}" "${max_ips}" "${usage}" "${limit}"
+        
+        # Enviar alerta si es necesario
+        if [ "${active_ips}" -gt "${max_ips}" ] || [ "${usage}" -gt "${limit}" ]; then
+            send_telegram_alert "${user}" "${active_ips}" "${max_ips}" "${usage}" "${limit}"
+        fi
+    fi
 done
-if [[ ${splvm} != "" ]]; then
-for vmuser in ${vm[@]}; do
-vmhas=$(cat /tmp/vm | grep -w "${vmuser}" | wc -l)
-tess=0
-if [[ ${vmhas} -gt $tess ]]; then
-byt=$(cat /etc/limit/vmess/${vmuser})
-gb=$(convert ${byt})
-lim=$(cat /etc/vmess/${vmuser})
-lim2=$(convert ${lim})
-echo -e "$COLOR1${NC} USERNAME : \033[0;33m$vmuser"
-echo -e "$COLOR1${NC} IP LOGIN : \033[0;33m$vmhas"
-echo -e "$COLOR1${NC} USAGE : \033[0;33m$gb"
-echo -e "$COLOR1${NC} LIMIT : \033[0;33m$lim2"
-echo -e ""
-fi
-done
-fi
-echo -e "$COLOR1╰═════════════════════════════════════════════════╯${NC}"
-echo ""
-read -n 1 -s -r -p "   Press any key to back on menu"
-m-vmess
-}
+
+global_stats
+cleanup
