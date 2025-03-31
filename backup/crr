@@ -258,7 +258,7 @@ cd /usr/bin
 wget -O issue "https://raw.githubusercontent.com/UnderTunnel/autoscript-vip/main/install/issue.net"
 wget -O m-theme "https://raw.githubusercontent.com/UnderTunnel/autoscript-vip/main/menu/m-theme.sh"
 wget -O speedtest "https://raw.githubusercontent.com/UnderTunnel/autoscript-vip/main/install/speedtest_cli.py"
-wget -O xp "https://raw.githubusercontent.com/UnderTunnel/autoscript-vip/main/install/xp.sh"
+#wget -O xp "https://raw.githubusercontent.com/UnderTunnel/autoscript-vip/main/install/xp.sh"
 
 chmod +x issue
 chmod +x m-theme
