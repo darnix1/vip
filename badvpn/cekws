@@ -1,40 +1,24 @@
 #!/bin/bash
 
 # ==============================================
-# CONFIGURACIÓN DE COLORES Y VARIABLES
+# CONFIGURACIÓN INICIAL
 # ==============================================
-DF='\e[39m'
-Bold='\e[1m'
-Blink='\e[5m'
-yell='\e[33m'
-red='\e[31m'
-green='\e[32m'
-blue='\e[34m'
-PURPLE='\e[35m'
-cyan='\e[36m'
-Lred='\e[91m'
-Lgreen='\e[92m'
-Lyellow='\e[93m'
-NC='\e[0m'
-GREEN='\033[0;32m'
-ORANGE='\033[0;33m'
-LIGHT='\033[0;37m'
-grenbo="\e[92;1m"
+DF='\e[39m'; Bold='\e[1m'; Blink='\e[5m'
+red='\e[31m'; green='\e[32m'; blue='\e[34m'
+PURPLE='\e[35m'; cyan='\e[36m'; NC='\e[0m'
+Lgreen='\e[92m'; Lyellow='\e[93m'
 
-# ==============================================
-# CONFIGURACIÓN DE ARCHIVOS TEMPORALES
-# ==============================================
-TMP_USERS=$(mktemp /tmp/vmess_users.XXXXXX)
-TMP_IPS=$(mktemp /tmp/vmess_ips.XXXXXX)
-TMP_OTHER=$(mktemp /tmp/vmess_other.XXXXXX)
-trap "rm -f $TMP_USERS $TMP_IPS $TMP_OTHER" EXIT
+# Archivos temporales
+TMP_DIR=$(mktemp -d)
+TMP_ACTIVE="${TMP_DIR}/active_connections.tmp"
+trap "rm -rf ${TMP_DIR}" EXIT
 
 # ==============================================
 # FUNCIONES PRINCIPALES
 # ==============================================
 
-# Función para convertir bytes a formato legible
-function con() {
+# Función para convertir bytes
+con() {
     local -i bytes=$1
     if [[ $bytes -lt 1024 ]]; then
         echo "${bytes}B"
@@ -47,118 +31,64 @@ function con() {
     fi
 }
 
-# Función para procesar logs eficientemente
-function process_logs() {
-    local log_file="/var/log/xray/access.log"
-    local -A user_data
-    local -A ip_user_map
+# Función para detectar conexiones activas
+get_active_connections() {
+    # Usar ss para detectar conexiones activas en puerto 443 (o el que use Xray)
+    ss -tnp | grep 'xray' | awk '{print $5}' | cut -d: -f1 | sort | uniq > "${TMP_ACTIVE}"
+}
+
+# Función para verificar IPs activas por usuario
+check_user_ips() {
+    local user=$1
+    local user_ips_file="${TMP_DIR}/${user}_ips.tmp"
+    local active_count=0
     
-    echo -n > "$TMP_IPS"
-    echo -n > "$TMP_OTHER"
+    # Obtener IPs históricas del usuario
+    grep -w "$user" /var/log/xray/access.log | tail -n 100 | awk '{print $3}' | cut -d: -f1 | sort | uniq > "${user_ips_file}"
     
-    # Procesar logs una sola vez
-    while read -r line; do
-        [[ -z "$line" ]] && continue
-        
-        local user=$(echo "$line" | awk '/###/ {print $2}')
-        [[ -z "$user" ]] && continue
-        
-        local ip=$(echo "$line" | awk '{print $3}' | sed 's/tcp://g' | cut -d: -f1)
-        local date=$(echo "$line" | awk '{print $2}')
-        
-        # Actualizar datos del usuario
-        user_data["${user}_last"]="$date"
-        user_data["${user}_ips"]+="$ip"$'\n'
-        
-        # Mapear IP a usuario
-        if [[ ! "${ip_user_map[$ip]}" =~ "$user" ]]; then
-            ip_user_map["$ip"]+="$user"$'\n'
+    # Verificar cuáles están activas ahora
+    while read ip; do
+        if grep -q "^${ip}$" "${TMP_ACTIVE}"; then
+            ((active_count++))
         fi
-    done < <(tail -n 500 "$log_file")
+    done < "${user_ips_file}"
     
-    # Procesar datos de usuarios
-    for user in $(grep '###' /etc/xray/config.json | awk '{print $2}' | sort | uniq); do
-        [[ -z "$user" ]] && continue
-        
-        # Guardar información del usuario
-        echo "$user" >> "$TMP_USERS"
-        echo "${user_data["${user}_last"]:-Nunca}" > "/tmp/vmess_${user}_last.tmp"
-        
-        # Procesar IPs del usuario
-        if [[ -n "${user_data["${user}_ips"]}" ]]; then
-            echo "${user_data["${user}_ips"]}" | sort | uniq > "/tmp/vmess_${user}_ips.tmp"
-            echo "${user_data["${user}_ips"]}" | sort | uniq >> "$TMP_IPS"
-        else
-            echo -n > "/tmp/vmess_${user}_ips.tmp"
-        fi
-    done
-    
-    # Procesar otras IPs
-    for ip in "${!ip_user_map[@]}"; do
-        if ! grep -q "$ip" "$TMP_IPS"; then
-            echo "$ip" >> "$TMP_OTHER"
-        fi
-    done
+    echo "${active_count}"
 }
 
 # Función para mostrar información de usuario
-function show_user() {
-    local akun=$1
+show_user() {
+    local user=$1
     local detail=${2:-false}
-    
-    # Obtener datos del usuario
-    local lastlogin=$(cat "/tmp/vmess_${akun}_last.tmp" 2>/dev/null || echo "Nunca")
-    local byte=$(cat "/etc/vmess/${akun}" 2>/dev/null || echo 0)
-    local lim=$(con ${byte})
-    local wey=$(cat "/etc/limit/vmess/${akun}" 2>/dev/null || echo 0)
-    local gb=$(con ${wey})
-    local iplimit=$(cat "/etc/kyt/limit/vmess/ip/${akun}" 2>/dev/null || echo "N/A")
-    local jum2=$(cat "/tmp/vmess_${akun}_ips.tmp" 2>/dev/null | wc -l)
-    
-    # Mostrar información básica
+    local last_login=$(grep -w "$user" /var/log/xray/access.log | tail -1 | awk '{print $2}')
+    local usage=$(con $(cat /etc/vmess/${user} 2>/dev/null || echo 0))
+    local limit=$(con $(cat /etc/limit/vmess/${user} 2>/dev/null || echo 0))
+    local iplimit=$(cat /etc/kyt/limit/vmess/ip/${user} 2>/dev/null || echo "N/A")
+    local active_ips=$(check_user_ips "$user")
+    local total_ips=$(cat "${TMP_DIR}/${user}_ips.tmp" | wc -l)
+
     echo -e " \033[1;36m┌──────────────────────────────────────┐\033[0m"
-    printf "  %-13s %-7s %-8s %2s\n" "  UserName : ${akun}" | lolcat
-    printf "  %-13s %-7s %-8s %2s\n" "  Login    : $lastlogin" | lolcat
-    printf "  %-13s %-7s %-8s %2s\n" "  Usage Quota : ${gb}" | lolcat
-    printf "  %-13s %-7s %-8s %2s\n" "  Limit Quota : ${lim}" | lolcat
-    printf "  %-13s %-7s %-8s %2s\n" "  Limit IP : $iplimit" | lolcat
-    printf "  %-13s %-7s %-8s %2s\n" "  Login IP : $jum2" | lolcat
+    printf "  %-13s %-7s %-8s %2s\n" "  UserName : ${user}" | lolcat
+    printf "  %-13s %-7s %-8s %2s\n" "  LastLogin: $last_login" | lolcat
+    printf "  %-13s %-7s %-8s %2s\n" "  Usage    : ${usage}" | lolcat
+    printf "  %-13s %-7s %-8s %2s\n" "  Limit    : ${limit}" | lolcat
+    printf "  %-13s %-7s %-8s %2s\n" "  Max IPs  : $iplimit" | lolcat
+    printf "  %-13s %-7s %-8s %2s\n" "  ActiveIPs: ${active_ips}" | lolcat
+    printf "  %-13s %-7s %-8s %2s\n" "  TotalIPs : ${total_ips}" | lolcat
     
-    # Mostrar detalles extendidos si se solicita
-    if [[ "$detail" == true && "$jum2" -gt 0 ]]; then
-        echo -e " \033[1;36m├─────────────── Detalles Extendidos ────────┐\033[0m"
-        echo -e "  ${cyan}■ IPs conectadas:${NC}"
-        cat "/tmp/vmess_${akun}_ips.tmp" | while read ip; do
-            echo -e "  ${Lyellow}•${NC} $ip"
-        done
+    if [[ "$detail" == true && "$total_ips" -gt 0 ]]; then
+        echo -e " \033[1;36m├─────────────── Active Connections ────────┐\033[0m"
+        while read ip; do
+            if grep -q "^${ip}$" "${TMP_ACTIVE}"; then
+                status="${green}✓${NC}"
+            else
+                status="${red}✗${NC}"
+            fi
+            echo -e "  ${Lyellow}•${NC} $ip $status"
+        done < "${TMP_DIR}/${user}_ips.tmp"
     fi
     
     echo -e " \033[1;36m└──────────────────────────────────────┘\033[0m"
-}
-
-# Función para mostrar estadísticas resumidas
-function show_stats() {
-    local total_users=0
-    local active_users=0
-    local total_ips=0
-    
-    # Calcular estadísticas
-    total_users=$(cat "$TMP_USERS" | wc -l)
-    active_users=$(while read -r user; do
-        [[ $(cat "/tmp/vmess_${user}_ips.tmp" 2>/dev/null | wc -l) -gt 0 ]] && echo 1
-    done < "$TMP_USERS" | wc -l)
-    
-    total_ips=$(cat "$TMP_IPS" 2>/dev/null | wc -l)
-    
-    # Mostrar estadísticas
-    echo -e "\033[1;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-    echo -e " \e[1;97;101m           ESTADÍSTICAS RESUMEN           \e[0m"
-    echo -e "\033[1;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-    echo -e " ${cyan}■ Total usuarios:${NC} ${total_users}"
-    echo -e " ${cyan}■ Usuarios activos:${NC} ${active_users}"
-    echo -e " ${cyan}■ Usuarios inactivos:${NC} $((total_users - active_users))"
-    echo -e " ${cyan}■ IPs únicas conectadas:${NC} ${total_ips}"
-    echo -e "\033[1;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 }
 
 # ==============================================
@@ -166,26 +96,40 @@ function show_stats() {
 # ==============================================
 clear
 
-# Verificar si se solicita detalle extendido
-DETAIL_MODE=false
-if [[ "$1" == "--detail" || "$1" == "-d" ]]; then
-    DETAIL_MODE=true
-fi
+# Verificar modo detallado
+DETAIL=false
+[[ "$1" == "--detail" || "$1" == "-d" ]] && DETAIL=true
 
-# Procesar logs
-process_logs
+# Obtener lista de usuarios
+users=$(grep '###' /etc/xray/config.json | awk '{print $2}' | sort | uniq)
+
+# Obtener conexiones activas
+get_active_connections
 
 # Mostrar encabezado
 echo -e "\033[1;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-echo -e " \e[1;97;101m           CEK VMESS ACCOUNT            \e[0m"
+echo -e " \e[1;97;101m        VMESS USER CONNECTION REPORT      \e[0m"
 echo -e "\033[1;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
 
-# Mostrar información de cada usuario
-while read -r akun; do
-    show_user "$akun" "$DETAIL_MODE"
-done < "$TMP_USERS"
+# Procesar cada usuario
+for user in $users; do
+    show_user "$user" "$DETAIL"
+done
 
-# Mostrar estadísticas resumidas
-show_stats
+# Mostrar resumen estadístico
+total_users=$(echo "$users" | wc -w)
+active_users=0
+total_active_ips=0
 
-# Limpieza final (automática por el trap)
+for user in $users; do
+    user_ips=$(check_user_ips "$user")
+    [[ "$user_ips" -gt 0 ]] && ((active_users++))
+    ((total_active_ips+=user_ips))
+done
+
+echo -e "\033[1;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+echo -e " ${cyan}■ Total Users:${NC} $total_users"
+echo -e " ${cyan}■ Active Users:${NC} $active_users"
+echo -e " ${cyan}■ Inactive Users:${NC} $((total_users - active_users))"
+echo -e " ${cyan}■ Total Active IPs:${NC} $total_active_ips"
+echo -e "\033[1;36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
