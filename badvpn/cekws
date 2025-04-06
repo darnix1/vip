@@ -7,7 +7,6 @@ from rich.table import Table
 from rich.panel import Panel
 from rich.box import SIMPLE
 from rich.style import Style
-from rich.progress import BarColumn, Progress
 from datetime import datetime
 import time
 
@@ -41,17 +40,6 @@ def get_user_style(usage, limit):
         return Style(color="yellow", bold=True)
     else:
         return Style(color="green", bold=False)
-
-# Función para mostrar un gráfico de barras de uso
-def display_usage_bar(usage, limit):
-    progress = Progress(
-        BarColumn(bar_width=30),
-        "{task.completed}/{task.total}",
-    )
-    with progress:
-        task_id = progress.add_task("[cyan]Uso", total=limit, completed=usage)
-        progress.update(task_id, completed=usage)
-    return progress
 
 # Función para cargar usuarios desde el archivo de configuración
 def load_vm_users():
@@ -94,7 +82,7 @@ def calculate_usage(vm_users):
             pass
     return pd.DataFrame(usage_data)
 
-# Función principal para monitorear usuarios VMESS
+# Función principal para monitorear usuarios VMESS activos
 def cek_vmess():
     # Limpiar pantalla
     os.system("clear")
@@ -107,29 +95,27 @@ def cek_vmess():
     logs = load_logs(vm_users)
     usage = calculate_usage(vm_users)
 
+    # Filtrar solo usuarios activos
+    active_users = logs.groupby("username").size().reset_index(name="count")
+    merged_data = pd.merge(vm_users, usage, on="username", how="left")
+    merged_data = pd.merge(merged_data, active_users, on="username", how="inner")
+
     # Crear tabla para mostrar usuarios activos
     table = Table(title="Usuarios VMESS Activos", box=SIMPLE, show_lines=True)
     table.add_column("Usuario", style="cyan", justify="center")
     table.add_column("IP Login", style="magenta", justify="center")
     table.add_column("Uso de Datos", style="green", justify="center")
     table.add_column("Límite", style="yellow", justify="center")
-    table.add_column("Estado", style="white", justify="center")
 
-    # Combinar datos
-    merged_data = pd.merge(vm_users, usage, on="username", how="left")
-    merged_data = pd.merge(merged_data, logs.groupby("username").size().reset_index(name="count"), on="username", how="left")
-
-    # Rellenar tabla
+    # Rellenar tabla con usuarios activos
     for _, row in merged_data.iterrows():
         username = row["username"]
-        ip = row.get("ip", "N/A")
+        ip = logs[logs["username"] == username]["ip"].iloc[0]  # Obtener la IP más reciente
         used = convert(row.get("used", 0))
         limit = convert(row.get("limit", 0))
-        count = row.get("count", 0)
-        status = "Activo" if count > 0 else "Inactivo"
 
         style = get_user_style(row.get("used", 0), row.get("limit", 0))
-        table.add_row(username, ip, used, limit, status, style=style)
+        table.add_row(username, ip, used, limit, style=style)
 
     # Mostrar tabla
     if not merged_data.empty:
