@@ -3,230 +3,185 @@ import os
 import re
 import subprocess
 import json
-import pandas as pd
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich.box import SIMPLE
 from rich.style import Style
-from rich.progress import Progress
 from datetime import datetime
 import time
 
 # Configuración
-APISERVER = "127.0.0.1:10000"
-XRAY_PATH = "/etc/xray/config.json"
-XRAY_BIN = "/usr/local/bin/xray"  # Asegúrate de que esta es la ruta correcta
-REFRESH_SECONDS = 2  # Intervalo de actualización en segundos
+XRAY_CONFIG = "/etc/xray/config.json"
+ACCESS_LOG = "/var/log/xray/access.log"
+REFRESH_SECONDS = 3
 
-# Inicializar Rich Console
 console = Console()
 
-# Funciones de conversión
-def tim2sec(time_str):
-    """Convierte formato HH:MM:SS a segundos"""
-    parts = list(map(int, time_str.split(":")))
-    seconds = 0
-    for i, part in enumerate(reversed(parts)):
-        seconds += part * (60 ** i)
-    return seconds
-
-def human_readable_size(size):
-    """Convierte bytes a formato legible (B, KB, MB, GB)"""
-    for unit in ['B', 'KB', 'MB', 'GB']:
-        if size < 1024:
-            return f"{size:.2f} {unit}"
-        size /= 1024
+def debug_log(message):
+    """Función para depuración"""
+    with open("/tmp/vmess_debug.log", "a") as f:
+        f.write(f"{datetime.now()}: {message}\n")
 
 def get_vmess_users():
-    """Obtiene la lista de usuarios VMESS del archivo de configuración"""
-    vm_users = []
+    """Obtiene usuarios VMESS del archivo de configuración"""
+    debug_log("Leyendo usuarios VMESS...")
     try:
-        with open(XRAY_PATH, "r") as config_file:
-            for line in config_file:
-                match = re.search(r"^#vmg\s+(\S+)", line)
-                if match:
-                    vm_users.append(match.group(1))
-    except FileNotFoundError:
-        console.print(f"[red]Error: No se pudo encontrar el archivo de configuración en {XRAY_PATH}[/red]")
-    return vm_users
+        with open(XRAY_CONFIG, "r") as f:
+            content = f.read()
+            debug_log(f"Contenido del archivo (primeras 200 líneas):\n{content[:2000]}...")
+            
+        users = re.findall(r'#vmg\s+(\S+)', content)
+        debug_log(f"Usuarios encontrados: {users}")
+        return users
+    except Exception as e:
+        debug_log(f"Error al leer usuarios: {str(e)}")
+        return []
 
-def get_active_connections():
-    """Obtiene conexiones activas desde el log de acceso"""
+def get_active_connections(vm_users):
+    """Obtiene conexiones activas desde el log"""
+    debug_log("Buscando conexiones activas...")
     active_users = set()
-    vm_users = get_vmess_users()
     
     try:
-        with open("/var/log/xray/access.log", "r") as log_file:
-            log_lines = log_file.readlines()[-100:]  # Últimas 100 líneas
-            
-        for line in log_lines:
-            parts = line.split()
-            if len(parts) >= 7:
-                user = parts[6]
+        # Leer las últimas 100 líneas del log
+        with open(ACCESS_LOG, "r") as f:
+            lines = f.readlines()[-100:]
+            debug_log(f"Total de líneas leídas: {len(lines)}")
+        
+        for line in lines:
+            if "email:" not in line:
+                continue
+                
+            try:
+                # Extraer componentes de la línea de log
+                parts = line.split()
                 time_str = parts[1]
                 ip = parts[2]
+                user = parts[6].split("email:")[1].strip()
                 
-                if "email:" in user:
-                    user_email = user.split("email:")[1].strip()
-                    if user_email in vm_users:
-                        now = tim2sec(datetime.now().strftime("%H:%M:%S"))
-                        conn_time = tim2sec(time_str)
-                        time_diff = now - conn_time
-                        
-                        if time_diff < 40:  # Conexión activa si es menor a 40 segundos
-                            clean_ip = re.sub(r"tcp://", "", ip).split(".")[0:3]
-                            clean_ip = ".".join(clean_ip)
-                            active_users.add((user_email, clean_ip))
-    except FileNotFoundError:
-        console.print("[red]Error: No se pudo leer el archivo de logs[/red]")
+                if user not in vm_users:
+                    continue
+                    
+                # Calcular tiempo desde la conexión
+                now = datetime.now()
+                log_time = datetime.strptime(time_str, "%H:%M:%S")
+                delta = now - datetime.combine(now.date(), log_time.time())
+                
+                if delta.total_seconds() < 40:
+                    clean_ip = re.sub(r"tcp://|udp://", "", ip).split(":")[0]
+                    active_users.add((user, clean_ip))
+                    debug_log(f"Conexión activa encontrada: {user} desde {clean_ip}")
+            except Exception as e:
+                debug_log(f"Error al procesar línea: {line.strip()} - {str(e)}")
+                
+    except Exception as e:
+        debug_log(f"Error al leer logs: {str(e)}")
     
     return active_users
 
-def get_real_time_stats():
-    """Obtiene estadísticas en tiempo real desde Xray API"""
+def get_user_stats(user):
+    """Obtiene estadísticas del usuario"""
     try:
-        result = subprocess.run(
-            [XRAY_BIN, "api", "statsquery", "--server", APISERVER],
-            capture_output=True, 
-            text=True
-        )
+        with open(f"/etc/limit/vmess/{user}", "r") as f:
+            usage = int(f.read().strip())
+    except:
+        usage = 0
         
-        data = json.loads(result.stdout)
-        stats = []
-        for item in data.get('stat', []):
-            if "name" in item and "value" in item:
-                parts = item["name"].split(">>>")
-                if len(parts) > 3 and parts[0] == "user":
-                    stats.append({
-                        "user": parts[1],
-                        "type": parts[3],  # uplink/downlink
-                        "value": int(item["value"])
-                    })
-        return stats
-    except (json.JSONDecodeError, subprocess.SubprocessError) as e:
-        console.print(f"[red]Error al obtener estadísticas: {str(e)}[/red]")
-        return []
-
-def get_user_limits(user):
-    """Obtiene el límite y uso actual de un usuario"""
     try:
-        with open(f"/etc/limit/vmess/{user}", "r") as usage_file:
-            usage = int(usage_file.read().strip())
+        with open(f"/etc/vmess/{user}", "r") as f:
+            limit = int(f.read().strip())
+    except:
+        limit = 0
         
-        with open(f"/etc/vmess/{user}", "r") as limit_file:
-            limit = int(limit_file.read().strip())
-        
-        return usage, limit
-    except FileNotFoundError:
-        return 0, 0
+    return usage, limit
 
-def display_combined_stats():
-    """Muestra estadísticas combinadas de conexiones y tráfico"""
-    with Progress(transient=True) as progress:
-        task = progress.add_task("[cyan]Monitoreo en tiempo real...", total=None)
-        
+def human_bytes(size):
+    """Formatea bytes en unidades legibles"""
+    units = ['B', 'KB', 'MB', 'GB']
+    for unit in units:
+        if size < 1024:
+            return f"{size:.2f} {unit}"
+        size /= 1024
+    return f"{size:.2f} TB"
+
+def display_stats():
+    """Muestra estadísticas en tiempo real"""
+    try:
         while True:
-            try:
-                # Obtener datos
-                active_conns = get_active_connections()
-                stats = get_real_time_stats()
-                
-                # Procesar conexiones activas
-                active_users = {}
-                for user, ip in active_conns:
-                    if user not in active_users:
-                        active_users[user] = {"ips": set(), "count": 0}
-                    active_users[user]["ips"].add(ip)
-                    active_users[user]["count"] += 1
-                
-                # Procesar estadísticas de tráfico
-                df = pd.DataFrame(stats)
-                traffic_data = {}
-                
-                if not df.empty:
-                    downlink = df[df['type'] == 'downlink'].groupby('user')['value'].sum()
-                    uplink = df[df['type'] == 'uplink'].groupby('user')['value'].sum()
-                    
-                    for user in set(downlink.index) | set(uplink.index):
-                        traffic_data[user] = {
-                            "down": downlink.get(user, 0),
-                            "up": uplink.get(user, 0),
-                            "total": downlink.get(user, 0) + uplink.get(user, 0)
-                        }
-                
-                # Combinar datos
-                all_users = set(active_users.keys()) | set(traffic_data.keys())
-                combined_data = []
-                
-                for user in all_users:
-                    usage, limit = get_user_limits(user)
-                    combined_data.append({
-                        "user": user,
-                        "connections": active_users.get(user, {}).get("count", 0),
-                        "ips": ", ".join(active_users.get(user, {}).get("ips", [])),
-                        "down": traffic_data.get(user, {}).get("down", 0),
-                        "up": traffic_data.get(user, {}).get("up", 0),
-                        "total": traffic_data.get(user, {}).get("total", 0),
-                        "usage": usage,
-                        "limit": limit,
-                        "remaining": limit - usage if limit > 0 else 0
-                    })
-                
-                # Ordenar por tráfico total descendente
-                combined_data.sort(key=lambda x: x["total"], reverse=True)
-                
-                # Limpiar consola y mostrar nueva tabla
-                console.clear()
-                console.print(Panel("[bold cyan]• VMESS USER MONITOR •[/bold cyan]", style="cyan", box=SIMPLE))
-                
-                table = Table(
-                    show_header=True,
-                    header_style=Style(bold=True, color="blue"),
-                    box=SIMPLE
-                )
-                
-                # Columnas de la tabla
-                table.add_column("Usuario", style="cyan")
-                table.add_column("Conexiones", justify="center", style="magenta")
-                table.add_column("IPs", style="dim")
-                table.add_column("↓ Descarga", justify="right", style="green")
-                table.add_column("↑ Subida", justify="right", style="magenta")
-                table.add_column("Total", justify="right", style="bold yellow")
-                table.add_column("Uso/Límite", justify="right", style="bold")
-                table.add_column("Restante", justify="right", style="bold green")
-                
-                # Agregar filas
-                for user_data in combined_data:
-                    usage_pct = (user_data["usage"] / user_data["limit"]) * 100 if user_data["limit"] > 0 else 0
-                    usage_str = (f"{human_readable_size(user_data['usage'])} / "
-                                f"{human_readable_size(user_data['limit'])} "
-                                f"({usage_pct:.1f}%)")
+            # Obtener datos
+            vm_users = get_vmess_users()
+            active_conns = get_active_connections(vm_users)
+            
+            # Procesar conexiones activas
+            user_stats = {}
+            for user, ip in active_conns:
+                if user not in user_stats:
+                    user_stats[user] = {'ips': set(), 'count': 0}
+                user_stats[user]['ips'].add(ip)
+                user_stats[user]['count'] += 1
+            
+            # Limpiar pantalla y mostrar encabezado
+            os.system('clear')
+            console.print(Panel("[bold cyan]• VMESS USER MONITOR •[/bold cyan]", 
+                             style="cyan", box=SIMPLE))
+            
+            # Crear tabla
+            table = Table(box=SIMPLE, show_header=True, 
+                         header_style=Style(bold=True, color="blue"))
+            table.add_column("Usuario", style="cyan")
+            table.add_column("Conexiones", justify="center")
+            table.add_column("IPs", style="dim")
+            table.add_column("Uso", justify="right")
+            table.add_column("Límite", justify="right")
+            table.add_column("Disponible", justify="right")
+            
+            # Agregar datos a la tabla
+            if user_stats:
+                for user, data in user_stats.items():
+                    usage, limit = get_user_stats(user)
+                    remaining = max(0, limit - usage) if limit > 0 else 0
                     
                     table.add_row(
-                        user_data["user"],
-                        str(user_data["connections"]),
-                        user_data["ips"],
-                        human_readable_size(user_data["down"]),
-                        human_readable_size(user_data["up"]),
-                        human_readable_size(user_data["total"]),
-                        usage_str,
-                        human_readable_size(user_data["remaining"])
+                        user,
+                        str(data['count']),
+                        ", ".join(data['ips']),
+                        human_bytes(usage),
+                        human_bytes(limit) if limit > 0 else "∞",
+                        human_bytes(remaining) if limit > 0 else "∞"
                     )
-                
                 console.print(table)
-                console.print(f"[dim]Actualizado: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}[/dim]")
+            else:
+                console.print("[yellow]No hay usuarios VMESS activos[/yellow]")
                 
-                time.sleep(REFRESH_SECONDS)
-                
-            except KeyboardInterrupt:
-                console.print("\n[bold yellow]Monitor detenido[/bold yellow]")
-                break
-            except Exception as e:
-                console.print(f"[red]Error: {str(e)}[/red]")
-                time.sleep(5)
+            console.print(f"\n[dim]Actualizado: {datetime.now().strftime('%H:%M:%S')} | "
+                         f"Usuarios configurados: {len(vm_users)}[/dim]")
+            
+            time.sleep(REFRESH_SECONDS)
+            
+    except KeyboardInterrupt:
+        console.print("\n[bold yellow]Monitor detenido[/bold yellow]")
+    except Exception as e:
+        console.print(f"[red]Error crítico: {str(e)}[/red]")
 
 if __name__ == "__main__":
-    console.print("[bold green]Iniciando monitor combinado de VMESS...[/bold green]")
-    console.print("Presiona Ctrl+C para salir\n")
-    display_combined_stats()
+    # Verificar permisos y archivos
+    checks = [
+        (XRAY_CONFIG, "Archivo de configuración de Xray"),
+        (ACCESS_LOG, "Archivo de logs de acceso"),
+        ("/etc/limit/vmess/", "Directorio de límites"),
+        ("/etc/vmess/", "Directorio de configuración VMESS")
+    ]
+    
+    all_ok = True
+    for path, desc in checks:
+        if not os.path.exists(path):
+            console.print(f"[red]Error: No se encuentra {desc} en {path}[/red]")
+            all_ok = False
+    
+    if all_ok:
+        console.print("[green]Iniciando monitor de usuarios VMESS...[/green]")
+        console.print("Presiona Ctrl+C para salir\n")
+        display_stats()
+    else:
+        console.print("\n[red]Corrige los problemas antes de ejecutar el monitor[/red]")
