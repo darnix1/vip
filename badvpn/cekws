@@ -1,12 +1,10 @@
 #!/usr/bin/python3
 import os
 import re
-import pandas as pd
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich.box import SIMPLE
-from rich.style import Style
 from datetime import datetime
 import time
 
@@ -32,46 +30,20 @@ def convert(bytes):
     else:
         return f"{(bytes + 1073741823) // 1073741824} GB"
 
-# Función para obtener estilo dinámico
-def get_user_style(usage, limit):
-    if usage >= limit:
-        return Style(color="red", bold=True)
-    elif usage >= limit * 0.8:  # 80% del límite
-        return Style(color="yellow", bold=True)
-    else:
-        return Style(color="green", bold=False)
-
-# Función para cargar usuarios desde el archivo de configuración
-def load_vm_users():
+# Función cek_vmess (verificación de usuarios VMESS activos)
+def cek_vmess():
+    # Leer usuarios VMESS del archivo de configuración
+    vm_users = []
     with open("/etc/xray/config.json", "r") as config_file:
-        lines = config_file.readlines()
-    vm_users = [re.search(r"^#vmg\s+(\S+)", line).group(1) for line in lines if re.search(r"^#vmg\s+(\S+)", line)]
-    return pd.DataFrame(vm_users, columns=["username"])
+        for line in config_file:
+            match = re.search(r"^#vmg\s+(\S+)", line)
+            if match:
+                vm_users.append(match.group(1))
 
-# Función para calcular el uso de datos
-def calculate_usage(vm_users):
-    usage_data = []
-    for user in vm_users["username"]:
-        try:
-            with open(f"/etc/limit/vmess/{user}", "r") as usage_file:
-                used_bytes = int(usage_file.read().strip())
-            with open(f"/etc/vmess/{user}", "r") as limit_file:
-                limit_bytes = int(limit_file.read().strip())
-            usage_data.append({
-                "username": user,
-                "used": used_bytes,
-                "limit": limit_bytes
-            })
-        except FileNotFoundError:
-            pass
-    return pd.DataFrame(usage_data)
-
-# Función para contar conexiones activas (como en el código original)
-def count_active_connections(vm_users):
     active_users = set()
-    for user in vm_users["username"]:
+    for db1 in vm_users:
         with open("/var/log/xray/access.log", "r") as log_file:
-            logvm = [line for line in log_file if f"email: {user}" in line][-100:]
+            logvm = [line for line in log_file if f"email: {db1}" in line][-100:]
         
         for line in logvm:
             parts = line.split()
@@ -87,54 +59,52 @@ def count_active_connections(vm_users):
                 if nowt < 40 and (ina, enu) not in active_users:
                     active_users.add((ina, enu))
 
-    # Contar conexiones por usuario
-    connection_counts = {}
-    for user, _ in active_users:
-        connection_counts[user] = connection_counts.get(user, 0) + 1
+    return vm_users, active_users
 
-    return connection_counts
+# Función principal
+def main():
+    console.clear()  # Limpiar la pantalla una sola vez al inicio
+    table = Table(title="Usuarios VMESS Activos", box=SIMPLE, show_lines=True)
+    table.add_column("Usuario", style="cyan", justify="center")
+    table.add_column("IP Login", style="magenta", justify="center")
+    table.add_column("Uso de Datos", style="green", justify="center")
+    table.add_column("Límite", style="yellow", justify="center")
 
-# Función principal para monitorear usuarios VMESS activos
-def cek_vmess():
-    # Mostrar encabezado bonito (solo una vez al inicio)
+    # Mostrar encabezado bonito
     console.print(Panel("[bold cyan]• VMESS USER ONLINE •[/bold cyan]", style="cyan", box=SIMPLE))
 
     while True:
-        # Cargar usuarios, uso de datos y conexiones activas
-        vm_users = load_vm_users()
-        usage = calculate_usage(vm_users)
-        active_connections = count_active_connections(vm_users)
+        vm_users, active_users = cek_vmess()
 
-        # Filtrar solo usuarios activos (con al menos una conexión)
-        active_users = usage[usage["username"].isin(active_connections.keys())]
+        # Limpiar la tabla antes de actualizarla
+        table.rows.clear()
 
-        # Crear tabla para mostrar usuarios activos
-        table = Table(title="Usuarios VMESS Activos", box=SIMPLE, show_lines=True)
-        table.add_column("Usuario", style="cyan", justify="center")
-        table.add_column("Conexiones Activas", style="magenta", justify="center")
-        table.add_column("Uso de Datos", style="green", justify="center")
-        table.add_column("Límite", style="yellow", justify="center")
+        if active_users:
+            for vmuser in vm_users:
+                vm_count = sum(1 for user in active_users if user[0] == vmuser)
+                if vm_count > 0:
+                    try:
+                        with open(f"/etc/limit/vmess/{vmuser}", "r") as usage_file:
+                            byt = int(usage_file.read().strip())
+                        gb = convert(byt)
 
-        # Rellenar tabla con usuarios activos
-        for _, row in active_users.iterrows():
-            username = row["username"]
-            connections = active_connections.get(username, 0)
-            used = convert(row.get("used", 0))
-            limit = convert(row.get("limit", 0))
+                        with open(f"/etc/vmess/{vmuser}", "r") as limit_file:
+                            lim = int(limit_file.read().strip())
+                        lim2 = convert(lim)
 
-            style = get_user_style(row.get("used", 0), row.get("limit", 0))
-            table.add_row(username, str(connections), used, limit, style=style)
+                        table.add_row(vmuser, str(vm_count), gb, lim2)
+                    except FileNotFoundError:
+                        pass
 
-        # Imprimir la tabla (sin limpiar la pantalla)
-        console.clear()  # Limpia solo la tabla anterior
-        console.print(table)
+            # Imprimir la tabla actualizada
+            console.print(table, end="\r")
+        else:
+            console.print("[bold red]No hay usuarios VMESS activos.[/bold red]", end="\r")
 
-        # Esperar antes de la próxima actualización
-        time.sleep(2)
+        time.sleep(0.5)  # Reducir el tiempo de espera para una actualización más rápida
 
-# Ejecución continua en tiempo real
 if __name__ == "__main__":
     try:
-        cek_vmess()
+        main()
     except KeyboardInterrupt:
         console.print("\n[bold yellow]Deteniendo el monitoreo...[/bold yellow]")
