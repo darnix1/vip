@@ -1,47 +1,16 @@
 #!/bin/bash
-#!/bin/bash
 
-# Configuración
-ANCHO=20           # Ancho del área de la animación
-VELOCIDAD=0.1      # Segundos entre cada frame
-CARACTER="•"       # Carácter de la barra (puede ser "=", "#", etc.)
-
-# Limpiar pantalla al inicio (opcional)
-clear
-
-# Función para mover la barra de izquierda a derecha y viceversa
-function animar_barra {
-    local pos=0     # Posición inicial
-    local dir=1     # Dirección: 1 (derecha), -1 (izquierda)
-
-    while true; do
-        # Limpiar la línea anterior (para animación fluida)
-        printf "\r"
-
-        # Construir la barra con espacios a la izquierda según la posición
-        printf " %${pos}s" "$CARACTER"
-        printf " %$((ANCHO - pos))s" " "   # Espacios restantes
-
-        # Actualizar posición y dirección
-        ((pos += dir))
-        if ((pos >= ANCHO || pos <= 0)); then
-            ((dir *= -1))  # Cambiar dirección
-        fi
-
-        # Esperar antes del siguiente frame
-        sleep $VELOCIDAD
-    done
-}
-
-# Ejecutar la animación
-animar_barra
 
 [[ -e /bin/xdarnix/xdarnix ]] && source /bin/xdarnix/darnix || source <(curl -sSL https://raw.githubusercontent.com/darnix1/Premium/refs/heads/main/menu/darnix)
 
 
 msg -bar
 msg -tit
+
 msg -bar
+green " Hola buenos "
+blanc " blanco "
+red " holaksk j"
 amacen " CONFIGURACION VMESS CLIENTES "
 animar_barra
 menu_func "NUEVO CLIENTE VMESS 👤 " \
