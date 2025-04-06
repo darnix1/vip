@@ -5,6 +5,9 @@
 
 
 title
+msg -bar
+amacen " LOGUEADO POR VMS TOTAL"
+echo ""
 menu_func "NUEVO CLIENTE VMESS 👤 " \
 "USUARIO TEMPORAL VMESS " \
 "$(msg -verd "RENOVAR USUARIOS XRAY") " \
