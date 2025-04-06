@@ -6,10 +6,10 @@
 
 msg -bar
 msg -tit
-
+title
 msg -bar
 green " Hola buenos "
-blan " blanco "
+gris " blanco "
 red " holaksk j"
 blanpunt " Hola bjs"
 amacen " CONFIGURACION VMESS CLIENTES "
