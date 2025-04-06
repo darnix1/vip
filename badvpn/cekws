@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import os
 import re
+import pandas as pd
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
@@ -73,11 +74,14 @@ def main():
     # Mostrar encabezado bonito
     console.print(Panel("[bold cyan]• VMESS USER ONLINE •[/bold cyan]", style="cyan", box=SIMPLE))
 
+    # DataFrame para almacenar los datos de los usuarios
+    df = pd.DataFrame(columns=["Usuario", "IP Login", "Uso de Datos", "Límite"])
+
     while True:
         vm_users, active_users = cek_vmess()
 
-        # Limpiar la tabla antes de actualizarla
-        table.rows.clear()
+        # Limpiar el DataFrame
+        df = df.iloc[0:0]
 
         if active_users:
             for vmuser in vm_users:
@@ -92,9 +96,22 @@ def main():
                             lim = int(limit_file.read().strip())
                         lim2 = convert(lim)
 
-                        table.add_row(vmuser, str(vm_count), gb, lim2)
+                        # Agregar datos al DataFrame
+                        df = df.append({
+                            "Usuario": vmuser,
+                            "IP Login": str(vm_count),
+                            "Uso de Datos": gb,
+                            "Límite": lim2
+                        }, ignore_index=True)
                     except FileNotFoundError:
                         pass
+
+            # Limpiar la tabla antes de actualizarla
+            table.rows.clear()
+
+            # Agregar filas del DataFrame a la tabla
+            for _, row in df.iterrows():
+                table.add_row(row["Usuario"], row["IP Login"], row["Uso de Datos"], row["Límite"])
 
             # Imprimir la tabla actualizada
             console.print(table, end="\r")
