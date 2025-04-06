@@ -1,13 +1,13 @@
 #!/usr/bin/python3
 import os
 import re
-import pandas as pd
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich.box import SIMPLE
 from datetime import datetime
 import time
+from collections import defaultdict
 
 # Inicializar Rich Console
 console = Console()
@@ -31,97 +31,96 @@ def convert(bytes):
     else:
         return f"{(bytes + 1073741823) // 1073741824} GB"
 
-# Función cek_vmess (verificación de usuarios VMESS activos)
-def cek_vmess():
-    # Leer usuarios VMESS del archivo de configuración
+# Función para leer usuarios VMESS
+def get_vmess_users():
     vm_users = []
-    with open("/etc/xray/config.json", "r") as config_file:
-        for line in config_file:
-            match = re.search(r"^#vmg\s+(\S+)", line)
-            if match:
-                vm_users.append(match.group(1))
+    try:
+        with open("/etc/xray/config.json", "r") as config_file:
+            for line in config_file:
+                match = re.search(r"^#vmg\s+(\S+)", line)
+                if match:
+                    vm_users.append(match.group(1))
+    except FileNotFoundError:
+        console.print("[bold red]Error: No se encontró el archivo de configuración[/bold red]")
+    return vm_users
 
-    active_users = set()
-    for db1 in vm_users:
+# Función para obtener usuarios activos
+def get_active_users(vm_users):
+    active_users = defaultdict(int)
+    try:
         with open("/var/log/xray/access.log", "r") as log_file:
-            logvm = [line for line in log_file if f"email: {db1}" in line][-100:]
-        
-        for line in logvm:
-            parts = line.split()
-            if len(parts) >= 7:
-                ina, inu, anu = parts[6], parts[1], parts[2]
-                enu = re.sub(r"tcp://", "", anu).split(".")[0:3]
-                enu = ".".join(enu)
+            log_lines = log_file.readlines()[-200:]  # Leer las últimas 200 líneas
+            
+        for line in log_lines:
+            for vmuser in vm_users:
+                if f"email: {vmuser}" in line:
+                    parts = line.split()
+                    if len(parts) >= 7:
+                        ina, inu, anu = parts[6], parts[1], parts[2]
+                        enu = re.sub(r"tcp://", "", anu).split(".")[0:3]
+                        enu = ".".join(enu)
 
-                now = tim2sec(datetime.now().strftime("%H:%M:%S"))
-                client = tim2sec(inu)
-                nowt = now - client
+                        now = tim2sec(datetime.now().strftime("%H:%M:%S"))
+                        client = tim2sec(inu)
+                        nowt = now - client
 
-                if nowt < 40 and (ina, enu) not in active_users:
-                    active_users.add((ina, enu))
+                        if nowt < 40:
+                            active_users[vmuser] += 1
+    except FileNotFoundError:
+        console.print("[bold red]Error: No se encontró el archivo de log[/bold red]")
+    return active_users
 
-    return vm_users, active_users
-
-# Función principal
-def main():
-    console.clear()  # Limpiar la pantalla una sola vez al inicio
+# Función para mostrar la tabla
+def display_table(active_users, vm_users):
+    # Crear tabla para mostrar usuarios activos
     table = Table(title="Usuarios VMESS Activos", box=SIMPLE, show_lines=True)
     table.add_column("Usuario", style="cyan", justify="center")
-    table.add_column("IP Login", style="magenta", justify="center")
+    table.add_column("Conexiones", style="magenta", justify="center")
     table.add_column("Uso de Datos", style="green", justify="center")
     table.add_column("Límite", style="yellow", justify="center")
 
-    # Mostrar encabezado bonito
-    console.print(Panel("[bold cyan]• VMESS USER ONLINE •[/bold cyan]", style="cyan", box=SIMPLE))
+    # Mostrar información de usuarios activos
+    if active_users:
+        for vmuser in vm_users:
+            if vmuser in active_users:
+                try:
+                    # Leer uso de datos
+                    with open(f"/etc/limit/vmess/{vmuser}", "r") as usage_file:
+                        byt = int(usage_file.read().strip())
+                    gb = convert(byt)
 
-    # DataFrame para almacenar los datos de los usuarios
-    df = pd.DataFrame(columns=["Usuario", "IP Login", "Uso de Datos", "Límite"])
+                    # Leer límite
+                    with open(f"/etc/vmess/{vmuser}", "r") as limit_file:
+                        lim = int(limit_file.read().strip())
+                    lim2 = convert(lim)
 
-    while True:
-        vm_users, active_users = cek_vmess()
+                    table.add_row(vmuser, str(active_users[vmuser]), gb, lim2)
+                except FileNotFoundError:
+                    table.add_row(vmuser, str(active_users[vmuser]), "N/A", "N/A")
 
-        # Limpiar el DataFrame
-        df = df.iloc[0:0]
+        # Limpiar y mostrar la tabla
+        console.clear()
+        console.print(Panel("[bold cyan]• VMESS USER ONLINE •[/bold cyan]", style="cyan", box=SIMPLE))
+        console.print(table)
+    else:
+        console.clear()
+        console.print(Panel("[bold cyan]• VMESS USER ONLINE •[/bold cyan]", style="cyan", box=SIMPLE))
+        console.print("[bold red]No hay usuarios VMESS activos.[/bold red]")
 
-        if active_users:
-            for vmuser in vm_users:
-                vm_count = sum(1 for user in active_users if user[0] == vmuser)
-                if vm_count > 0:
-                    try:
-                        with open(f"/etc/limit/vmess/{vmuser}", "r") as usage_file:
-                            byt = int(usage_file.read().strip())
-                        gb = convert(byt)
+# Función principal
+def main():
+    vm_users = get_vmess_users()
+    if not vm_users:
+        console.print("[bold red]No se encontraron usuarios VMESS[/bold red]")
+        return
 
-                        with open(f"/etc/vmess/{vmuser}", "r") as limit_file:
-                            lim = int(limit_file.read().strip())
-                        lim2 = convert(lim)
-
-                        # Agregar datos al DataFrame
-                        df = df.append({
-                            "Usuario": vmuser,
-                            "IP Login": str(vm_count),
-                            "Uso de Datos": gb,
-                            "Límite": lim2
-                        }, ignore_index=True)
-                    except FileNotFoundError:
-                        pass
-
-            # Limpiar la tabla antes de actualizarla
-            table.rows.clear()
-
-            # Agregar filas del DataFrame a la tabla
-            for _, row in df.iterrows():
-                table.add_row(row["Usuario"], row["IP Login"], row["Uso de Datos"], row["Límite"])
-
-            # Imprimir la tabla actualizada
-            console.print(table, end="\r")
-        else:
-            console.print("[bold red]No hay usuarios VMESS activos.[/bold red]", end="\r")
-
-        time.sleep(0.5)  # Reducir el tiempo de espera para una actualización más rápida
-
-if __name__ == "__main__":
     try:
-        main()
+        while True:
+            active_users = get_active_users(vm_users)
+            display_table(active_users, vm_users)
+            time.sleep(2)  # Espera 2 segundos antes de actualizar
     except KeyboardInterrupt:
         console.print("\n[bold yellow]Deteniendo el monitoreo...[/bold yellow]")
+
+if __name__ == "__main__":
+    main()
