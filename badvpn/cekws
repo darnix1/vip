@@ -13,6 +13,14 @@ import time
 # Inicializar Rich Console
 console = Console()
 
+# Función tim2sec (conversión de tiempo a segundos)
+def tim2sec(time_str):
+    parts = list(map(int, time_str.split(":")))
+    seconds = 0
+    for i, part in enumerate(reversed(parts)):
+        seconds += part * (60 ** i)
+    return seconds
+
 # Función convert (conversión de bytes a KB, MB, GB)
 def convert(bytes):
     if bytes < 1024:
@@ -58,17 +66,33 @@ def calculate_usage(vm_users):
             pass
     return pd.DataFrame(usage_data)
 
-# Función para contar conexiones activas
+# Función para contar conexiones activas (como en el código original)
 def count_active_connections(vm_users):
-    active_connections = {}
-    with open("/var/log/xray/access.log", "r") as log_file:
-        for line in log_file:
+    active_users = set()
+    for user in vm_users["username"]:
+        with open("/var/log/xray/access.log", "r") as log_file:
+            logvm = [line for line in log_file if f"email: {user}" in line][-100:]
+        
+        for line in logvm:
             parts = line.split()
             if len(parts) >= 7:
-                username = parts[6]
-                if username in vm_users["username"].values:
-                    active_connections[username] = active_connections.get(username, 0) + 1
-    return active_connections
+                ina, inu, anu = parts[6], parts[1], parts[2]
+                enu = re.sub(r"tcp://", "", anu).split(".")[0:3]
+                enu = ".".join(enu)
+
+                now = tim2sec(datetime.now().strftime("%H:%M:%S"))
+                client = tim2sec(inu)
+                nowt = now - client
+
+                if nowt < 40 and (ina, enu) not in active_users:
+                    active_users.add((ina, enu))
+
+    # Contar conexiones por usuario
+    connection_counts = {}
+    for user, _ in active_users:
+        connection_counts[user] = connection_counts.get(user, 0) + 1
+
+    return connection_counts
 
 # Función principal para monitorear usuarios VMESS activos
 def cek_vmess():
