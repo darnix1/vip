@@ -4,16 +4,7 @@
 [[ -e /bin/xdarnix/xdarnix ]] && source /bin/xdarnix/darnix || source <(curl -sSL https://raw.githubusercontent.com/darnix1/Premium/refs/heads/main/menu/darnix)
 
 
-msg -bar
-msg -tit
 title
-msg -bar
-green " Hola buenos "
-gris " blanco "
-red " holaksk j"
-blanpunt " Hola bjs"
-amacen " CONFIGURACION VMESS CLIENTES "
-animar_barra
 menu_func "NUEVO CLIENTE VMESS 👤 " \
 "USUARIO TEMPORAL VMESS " \
 "$(msg -verd "RENOVAR USUARIOS XRAY") " \
