@@ -10,7 +10,7 @@ import time
 
 # Configuración
 APISERVER = "127.0.0.1:10000"
-XRAY = "/usr/local/bin/xray"
+XRAY = "/etc/xray/config.json"
 REFRESH_SECONDS = 5  # Intervalo de actualización en segundos
 
 console = Console()
