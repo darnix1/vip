@@ -13,14 +13,6 @@ import time
 # Inicializar Rich Console
 console = Console()
 
-# Función tim2sec (conversión de tiempo a segundos)
-def tim2sec(time_str):
-    parts = list(map(int, time_str.split(":")))
-    seconds = 0
-    for i, part in enumerate(reversed(parts)):
-        seconds += part * (60 ** i)
-    return seconds
-
 # Función convert (conversión de bytes a KB, MB, GB)
 def convert(bytes):
     if bytes < 1024:
@@ -48,22 +40,6 @@ def load_vm_users():
     vm_users = [re.search(r"^#vmg\s+(\S+)", line).group(1) for line in lines if re.search(r"^#vmg\s+(\S+)", line)]
     return pd.DataFrame(vm_users, columns=["username"])
 
-# Función para cargar logs en un DataFrame
-def load_logs(vm_users):
-    logs = []
-    with open("/var/log/xray/access.log", "r") as log_file:
-        for line in log_file:
-            parts = line.split()
-            if len(parts) >= 7:
-                username = parts[6]
-                if username in vm_users["username"].values:
-                    logs.append({
-                        "username": username,
-                        "ip": parts[2],
-                        "timestamp": parts[1]
-                    })
-    return pd.DataFrame(logs)
-
 # Función para calcular el uso de datos
 def calculate_usage(vm_users):
     usage_data = []
@@ -82,52 +58,59 @@ def calculate_usage(vm_users):
             pass
     return pd.DataFrame(usage_data)
 
+# Función para contar conexiones activas
+def count_active_connections(vm_users):
+    active_connections = {}
+    with open("/var/log/xray/access.log", "r") as log_file:
+        for line in log_file:
+            parts = line.split()
+            if len(parts) >= 7:
+                username = parts[6]
+                if username in vm_users["username"].values:
+                    active_connections[username] = active_connections.get(username, 0) + 1
+    return active_connections
+
 # Función principal para monitorear usuarios VMESS activos
 def cek_vmess():
-    # Limpiar pantalla
-    os.system("clear")
-
-    # Mostrar encabezado bonito
+    # Mostrar encabezado bonito (solo una vez al inicio)
     console.print(Panel("[bold cyan]• VMESS USER ONLINE •[/bold cyan]", style="cyan", box=SIMPLE))
 
-    # Cargar usuarios y logs
-    vm_users = load_vm_users()
-    logs = load_logs(vm_users)
-    usage = calculate_usage(vm_users)
+    while True:
+        # Cargar usuarios, uso de datos y conexiones activas
+        vm_users = load_vm_users()
+        usage = calculate_usage(vm_users)
+        active_connections = count_active_connections(vm_users)
 
-    # Filtrar solo usuarios activos
-    active_users = logs.groupby("username").size().reset_index(name="count")
-    merged_data = pd.merge(vm_users, usage, on="username", how="left")
-    merged_data = pd.merge(merged_data, active_users, on="username", how="inner")
+        # Filtrar solo usuarios activos (con al menos una conexión)
+        active_users = usage[usage["username"].isin(active_connections.keys())]
 
-    # Crear tabla para mostrar usuarios activos
-    table = Table(title="Usuarios VMESS Activos", box=SIMPLE, show_lines=True)
-    table.add_column("Usuario", style="cyan", justify="center")
-    table.add_column("IP Login", style="magenta", justify="center")
-    table.add_column("Uso de Datos", style="green", justify="center")
-    table.add_column("Límite", style="yellow", justify="center")
+        # Crear tabla para mostrar usuarios activos
+        table = Table(title="Usuarios VMESS Activos", box=SIMPLE, show_lines=True)
+        table.add_column("Usuario", style="cyan", justify="center")
+        table.add_column("Conexiones Activas", style="magenta", justify="center")
+        table.add_column("Uso de Datos", style="green", justify="center")
+        table.add_column("Límite", style="yellow", justify="center")
 
-    # Rellenar tabla con usuarios activos
-    for _, row in merged_data.iterrows():
-        username = row["username"]
-        ip = logs[logs["username"] == username]["ip"].iloc[0]  # Obtener la IP más reciente
-        used = convert(row.get("used", 0))
-        limit = convert(row.get("limit", 0))
+        # Rellenar tabla con usuarios activos
+        for _, row in active_users.iterrows():
+            username = row["username"]
+            connections = active_connections.get(username, 0)
+            used = convert(row.get("used", 0))
+            limit = convert(row.get("limit", 0))
 
-        style = get_user_style(row.get("used", 0), row.get("limit", 0))
-        table.add_row(username, ip, used, limit, style=style)
+            style = get_user_style(row.get("used", 0), row.get("limit", 0))
+            table.add_row(username, str(connections), used, limit, style=style)
 
-    # Mostrar tabla
-    if not merged_data.empty:
+        # Imprimir la tabla (sin limpiar la pantalla)
+        console.clear()  # Limpia solo la tabla anterior
         console.print(table)
-    else:
-        console.print("[bold red]No hay usuarios VMESS activos.[/bold red]")
+
+        # Esperar antes de la próxima actualización
+        time.sleep(2)
 
 # Ejecución continua en tiempo real
 if __name__ == "__main__":
     try:
-        while True:
-            cek_vmess()
-            time.sleep(2)  # Espera 2 segundos antes de actualizar
+        cek_vmess()
     except KeyboardInterrupt:
         console.print("\n[bold yellow]Deteniendo el monitoreo...[/bold yellow]")
