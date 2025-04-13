@@ -2,7 +2,7 @@
 # check-connections.sh: Muestra usuarios conectados para VMess, VLESS, Trojan
 # Compatible con xraylimit.sh mejorado
 # Versión ajustada para mostrar uso de datos e IPs conectadas
-# Autor: Adaptado para mostrar conexiones activas
+# AutorDAN: Adaptado para mostrar conexiones activas
 
 # --- Configuración inicial ---
 colornow=$(cat /etc/rmbl/theme/color.conf 2>/dev/null || echo "default")
