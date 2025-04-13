@@ -1,9 +1,9 @@
 #!/bin/bash
 # check-connections.sh: Muestra usuarios conectados para VMess, VLESS, Trojan
 # Compatible con xraylimit.sh mejorado
-# Versión ajustada para depurar problemas con IP LOGIN y USAGE
+# Versión ajustada para depurar problemas con API y detección de IPs
 # Autor: Adaptado para mostrar conexiones activas
-#DARU
+
 # --- Configuración inicial ---
 colornow=$(cat /etc/rmbl/theme/color.conf 2>/dev/null || echo "default")
 NC="\e[0m"
@@ -36,9 +36,6 @@ check_files() {
     local files=("/etc/xray/config.json" "/var/log/xray/access.log")
     for file in "${files[@]}"; do
         [[ ! -f "$file" ]] && { echo "Error: $file no existe"; exit 1; }
-    done
-    # Verificar permisos
-    for file in "${files[@]}"; do
         [[ ! -r "$file" ]] && { echo "Error: Sin permisos de lectura para $file"; exit 1; }
     done
 }
@@ -51,6 +48,24 @@ check_xray_log() {
         echo "Xray reiniciado: log tenía $xray_lines líneas"
         sleep 2
     fi
+    echo "Últimas 5 líneas de /var/log/xray/access.log:"
+    tail -n 5 /var/log/xray/access.log
+    echo ""
+}
+
+# --- Verificar API de Xray ---
+check_xray_api() {
+    echo "Verificando estado de Xray API (127.0.0.1:10085)..."
+    if ! netstat -tuln | grep -q ":10085"; then
+        echo "Error: El puerto 10085 no está abierto. La API de Xray podría no estar configurada."
+    else
+        echo "Puerto 10085 abierto."
+    fi
+    if ! systemctl is-active --quiet xray; then
+        echo "Error: Xray no está corriendo."
+    else
+        echo "Xray está corriendo."
+    fi
 }
 
 # --- Actualizar uso desde Xray API ---
@@ -60,7 +75,7 @@ update_usage() {
     local stats=$(xray api stats --server=127.0.0.1:10085 2>/dev/null)
     if [[ -z "$stats" ]]; then
         echo "Error: No se pudo conectar a Xray API"
-        return
+        return 1
     fi
     local downlink=$(echo "$stats" | grep "user>>>${user}>>>traffic>>>downlink" | grep -w "value" | awk '{print $2}' | cut -d '"' -f2 || echo "0")
     echo "Resultado de API para $user: downlink=$downlink bytes"
@@ -69,6 +84,7 @@ update_usage() {
         echo "$downlink" > "/etc/limit/$dir/$user"
         xray api stats --server=127.0.0.1:10085 -name "user>>>${user}>>>traffic>>>downlink" -reset >/dev/null 2>&1
     fi
+    return 0
 }
 
 # --- Procesar conexiones por protocolo ---
@@ -88,14 +104,14 @@ process_connections() {
     fi
     echo "Usuarios encontrados: ${users[*]}"
 
-    # Procesar logs con awk (umbral de 300 segundos)
+    # Procesar logs con awk (umbral de 600 segundos)
     echo -n > "$tmp_file"
     for user in "${users[@]}"; do
         log_data=$(awk -v user="$user" -v now="$timenow" '
             $0 ~ "email: " user {
                 split($2, t, ":");
                 time=mktime(gensub(/[-:]/, " ", "g", $1));
-                if (now - time < 300) {
+                if (now - time < 600) {
                     ip=$0;
                     if (ip ~ /tcp:\/\//) {
                         ip=gensub(/.*tcp:\/\/([0-9.]+).*/, "\\1", 1, ip);
@@ -112,9 +128,9 @@ process_connections() {
         while read -r u t ip; do
             grep -w "$u $t $ip" "$tmp_file" >/dev/null || echo "$u $t WIB : $ip" >> "$tmp_file"
         done <<<"$log_data"
-        # Mostrar todas las entradas del log para este usuario (sin filtro de tiempo)
-        echo "Entradas en el log para $user:"
-        grep "email: $user" "$log_file" | tail -n 5
+        # Mostrar todas las entradas del log para este usuario
+        echo "Entradas en el log para $user (sin filtro de tiempo):"
+        grep "email: $user" "$log_file" | tail -n 10
         echo ""
     done
 
@@ -125,14 +141,21 @@ process_connections() {
     echo -e "$COLOR1┌─────────────────────────────────────────────────┐${NC}"
     local found=0
     for user in "${users[@]}"; do
-        # Actualizar uso
-        update_usage "$proto" "$dir" "$user"
         ip_count=$(grep -w "$user" "$tmp_file" | wc -l)
         ip_list=$(grep -w "$user" "$tmp_file" | cut -d ' ' -f 2- | nl -s '. ' | while read line; do printf "%-30s\n" "$line"; done)
-        byt=$(cat "/etc/limit/$dir/$user" 2>/dev/null || echo "0")
+        # Intentar actualizar uso
+        if ! update_usage "$proto" "$dir" "$user"; then
+            # Usar datos existentes si la API falla
+            byt=$(cat "/etc/limit/$dir/$user" 2>/dev/null || echo "0")
+        else
+            byt=$(cat "/etc/limit/$dir/$user" 2>/dev/null || echo "0")
+        fi
         if [[ ! -f "/etc/limit/$dir/$user" ]]; then
             gb="No disponible"
             echo "Archivo /etc/limit/$dir/$user no existe"
+        elif [[ $byt == "0" ]]; then
+            gb="0 B"
+            echo "Archivo /etc/limit/$dir/$user: $byt bytes (sin datos)"
         else
             gb=$(convert "$byt")
             echo "Archivo /etc/limit/$dir/$user: $byt bytes"
@@ -160,6 +183,7 @@ process_connections() {
 main() {
     check_files
     check_xray_log
+    check_xray_api
     clear
     echo "Selecciona un protocolo para verificar conexiones:"
     echo "1. VMess"
