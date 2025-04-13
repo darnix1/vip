@@ -3,7 +3,7 @@
 # Compatible con xraylimit.sh mejorado
 # Versión ajustada para depurar problemas con API y detección de IPs
 # Autor: Adaptado para mostrar conexiones activas
-
+#DARUS
 # --- Configuración inicial ---
 colornow=$(cat /etc/rmbl/theme/color.conf 2>/dev/null || echo "default")
 NC="\e[0m"
