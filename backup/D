@@ -3,7 +3,7 @@
 # Compatible con xraylimit.sh mejorado
 # Versión ajustada para corregir detección de IPs y uso
 # Autor: Adaptado para mostrar conexiones activas
-
+#DAN
 # --- Configuración inicial ---
 colornow=$(cat /etc/rmbl/theme/color.conf 2>/dev/null || echo "default")
 NC="\e[0m"
