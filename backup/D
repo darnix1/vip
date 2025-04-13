@@ -1,8 +1,8 @@
 #!/bin/bash
 # check-connections.sh: Muestra usuarios conectados para VMess, VLESS, Trojan
 # Compatible con xraylimit.sh mejorado
-# Versión ajustada para mostrar uso de datos e IPs conectadas
-# AutorDAN: Adaptado para mostrar conexiones activas
+# Versión ajustada para corregir detección de IPs y uso
+# Autor: Adaptado para mostrar conexiones activas
 
 # --- Configuración inicial ---
 colornow=$(cat /etc/rmbl/theme/color.conf 2>/dev/null || echo "default")
@@ -47,6 +47,21 @@ check_xray_log() {
         echo "Xray reiniciado: log tenía $xray_lines líneas"
         sleep 2
     fi
+    # Mostrar últimas líneas para depuración
+    echo "Últimas 5 líneas de /var/log/xray/access.log:"
+    tail -n 5 /var/log/xray/access.log
+    echo ""
+}
+
+# --- Actualizar uso desde Xray API ---
+update_usage() {
+    local proto=$1 dir=$2 user=$3
+    local downlink=$(xray api stats --server=127.0.0.1:10085 | grep "user>>>${user}>>>traffic>>>downlink" | grep -w "value" | awk '{print $2}' | cut -d '"' -f2 || echo "0")
+    if [[ $downlink != "0" ]]; then
+        mkdir -p "/etc/limit/$dir"
+        echo "$downlink" > "/etc/limit/$dir/$user"
+        xray api stats --server=127.0.0.1:10085 -name "user>>>${user}>>>traffic>>>downlink" -reset >/dev/null 2>&1
+    fi
 }
 
 # --- Procesar conexiones por protocolo ---
@@ -64,6 +79,7 @@ process_connections() {
         echo "No se encontraron usuarios para $proto en /etc/xray/config.json"
         return
     fi
+    echo "Usuarios encontrados: ${users[*]}"
 
     # Procesar logs con awk
     echo -n > "$tmp_file"
@@ -72,10 +88,12 @@ process_connections() {
             $0 ~ "email: " user {
                 split($2, t, ":");
                 time=mktime(gensub(/[-:]/, " ", "g", $1));
-                if (now - time < 60) {
+                if (now - time < 120) {
                     ip=$3;
                     if (ip ~ /tcp:\/\//) {
                         ip=gensub(/.*tcp:\/\/([0-9.]+).*/, "\\1", 1, ip);
+                    } else if (ip ~ /[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/) {
+                        ip=gensub(/.*([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+).*/, "\\1", 1, ip);
                     } else {
                         ip=ip;
                     }
@@ -96,6 +114,8 @@ process_connections() {
     echo -e "$COLOR1┌─────────────────────────────────────────────────┐${NC}"
     local found=0
     for user in "${users[@]}"; do
+        # Actualizar uso
+        update_usage "$proto" "$dir" "$user"
         ip_count=$(grep -w "$user" "$tmp_file" | wc -l)
         ip_list=$(grep -w "$user" "$tmp_file" | cut -d ' ' -f 2- | nl -s '. ' | while read line; do printf "%-30s\n" "$line"; done)
         byt=$(cat "/etc/limit/$dir/$user" 2>/dev/null || echo "0")
@@ -103,6 +123,7 @@ process_connections() {
             gb="No disponible"
         else
             gb=$(convert "$byt")
+            echo "Uso bruto para $user: $byt bytes"  # Depuración
         fi
         lim=$(cat "/etc/$dir/$user" 2>/dev/null || echo "999999999999")
         lim2=$(convert "$lim")
@@ -118,6 +139,30 @@ process_connections() {
     done
     if [[ $found -eq 0 ]]; then
         echo -e "$COLOR1${NC} No hay usuarios conectados actualmente"
+        # Mostrar conexiones recientes para depuración
+        echo "Buscando conexiones recientes (hasta 5 minutos):"
+        for user in "${users[@]}"; do
+            log_data=$(awk -v user="$user" -v now="$timenow" '
+                $0 ~ "email: " user {
+                    split($2, t, ":");
+                    time=mktime(gensub(/[-:]/, " ", "g", $1));
+                    if (now - time < 300) {
+                        ip=$3;
+                        if (ip ~ /tcp:\/\//) {
+                            ip=gensub(/.*tcp:\/\/([0-9.]+).*/, "\\1", 1, ip);
+                        } else if (ip ~ /[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/) {
+                            ip=gensub(/.*([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+).*/, "\\1", 1, ip);
+                        }
+                        if (ip != "") {
+                            print user, t[1]":"t[2]":"t[3], ip
+                        }
+                    }
+                }' "$log_file")
+            if [[ -n "$log_data" ]]; then
+                echo "Conexiones recientes para $user:"
+                echo "$log_data"
+            fi
+        done
     fi
     echo -e "$COLOR1└─────────────────────────────────────────────────┘${NC}"
     echo ""
