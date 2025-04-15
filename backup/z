@@ -1,1 +1,256 @@
-g
+#!/bin/bash
+
+# Colores
+COLOR1="\033[1;36m"  # Cyan para separadores
+COLOR_SSH="\033[0;33m"  # Amarillo para SSH
+COLOR_VPN="\033[0;32m"  # Verde para OpenVPN
+NC="\033[0m"  # Sin color
+
+# Funciones de formato (reemplazo de msg)
+msg_bar() {
+    echo -e "${COLOR1}┌─────────────────────────────────────────────────┐${NC}"
+}
+
+msg_tit() {
+    echo -e "${COLOR1}│                USUARIOS EN LÍNEA                │${NC}"
+}
+
+amacen() {
+    local text="$1"
+    local width=49
+    local padding=$(( (width - ${#text}) / 2 ))
+    printf "${COLOR1}│%*s%s%*s│${NC}\n" $padding "" "$text" $padding ""
+}
+
+dnxroj() {
+    local text="$1"
+    echo -e "${COLOR1}${text}${NC}"
+}
+
+# Limpieza de archivos temporales
+cleanup() {
+    rm -f /tmp/ssh2 /tmp/log-db.txt /tmp/log-db-pid.txt /tmp/vpn-login-tcp.txt /tmp/vpn-login-udp.txt /tmp/auth.log
+}
+trap cleanup EXIT
+
+function cek(){
+    clear
+    TIMES="10"  # Mantenido por compatibilidad
+    CHATID=$(cat /etc/per/id 2>/dev/null || echo "")
+    KEY=$(cat /etc/per/token 2>/dev/null || echo "")
+    URL="https://api.telegram.org/bot$KEY/sendMessage"
+    ISP=$(cat /etc/xray/isp 2>/dev/null || echo "Desconocido")
+    CITY=$(cat /etc/xray/city 2>/dev/null || echo "Desconocido")
+    domain=$(cat /etc/xray/domain 2>/dev/null || echo "Desconocido")
+    author=$(cat /etc/profil 2>/dev/null || echo "Desconocido")
+    MAX_CONNECTIONS=2
+    LOG_DIR="/var/log/cek"
+    mkdir -p "$LOG_DIR" 2>/dev/null
+
+    # Validar archivo de log
+    if [ -f "/var/log/auth.log" ]; then
+        LOG="/var/log/auth.log"
+    else
+        journalctl -u sshd -u dropbear --since "1 hour ago" > /tmp/auth.log 2>/dev/null
+        LOG="/tmp/auth.log"
+        if [ ! -s "$LOG" ]; then
+            echo -e "${COLOR1}Error: No se encontraron logs de autenticación.${NC}"
+            read -n 1 -s -r -p "$(dnxroj " Presione cualquier tecla para continuar...")"
+            return 1
+        fi
+    fi
+
+    # Reiniciar ws-stunnel si está activo
+    if systemctl is-active -q ws-stunnel 2>/dev/null; then
+        systemctl restart ws-stunnel > /dev/null 2>&1
+        sleep 3
+    fi
+
+    msg_bar
+    msg_tit
+    msg_bar
+    amacen " • SSH USUARIOS EN LINEA •"
+    echo ""
+
+    rm -rf /tmp/ssh2
+    ssh_count=0
+
+    # Obtener usuarios del sistema
+    cat /etc/passwd | grep "/home/" | cut -d":" -f1 > /etc/user.txt
+    username1=( $(cat "/etc/user.txt") )
+    i=0
+    for user in "${username1[@]}"; do
+        username[$i]=$(echo "$user" | sed "s/'//g")
+        jumlah[$i]=0
+        pid[$i]=""
+        i=$((i + 1))
+    done
+
+    # Dropbear
+    cat "$LOG" | grep -i dropbear | grep -i "Password auth succeeded" > /tmp/log-db.txt
+    proc=( $(ps aux | grep -i dropbear | awk '{print $2}') )
+    for PID in "${proc[@]}"; do
+        cat /tmp/log-db.txt | grep "dropbear\[$PID\]" > /tmp/log-db-pid.txt
+        NUM=$(wc -l < /tmp/log-db-pid.txt)
+        USER=$(awk '{print $10}' /tmp/log-db-pid.txt | sed "s/'//g")
+        IP=$(awk '{print $12}' /tmp/log-db-pid.txt)
+        if [ "$NUM" -eq 1 ] && [ -n "$USER" ]; then
+            TIME=$(date +'%H:%M:%S')
+            # Calcular duración desde el log
+            LOG_TIME=$(grep "dropbear\[$PID\]" /tmp/log-db.txt | awk '{print $1, $2, $3}' | head -n 1)
+            if [ -n "$LOG_TIME" ]; then
+                login_time=$(date -d "$LOG_TIME" +%s 2>/dev/null || echo 0)
+                current_time=$(date +%s)
+                duration=$(( (current_time - login_time) / 60 ))
+                [ "$duration" -lt 0 ] && duration=0
+            else
+                duration=0
+            fi
+            echo "$USER Dropbear $TIME $duration min : $IP" >> /tmp/ssh2
+            i=0
+            for user1 in "${username[@]}"; do
+                if [ "$USER" == "$user1" ]; then
+                    jumlah[$i]=$((jumlah[$i] + 1))
+                    pid[$i]+="$PID "
+                fi
+                i=$((i + 1))
+            done
+        fi
+    done
+
+    # OpenSSH
+    cat "$LOG" | grep -i sshd | grep -i "Accepted password for" > /tmp/log-db.txt
+    data=( $(ps aux | grep "\[priv\]" | sort -k 72 | awk '{print $2}') )
+    for PID in "${data[@]}"; do
+        cat /tmp/log-db.txt | grep "sshd\[$PID\]" > /tmp/log-db-pid.txt
+        NUM=$(wc -l < /tmp/log-db-pid.txt)
+        USER=$(awk '{print $9}' /tmp/log-db-pid.txt)
+        IP=$(awk '{print $11}' /tmp/log-db-pid.txt)
+        if [ "$NUM" -eq 1 ] && [ -n "$USER" ]; then
+            TIME=$(date +'%H:%M:%S')
+            # Calcular duración desde el log
+            LOG_TIME=$(grep "sshd\[$PID\]" /tmp/log-db.txt | awk '{print $1, $2, $3}' | head -n 1)
+            if [ -n "$LOG_TIME" ]; then
+                login_time=$(date -d "$LOG_TIME" +%s 2>/dev/null || echo 0)
+                current_time=$(date +%s)
+                duration=$(( (current_time - login_time) / 60 ))
+                [ "$duration" -lt 0 ] && duration=0
+            else
+                duration=0
+            fi
+            echo "$USER OpenSSH $TIME $duration min : $IP" >> /tmp/ssh2
+            i=0
+            for user1 in "${username[@]}"; do
+                if [ "$USER" == "$user1" ]; then
+                    jumlah[$i]=$((jumlah[$i] + 1))
+                    pid[$i]+="$PID "
+                fi
+                i=$((i + 1))
+            done
+        fi
+    done
+
+    # Mostrar usuarios SSH
+    j=0
+    for i in ${!username[*]}; do
+        limitip=0
+        if [[ ${jumlah[$i]} -gt $limitip ]]; then
+            sship=$(grep -w "${username[$i]}" /tmp/ssh2 | wc -l)
+            echo -e "${COLOR_SSH}USUARIO : ${username[$i]}${NC}"
+            echo -e "${COLOR_SSH}PROTOCOLO : $(grep -w "${username[$i]}" /tmp/ssh2 | awk '{print $2}' | sort -u | tr '\n' ',' | sed 's/,$//')${NC}"
+            echo -e "${COLOR_SSH}CONEXIONES : $sship${NC}"
+            echo -e "${COLOR_SSH}DETALLES :${NC}"
+            while read -r user proto time duration ip; do
+                if [ "$user" == "${username[$i]}" ]; then
+                    echo -e "${COLOR_SSH}  - $proto a las $time ($duration min) desde $ip${NC}"
+                    ssh_count=$((ssh_count + 1))
+                fi
+            done < /tmp/ssh2
+            echo ""
+            if [[ ${jumlah[$i]} -gt $MAX_CONNECTIONS ]]; then
+                echo -e "${COLOR1}¡Advertencia! ${username[$i]} tiene ${jumlah[$i]} conexiones (límite: $MAX_CONNECTIONS)${NC}"
+            fi
+        fi
+    done
+    [ "$ssh_count" -eq 0 ] && echo -e "${COLOR_SSH}No hay usuarios SSH conectados.${NC}"
+
+    # OpenVPN
+    tcp_count=0
+    udp_count=0
+    if [ -f "/etc/openvpn/server/openvpn-tcp.log" ] || [ -f "/etc/openvpn/server/openvpn-udp.log" ]; then
+        echo ""
+        msg_bar
+        amacen " • OPENVPN USUARIOS EN LINEA •"
+        msg_bar
+    fi
+
+    if [ -f "/etc/openvpn/server/openvpn-tcp.log" ]; then
+        echo -e "${COLOR_VPN}OpenVPN TCP:${NC}"
+        cat /etc/openvpn/server/openvpn-tcp.log | grep -w "^CLIENT_LIST" | cut -d ',' -f 2,3,8 | sed -e 's/,/      /g' > /tmp/vpn-login-tcp.txt
+        while read -r user ip_real ip_virt; do
+            if [ -n "$user" ]; then
+                echo -e "${COLOR_VPN}$user      $ip_real      $ip_virt${NC}"
+                tcp_count=$((tcp_count + 1))
+            fi
+        done < /tmp/vpn-login-tcp.txt
+        echo ""
+    fi
+
+    if [ -f "/etc/openvpn/server/openvpn-udp.log" ]; then
+        echo -e "${COLOR_VPN}OpenVPN UDP:${NC}"
+        cat /etc/openvpn/server/openvpn-udp.log | grep -w "^CLIENT_LIST" | cut -d ',' -f 2,3,8 | sed -e 's/,/      /g' > /tmp/vpn-login-udp.txt
+        while read -r user ip_real ip_virt; do
+            if [ -n "$user" ]; then
+                echo -e "${COLOR_VPN}$user      $ip_real      $ip_virt${NC}"
+                udp_count=$((udp_count + 1))
+            fi
+        done < /tmp/vpn-login-udp.txt
+        echo ""
+    fi
+
+    # Resumen
+    echo -e "${COLOR1}┌─────────────────────────────────────────────────┐${NC}"
+    echo -e "${COLOR1}│ Resumen:${NC}"
+    echo -e "${COLOR1}│ Total SSH: $ssh_count${NC}"
+    echo -e "${COLOR1}│ Total OpenVPN TCP: $tcp_count${NC}"
+    echo -e "${COLOR1}│ Total OpenVPN UDP: $udp_count${NC}"
+    echo -e "${COLOR1}└─────────────────────────────────────────────────┘${NC}"
+    echo ""
+
+    # Guardar historial
+    if [ "$ssh_count" -gt 0 ] || [ "$tcp_count" -gt 0 ] || [ "$udp_count" -gt 0 ]; then
+        {
+            echo "$(date):"
+            echo "SSH:"
+            cat /tmp/ssh2 2>/dev/null
+            echo "OpenVPN TCP:"
+            cat /tmp/vpn-login-tcp.txt 2>/dev/null
+            echo "OpenVPN UDP:"
+            cat /tmp/vpn-login-udp.txt 2>/dev/null
+            echo "-----------------------------------"
+        } >> "$LOG_DIR/connections_$(date +%F).log"
+    fi
+
+    # Enviar a Telegram
+    if [ -n "$CHATID" ] && [ -n "$KEY" ] && { [ "$ssh_count" -gt 0 ] || [ "$tcp_count" -gt 0 ] || [ "$udp_count" -gt 0 ]; }; then
+        output="Usuarios en línea ($ISP, $CITY):\n"
+        if [ "$ssh_count" -gt 0 ]; then
+            output+="SSH ($ssh_count):\n"
+            while read -r user proto time duration ip; do
+                output+="$user ($proto) a las $time ($duration min) desde $ip\n"
+            done < /tmp/ssh2
+        fi
+        if [ "$tcp_count" -gt 0 ]; then
+            output+="OpenVPN TCP ($tcp_count):\n$(cat /tmp/vpn-login-tcp.txt 2>/dev/null)\n"
+        fi
+        if [ "$udp_count" -gt 0 ]; then
+            output+="OpenVPN UDP ($udp_count):\n$(cat /tmp/vpn-login-udp.txt 2>/dev/null)"
+        fi
+        curl -s -X POST "$URL" -d chat_id="$CHATID" -d text="$output" > /dev/null 2>&1
+    fi
+
+    read -n 1 -s -r -p "$(dnxroj " Presione cualquier tecla para continuar...")"
+    m-sshovpn
+}
+
+cek
