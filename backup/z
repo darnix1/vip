@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Colores para formato
+# Colores para formato dan
 COLOR1="\033[1;36m"  # Cyan
 COLOR_SSH="\033[0;33m"  # Amarillo
 COLOR_VPN="\033[0;32m"  # Verde
