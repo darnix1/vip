@@ -1,222 +1,93 @@
 #!/bin/bash
-# check-connections.sh: Muestra usuarios conectados para VMess, VLESS, Trojan
-# Compatible con xraylimit.sh mejorado
-# Versión ajustada para depurar problemas con API y detección de IPs
-# Autor: Adaptado para mostrar conexiones activas
-#DARUS
-# --- Configuración inicial ---
-colornow=$(cat /etc/rmbl/theme/color.conf 2>/dev/null || echo "default")
-NC="\e[0m"
-RED="\033[0;31m"
-COLOR1="$(cat /etc/rmbl/theme/$colornow 2>/dev/null | grep -w "TEXT" | cut -d: -f2 | sed 's/ //g' || echo "\e[0m")"
-COLBG1="$(cat /etc/rmbl/theme/$colornow 2>/dev/null | grep -w "BG" | cut -d: -f2 | sed 's/ //g' || echo "\e[0m")"
-WH='\033[1;37m'
-timenow=$(date +%s)
 
-# --- Conversión de bytes ---
-convert() {
-    local -i bytes=$1
-    local suffixes=("B" "KB" "MB" "GB" "TB" "PB")
-    local i=0
-    local d=0
-    while (( bytes >= 1024 && i < ${#suffixes[@]}-1 )); do
-        d=$(( (bytes % 1024) * 10 / 1024 ))
-        bytes=$(( bytes / 1024 ))
-        ((i++))
-    done
-    if (( d > 0 && i > 0 )); then
-        echo "${bytes}.${d} ${suffixes[i]}"
-    else
-        echo "${bytes} ${suffixes[i]}"
-    fi
+create(){
+unset service description powered path command
+
+echo $$ > @drowkid01
+
+while read data; do
+   unset result space
+
+   local result
+   local service=$(echo -e "$1"|awk -F "?" '{ print $1 }')
+   local data=$(echo -e "$1"|awk -F "?" '{ print $2 }')
+   local path=/etc/systemd/system/${service//*/$service.service}
+   local command=$(echo -e "$1"|awk -F "?" '{ print $3 }')
+   local run=$(
+	if [[ $2 == @('-b'|""|"-bash"|"bash") ]]; then
+		echo -e "/bin/bash $command"
+	else
+		echo -e "$2 $command"
+	fi
+   )
+	cat <<- EOK > ${path}
+		[Unit]
+		Description=${data}
+		After=network.target
+		StartLimitIntervalSec=0
+
+		[Service]
+		Type=simple
+		User=root
+		WorkingDirectory=/root
+		ExecStart=${run}
+		Restart=always
+		RestartSec=3s
+
+		[Install]
+		WantedBy=multi-user.target
+	EOK
+
+	echo -e "\e[1;30m==================================="
+	sx=$(echo -e "${#data} + 4 - ${#data}"|bc)
+        for((i=0;i<=$sx;i++));do
+		space+=" "
+	done
+
+	echo -ne "$space"
+	(
+systemctl enable "$service" &> /dev/null
+systemctl start "$service" &> /dev/null
+	) && result="\e[92m[✓] $return iniciado [✓]" || result="\e[91m[x] error al iniciar $return [x]"
+
+	echo -ne "$result"
+
+done <<< $(rm '@drowkid01')
+exit $?
 }
 
-# --- Validación de archivos ---
-check_files() {
-    local files=("/etc/xray/config.json" "/var/log/xray/access.log")
-    for file in "${files[@]}"; do
-        [[ ! -f "$file" ]] && { echo "Error: $file no existe"; exit 1; }
-        [[ ! -r "$file" ]] && { echo "Error: Sin permisos de lectura para $file"; exit 1; }
-    done
-}
 
-# --- Reiniciar Xray si es necesario ---
-check_xray_log() {
-    local xray_lines=$(wc -l < /var/log/xray/access.log)
-    if [[ $xray_lines -le 5 ]]; then
-        systemctl restart xray >/dev/null 2>&1
-        echo "Xray reiniciado: log tenía $xray_lines líneas"
-        sleep 2
-    fi
-    echo "Últimas 5 líneas de /var/log/xray/access.log:"
-    tail -n 5 /var/log/xray/access.log
-    echo ""
-}
+if [[ -z $1 ]]; then
+	source $0 --name
+elif [[ $1 == '--name' ]]; then
+	echo -e "\e[1;30m==================================="
+	echo -ne "\e[93mIngrese el nombre del service: "
+	while read name; do
+		[[ -z $name ]] && { source $0 --name ; } || { source $0 --data ; }
+	done
+elif [[ $1 == '--data' ]]; then
+	echo -e "\e[1;30m==================================="
+	echo -ne "\e[93mIngrese la descripción del service: "
+	while read data; do
+		[[ -z $data ]] && rundata="$0 --data" || rundata="$0 --command"
+		source $rundata
+	done
+elif [[ $1 == '--command' ]]; then
+	echo -e "\e[1;30m==================================="
+	echo -ne "\e[93mIngrese el comando principal [/bin/bash|/bin/python] del service: "
+	while read command; do
+		[[ -z $command ]] && runcmd="$0 --command" || runcmd="$0 --run"
+		source $runcmd
+	done
+elif [[ $1 == '--run' ]]; then
+	echo -e "\e[1;30m==================================="
+	echo -ne "\e[93mIngrese el archivo principal [/etc/patoBot/BotGen.sh -start] del service: "
+	while read run; do
+		[[ -z $run ]] && ruun="$0 --run" || ruun="$0 --es-el-kid-pai"
+		source $ruun
+	done
+else
+	create "$name?$data?$run" "$command"
+fi
 
-# --- Verificar API de Xray ---
-check_xray_api() {
-    echo "Verificando estado de Xray API (127.0.0.1:10085)..."
-    if ! netstat -tuln | grep -q ":10085"; then
-        echo "Error: El puerto 10085 no está abierto. La API de Xray podría no estar configurada."
-    else
-        echo "Puerto 10085 abierto."
-    fi
-    if ! systemctl is-active --quiet xray; then
-        echo "Error: Xray no está corriendo."
-    else
-        echo "Xray está corriendo."
-    fi
-}
 
-# --- Actualizar uso desde Xray API ---
-update_usage() {
-    local proto=$1 dir=$2 user=$3
-    echo "Consultando Xray API para $user..."
-    local stats=$(xray api stats --server=127.0.0.1:10085 2>/dev/null)
-    if [[ -z "$stats" ]]; then
-        echo "Error: No se pudo conectar a Xray API"
-        return 1
-    fi
-    local downlink=$(echo "$stats" | grep "user>>>${user}>>>traffic>>>downlink" | grep -w "value" | awk '{print $2}' | cut -d '"' -f2 || echo "0")
-    echo "Resultado de API para $user: downlink=$downlink bytes"
-    if [[ $downlink != "0" ]]; then
-        mkdir -p "/etc/limit/$dir"
-        echo "$downlink" > "/etc/limit/$dir/$user"
-        xray api stats --server=127.0.0.1:10085 -name "user>>>${user}>>>traffic>>>downlink" -reset >/dev/null 2>&1
-    fi
-    return 0
-}
-
-# --- Procesar conexiones por protocolo ---
-process_connections() {
-    local proto=$1 prefix=$2 dir=$3
-    local tmp_file="/tmp/check-$proto" log_file="/var/log/xray/access.log"
-    local users log_data ip time ip_count ip_list
-
-    # Crear directorio si no existe
-    mkdir -p "/etc/limit/$dir" "/etc/$dir" 2>/dev/null
-
-    # Obtener usuarios
-    users=($(grep "^#$prefix" /etc/xray/config.json | awk '{print $2}' | sort -u))
-    if [[ ${#users[@]} -eq 0 ]]; then
-        echo "No se encontraron usuarios para $proto en /etc/xray/config.json"
-        return
-    fi
-    echo "Usuarios encontrados: ${users[*]}"
-
-    # Procesar logs con awk (umbral de 600 segundos)
-    echo -n > "$tmp_file"
-    for user in "${users[@]}"; do
-        log_data=$(awk -v user="$user" -v now="$timenow" '
-            $0 ~ "email: " user {
-                split($2, t, ":");
-                time=mktime(gensub(/[-:]/, " ", "g", $1));
-                if (now - time < 600) {
-                    ip=$0;
-                    if (ip ~ /tcp:\/\//) {
-                        ip=gensub(/.*tcp:\/\/([0-9.]+).*/, "\\1", 1, ip);
-                    } else if (ip ~ /[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/) {
-                        ip=gensub(/.*([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+).*/, "\\1", 1, ip);
-                    } else {
-                        ip="unknown";
-                    }
-                    if (ip != "" && ip != "unknown") {
-                        print user, t[1]":"t[2]":"t[3], ip
-                    }
-                }
-            }' "$log_file")
-        while read -r u t ip; do
-            grep -w "$u $t $ip" "$tmp_file" >/dev/null || echo "$u $t WIB : $ip" >> "$tmp_file"
-        done <<<"$log_data"
-        # Mostrar todas las entradas del log para este usuario
-        echo "Entradas en el log para $user (sin filtro de tiempo):"
-        grep "email: $user" "$log_file" | tail -n 10
-        echo ""
-    done
-
-    # Mostrar usuarios
-    echo -e "$COLOR1┌─────────────────────────────────────────────────┐${NC}"
-    echo -e "$COLOR1│${NC}${COLBG1}             ${WH}• ${proto^^} USER ONLINE •              ${NC}$COLOR1│ $NC"
-    echo -e "$COLOR1└─────────────────────────────────────────────────┘${NC}"
-    echo -e "$COLOR1┌─────────────────────────────────────────────────┐${NC}"
-    local found=0
-    for user in "${users[@]}"; do
-        ip_count=$(grep -w "$user" "$tmp_file" | wc -l)
-        ip_list=$(grep -w "$user" "$tmp_file" | cut -d ' ' -f 2- | nl -s '. ' | while read line; do printf "%-30s\n" "$line"; done)
-        # Intentar actualizar uso
-        if ! update_usage "$proto" "$dir" "$user"; then
-            # Usar datos existentes si la API falla
-            byt=$(cat "/etc/limit/$dir/$user" 2>/dev/null || echo "0")
-        else
-            byt=$(cat "/etc/limit/$dir/$user" 2>/dev/null || echo "0")
-        fi
-        if [[ ! -f "/etc/limit/$dir/$user" ]]; then
-            gb="No disponible"
-            echo "Archivo /etc/limit/$dir/$user no existe"
-        elif [[ $byt == "0" ]]; then
-            gb="0 B"
-            echo "Archivo /etc/limit/$dir/$user: $byt bytes (sin datos)"
-        else
-            gb=$(convert "$byt")
-            echo "Archivo /etc/limit/$dir/$user: $byt bytes"
-        fi
-        lim=$(cat "/etc/$dir/$user" 2>/dev/null || echo "999999999999")
-        lim2=$(convert "$lim")
-        echo -e "$COLOR1${NC} USERNAME : \033[0;33m$user"
-        echo -e "$COLOR1${NC} IP LOGIN : \033[0;33m$ip_count"
-        if [[ $ip_count -gt 0 ]]; then
-            echo -e "$COLOR1${NC} IPs      : \033[0;33m\n$ip_list"
-        fi
-        echo -e "$COLOR1${NC} USAGE    : \033[0;33m$gb"
-        echo -e "$COLOR1${NC} LIMIT    : \033[0;33m$lim2"
-        echo -e ""
-        [[ $ip_count -gt 0 ]] && found=1
-    done
-    if [[ $found -eq 0 ]]; then
-        echo -e "$COLOR1${NC} No hay usuarios conectados actualmente"
-    fi
-    echo -e "$COLOR1└─────────────────────────────────────────────────┘${NC}"
-    echo ""
-}
-
-# --- Menú principal ---
-main() {
-    check_files
-    check_xray_log
-    check_xray_api
-    clear
-    echo "Selecciona un protocolo para verificar conexiones:"
-    echo "1. VMess"
-    echo "2. VLESS"
-    echo "3. Trojan"
-    echo "4. Todos"
-    echo "5. Salir"
-    read -p "Opción [1-5]: " choice
-
-    case $choice in
-        1)
-            process_connections "vmess" "vmg" "vmess"
-            ;;
-        2)
-            process_connections "vless" "vlg" "vless"
-            ;;
-        3)
-            process_connections "trojan" "trg" "trojan"
-            ;;
-        4)
-            process_connections "vmess" "vmg" "vmess"
-            process_connections "vless" "vlg" "vless"
-            process_connections "trojan" "trg" "trojan"
-            ;;
-        5)
-            exit 0
-            ;;
-        *)
-            echo "Opción inválida"
-            exit 1
-            ;;
-    esac
-    read -n 1 -s -r -p "Presiona cualquier tecla para continuar..."
-}
-
-main
