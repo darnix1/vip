@@ -1,131 +1,221 @@
 #!/bin/bash
 
-kubali="\033[38;2;0;128;0m"
-GREEN="\033[0;32m"
-kataa="\033[31;1m"
-siani="\033[0;36m"
-mwisho="\033[0m"
-teal_color="\033[38;2;100;182;172m"
-orange="\033[0;33m"
-PURPLE='\033[0;35m'
-kidude="[+]"
-kubali_kidude="${kubali}${kidude}${mwisho}"
-kataa_kidude="${kataa}${kidude}"
-dark_blue="\033[38;2;0;0;128m"
-orange_kidude="${orange}\033[1m[!]$mwisho"
+# Colores para formato
+COLOR1="\033[1;36m"  # Cyan
+COLOR_SSH="\033[0;33m"  # Amarillo
+COLOR_VPN="\033[0;32m"  # Verde
+NC="\033[0m"  # Sin color
 
-# Xray Configuration File
-CONFIG_FILE="/etc/xray/config.json"
-#CONFIG_FILE2="/usr/local/etc/xray/vmntls.json"
-colors=(
-  "\033[0;31m"  # Red
-  "\033[0;32m"  # Green
-  "\033[0;33m"  # Yellow
-  "\033[0;34m"  # Blue
-  "\033[0;35m"  # Purple
-  "\033[0;36m"  # Cyan
-  "\033[0;91m"  # Light Red
-  "\033[0;92m"  # Light Green
-  "\033[0;93m"  # Light Yellow
-  "\033[0;94m"  # Light Blue
-  "\033[0;95m"  # Light Purple
-  "\033[0;96m"  # Light Cyan
-)
-
-# Function to choose a random color
-function choose_random_color() {
-  local num_colors=${#colors[@]}
-  local random_index=$((RANDOM % num_colors))
-  echo -e "${colors[random_index]}"
-}
-selected_color=$(choose_random_color)
-
-function banner(){
-  echo -e "${selected_color}
-╔═╗┬┌┬┐┌─┐  ╔╗ ┬  ┌─┐┌─┐┬┌─┌─┐┬─┐
-╚═╗│ │ ├┤   ╠╩╗│  │ ││  ├┴┐├┤ ├┬┘
-╚═╝┴ ┴ └─┘  ╚═╝┴─┘└─┘└─┘┴ ┴└─┘┴└─
-          (Vmess)
-  ${mwisho}
-  "
-}
-# Function to add a domain to be blocked
-add_blocked_domain() {
-  domain=$1
-  if [[ -z "$domain" ]]; then
-    echo -e "${kataa}Error: Domain cannot be empty.${mwisho}"
-  elif grep -q "\"domain\": \[\"$domain\"\]" "$CONFIG_FILE"; then
-    echo -e "${kataa}Domain '$domain' is already blocked.${mwisho}"
-  else
-    echo -e "${kubali}Adding domain '$domain' to be blocked...${mwisho}"
-    sed -i "/\"rules\": \[/a \\\t{ \"type\": \"field\", \"domain\": [\"$domain\"], \"outboundTag\": \"blocked\" }," "$CONFIG_FILE"
-    #sed -i "/\"rules\": \[/a \\\t{ \"type\": \"field\", \"domain\": [\"$domain\"], \"outboundTag\": \"blocked\" }," "$CONFIG_FILE2"
-    echo -e "${kubali}Domain '$domain' added to be blocked.${mwisho}"
-    systemctl restart xray
-  fi
+# Funciones de formato (reemplazo de msg)
+msg_bar() {
+    echo -e "${COLOR1}┌─────────────────────────────────────────────────┐${NC}"
 }
 
-# Function to list blocked domains
-list_blocked_domains() {
-  clear
-  echo -e "${kubali_kidude}Blocked Domains:${mwisho}"
-  grep -oP '(?<=domain": \[")[^"]*' "$CONFIG_FILE" | nl -w2 -s". "
+msg_tit() {
+    echo -e "${COLOR1}│                USUARIOS EN LÍNEA                │${NC}"
 }
 
-# Function to remove a blocked domain
-remove_blocked_domain() {
-  index=$1
-  domain=$(grep -oP '(?<=domain": \[")[^"]*' "$CONFIG_FILE" | sed -n "${index}p")
-  if [ -z "$domain" ]; then
-    echo -e "${kataa}Invalid selection.${mwisho}"
-  else
-    echo -e "Removing domain '$domain' from blocked list..."
-    sed -i "/\"domain\": \[\"$domain\"\],/d" "$CONFIG_FILE"
-    #sed -i "/\"domain\": \[\"$domain\"\],/d" "$CONFIG_FILE2"
-    echo -e "${kubali_kidude}Domain '$domain' removed from blocked list."
-    systemctl restart xray
-  fi
+msg_center() {
+    local text="$1"
+    local width=49
+    local padding=$(( (width - ${#text}) / 2 ))
+    printf "${COLOR1}│%*s%s%*s│${NC}\n" $padding "" "$text" $padding ""
 }
 
-# Main function
-main() {
-  while true; do
+msg_prompt() {
+    local text="$1"
+    echo -e "${COLOR1}${text}${NC}"
+}
+
+# Limpieza de archivos temporales al salir
+cleanup() {
+    rm -f /tmp/ssh2 /tmp/log-db.txt /tmp/log-db-pid.txt /tmp/vpn-login-tcp.txt /tmp/vpn-login-udp.txt /tmp/auth.log
+}
+trap cleanup EXIT
+
+# Función principal
+function cek() {
     clear
-    banner
-    echo ""
-    echo "[1]. Add a domain to be blocked"
-    echo "[2]. List blocked domains"
-    echo "[3]. Remove a domain from blocked list"
-    echo "[4]. Exit"
-    read -p "Choose an option (1-4): " choice
 
-    case $choice in
-      1)
-        read -p "[!]Enter domain to be blocked (e.g., example.com): " domain
-        add_blocked_domain "$domain"
-        read -rp "press any key to continue"
-        ;;
-      2)
-        list_blocked_domains
-        read -rp "press any key to continue"
-        ;;
-      3)
-        list_blocked_domains
-        read -p "[!]Enter the number of the domain to be removed from the blocked list: " index
-        remove_blocked_domain "$index"
-        read -rp "press any key to continue"
-        ;;
-      4)
-        echo -e "Exiting..."
-        break
-        ;;
-      *)
-        echo -e "${kataa}Invalid choice. Please try again${mwisho}."
-        ;;
-    esac
+    # Configuración inicial
+    TIMES="10"  # No usado, mantenido por compatibilidad
+    CHATID=$(cat /etc/per/id 2>/dev/null || echo "")
+    KEY=$(cat /etc/per/token 2>/dev/null || echo "")
+    URL="https://api.telegram.org/bot$KEY/sendMessage"
+    ISP=$(cat /etc/xray/isp 2>/dev/null || echo "Desconocido")
+    CITY=$(cat /etc/xray/city 2>/dev/null || echo "Desconocido")
+    domain=$(cat /etc/xray/domain 2>/dev/null || echo "Desconocido")
+    author=$(cat /etc/profil 2>/dev/null || echo "Desconocido")
+    MAX_CONNECTIONS=2  # Límite de conexiones por usuario
+    LOG_DIR="/var/log/cek"
+    mkdir -p "$LOG_DIR" 2>/dev/null
 
-    echo
-  done
+    # Validar servicios
+    for service in dropbear sshd openvpn@server; do
+        if ! systemctl is-active -q "$service" 2>/dev/null; then
+            echo -e "${COLOR1}Advertencia: $service no está corriendo.${NC}"
+        fi
+    done
+
+    # Validar archivo de log
+    if [ -f "/var/log/auth.log" ]; then
+        LOG="/var/log/auth.log"
+    else
+        journalctl -u sshd -u dropbear --since "1 hour ago" > /tmp/auth.log 2>/dev/null
+        LOG="/tmp/auth.log"
+        if [ ! -s "$LOG" ]; then
+            echo -e "${COLOR1}Error: No se encontraron logs de autenticación.${NC}"
+            read -n 1 -s -r -p "$(msg_prompt " Presione cualquier tecla para continuar...")"
+            return 1
+        fi
+    fi
+
+    # Reiniciar ws-stunnel si está activo
+    if systemctl is-active -q ws-stunnel 2>/dev/null; then
+        systemctl restart ws-stunnel > /dev/null 2>&1
+        sleep 3
+    fi
+
+    # Obtener usuarios del sistema
+    declare -A jumlah pid
+    cat /etc/passwd | grep "/home/" | cut -d":" -f1 > /etc/user.txt
+    mapfile -t username < /etc/user.txt
+    for user in "${username[@]}"; do
+        jumlah[$user]=0
+        pid[$user]=""
+    done
+
+    # Inicializar archivo de conexiones
+    : > /tmp/ssh2
+
+    # Monitoreo de SSH (Dropbear y OpenSSH)
+    msg_bar
+    msg_tit
+    msg_center "• SSH USUARIOS EN LÍNEA •"
+    msg_bar
+    echo -e "${COLOR_SSH}%-20s %-15s %-20s %-15s %-10s${NC}" "Usuario" "Protocolo" "IP" "Tiempo" "Recursos"
+    echo -e "${COLOR_SSH}---------------------------------------------------------------${NC}"
+
+    # Usar 'who' para sesiones activas
+    while read -r user tty ip time; do
+        # Determinar protocolo
+        proc_pid=$(pgrep -u "$user" sshd || pgrep -u "$user" dropbear)
+        if [ -n "$proc_pid" ]; then
+            proto=$(ps -p "$proc_pid" -o comm= | head -n 1)
+            proto=${proto:-"Unknown"}
+        else
+            proto="Unknown"
+        fi
+
+        # Calcular duración
+        login_time=$(date -d "$time" +%s 2>/dev/null || echo 0)
+        current_time=$(date +%s)
+        duration=$(( (current_time - login_time) / 60 ))
+
+        # Obtener uso de recursos
+        cpu_mem=""
+        if [ -n "$proc_pid" ]; then
+            cpu_mem=$(ps -p "$proc_pid" -o %cpu,%mem | tail -n 1)
+            cpu_mem="${cpu_mem%% *}%/${cpu_mem##* }%"
+        else
+            cpu_mem="N/A"
+        fi
+
+        # Guardar conexión
+        echo "$user $proto $ip $duration min $cpu_mem" >> /tmp/ssh2
+
+        # Actualizar contadores
+        if [[ -n "${jumlah[$user]}" ]]; then
+            jumlah[$user]=$((jumlah[$user] + 1))
+            pid[$user]+="$proc_pid "
+        fi
+
+        # Mostrar en pantalla
+        printf "${COLOR_SSH}%-20s %-15s %-20s %-15s %-10s${NC}\n" "$user" "$proto" "$ip" "$duration min" "$cpu_mem"
+    done < <(who | awk '{print $1, $2, $5, $3}' | grep -v '^$' | sort -u)
+
+    # Verificar límites de conexiones
+    for user in "${!jumlah[@]}"; do
+        if [[ ${jumlah[$user]} -gt $MAX_CONNECTIONS ]]; then
+            echo -e "${COLOR1}¡Advertencia! $user tiene ${jumlah[$user]} conexiones (límite: $MAX_CONNECTIONS)${NC}"
+            # Opcional: Terminar conexiones excedentes
+            # read -p "Terminar conexiones excedentes? (s/n): " answer
+            # if [[ "$answer" == "s" ]]; then
+            #     for p in ${pid[$user]}; do kill -9 "$p" 2>/dev/null; done
+            # fi
+        fi
+    done
+
+    # Monitoreo de OpenVPN
+    if [ -f "/etc/openvpn/server/openvpn-tcp.log" ] || [ -f "/etc/openvpn/server/openvpn-udp.log" ]; then
+        msg_bar
+        msg_center "• OPENVPN USUARIOS EN LÍNEA •"
+        msg_bar
+    fi
+
+    # OpenVPN TCP
+    if [ -f "/etc/openvpn/server/openvpn-tcp.log" ]; then
+        echo -e "${COLOR_VPN}OpenVPN TCP:${NC}"
+        echo -e "${COLOR_VPN}%-20s %-20s %-20s${NC}" "Usuario" "IP Real" "IP Virtual"
+        echo -e "${COLOR_VPN}---------------------------------------------------${NC}"
+        # Cachear si el archivo es reciente
+        if [ ! -f "/tmp/vpn-login-tcp.txt" ] || [ "$(find /tmp/vpn-login-tcp.txt -mmin +5 2>/dev/null)" ]; then
+            grep -w "^CLIENT_LIST" /etc/openvpn/server/openvpn-tcp.log | cut -d ',' -f 2,3,8 | sed 's/,/      /g' > /tmp/vpn-login-tcp.txt
+        fi
+        while read -r user ip_real ip_virt; do
+            printf "${COLOR_VPN}%-20s %-20s %-20s${NC}\n" "$user" "$ip_real" "$ip_virt"
+        done < /tmp/vpn-login-tcp.txt
+    fi
+
+    # OpenVPN UDP
+    if [ -f "/etc/openvpn/server/openvpn-udp.log" ]; then
+        echo -e "${COLOR_VPN}OpenVPN UDP:${NC}"
+        echo -e "${COLOR_VPN}%-20s %-20s %-20s${NC}" "Usuario" "IP Real" "IP Virtual"
+        echo -e "${COLOR_VPN}---------------------------------------------------${NC}"
+        if [ ! -f "/tmp/vpn-login-udp.txt" ] || [ "$(find /tmp/vpn-login-udp.txt -mmin +5 2>/dev/null)" ]; then
+            grep -w "^CLIENT_LIST" /etc/openvpn/server/openvpn-udp.log | cut -d ',' -f 2,3,8 | sed 's/,/      /g' > /tmp/vpn-login-udp.txt
+        fi
+        while read -r user ip_real ip_virt; do
+            printf "${COLOR_VPN}%-20s %-20s %-20s${NC}\n" "$user" "$ip_real" "$ip_virt"
+        done < /tmp/vpn-login-udp.txt
+    fi
+
+    # Resumen
+    ssh_count=$(wc -l < /tmp/ssh2 2>/dev/null || echo 0)
+    tcp_count=$(wc -l < /tmp/vpn-login-tcp.txt 2>/dev/null || echo 0)
+    udp_count=$(wc -l < /tmp/vpn-login-udp.txt 2>/dev/null || echo 0)
+    msg_bar
+    echo -e "${COLOR1}│ Resumen:${NC}"
+    echo -e "${COLOR1}│ Total SSH: $ssh_count${NC}"
+    echo -e "${COLOR1}│ Total OpenVPN TCP: $tcp_count${NC}"
+    echo -e "${COLOR1}│ Total OpenVPN UDP: $udp_count${NC}"
+    msg_bar
+
+    # Guardar historial
+    {
+        echo "$(date):"
+        echo "SSH:"
+        cat /tmp/ssh2 2>/dev/null
+        echo "OpenVPN TCP:"
+        cat /tmp/vpn-login-tcp.txt 2>/dev/null
+        echo "OpenVPN UDP:"
+        cat /tmp/vpn-login-udp.txt 2>/dev/null
+        echo "-----------------------------------"
+    } >> "$LOG_DIR/connections_$(date +%F).log"
+
+    # Enviar a Telegram si está configurado
+    if [ -n "$CHATID" ] && [ -n "$KEY" ]; then
+        output="Usuarios en línea ($ISP, $CITY):\n"
+        output+="SSH ($ssh_count):\n$(cat /tmp/ssh2 2>/dev/null)\n"
+        output+="OpenVPN TCP ($tcp_count):\n$(cat /tmp/vpn-login-tcp.txt 2>/dev/null)\n"
+        output+="OpenVPN UDP ($udp_count):\n$(cat /tmp/vpn-login-udp.txt 2>/dev/null)"
+        curl -s -X POST "$URL" -d chat_id="$CHATID" -d text="$output" > /dev/null 2>&1
+    fi
+
+    # Pausa y retorno al menú
+    read -n 1 -s -r -p "$(msg_prompt " Presione cualquier tecla para continuar...")"
+    m-sshovpn  # Asumo que esto es una función externa
 }
 
-main
+# Ejecutar la función
+cek
