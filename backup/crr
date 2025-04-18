@@ -1,6 +1,111 @@
 #!/bin/bash
 #
 # ==================================================
+# Script adaptado para Debian 9, 10, 11, 12, Ubuntu 20.04, 22.04, 24.04
+# Preserva la funcionalidad del script original con ajustes para compatibilidad
+# ==================================================
+
+# Detectar sistema operativo y versión
+source /etc/os-release
+DISTRO=$ID
+VERSION=$VERSION_ID
+
+# Función para determinar la versión de PHP
+get_php_version() {
+    case $DISTRO in
+        "debian")
+            case $VERSION in
+                "9") echo "7.3" ;;
+                "10") echo "7.3" ;;
+                "11") echo "7.4" ;;
+                "12") echo "8.2" ;;
+                *) echo "7.4" ;; # Fallback
+            esac
+            ;;
+        "ubuntu")
+            case $VERSION in
+                "20.04") echo "7.4" ;;
+                "22.04") echo "8.1" ;;
+                "24.04") echo "8.3" ;;
+                *) echo "7.4" ;; # Fallback
+            esac
+            ;;
+        *) echo "7.4" ;; # Fallback para distribuciones no soportadas
+    esac
+}
+
+# Obtener la versión de PHP
+PHP_VERSION=$(get_php_version)
+
+# Función para determinar el paquete de Squid
+get_squid_package() {
+    case $DISTRO in
+        "debian")
+            case $VERSION in
+                "9"|"10") echo "squid3" ;;
+                "11"|"12") echo "squid" ;;
+                *) echo "squid" ;; # Fallback
+            esac
+            ;;
+        "ubuntu")
+            case $VERSION in
+                "20.04") echo "squid3" ;;
+                "22.04"|"24.04") echo "squid" ;;
+                *) echo "squid" ;; # Fallback
+            esac
+            ;;
+        *) echo "squid" ;; # Fallback
+    esac
+}
+
+SQUID_PACKAGE=$(get_squid_package)
+
+# Función para manejar iptables/nftables
+setup_firewall_rules() {
+    # Verificar si nftables está en uso
+    if command -v nft >/dev/null 2>&1 && [ "$DISTRO" = "debian" ] && [ "$VERSION" = "12" ] || [ "$DISTRO" = "ubuntu" ] && [ "$VERSION" = "22.04" ] || [ "$DISTRO" = "ubuntu" ] && [ "$VERSION" = "24.04" ]; then
+        # Usar nftables en Debian 12, Ubuntu 22.04, 24.04
+        cat > /etc/nftables.conf <<END
+#!/usr/sbin/nft -f
+flush ruleset
+table inet filter {
+    chain forward {
+        type filter hook forward priority 0; policy accept;
+        string "get_peers" drop
+        string "announce_peer" drop
+        string "find_node" drop
+        string "BitTorrent" drop
+        string "BitTorrent protocol" drop
+        string "peer_id=" drop
+        string ".torrent" drop
+        string "announce.php?passkey=" drop
+        string "torrent" drop
+        string "announce" drop
+        string "info_hash" drop
+    }
+}
+END
+        systemctl enable nftables
+        systemctl restart nftables
+    else
+        # Usar iptables para versiones anteriores
+        iptables -A FORWARD -m string --string "get_peers" --algo bm -j DROP
+        iptables -A FORWARD -m string --string "announce_peer" --algo bm -j DROP
+        iptables -A FORWARD -m string --string "find_node" --algo bm -j DROP
+        iptables -A FORWARD -m string --algo bm --string "BitTorrent" -j DROP
+        iptables -A FORWARD -m string --algo bm --string "BitTorrent protocol" -j DROP
+        iptables -A FORWARD -m string --algo bm --string "peer_id=" -j DROP
+        iptables -A FORWARD -m string --algo bm --string ".torrent" -j DROP
+        iptables -A FORWARD -m string --algo bm --string "announce.php?passkey=" -j DROP
+        iptables -A FORWARD -m string --algo bm --string "torrent" -j DROP
+        iptables -A FORWARD -m string --algo bm --string "announce" -j DROP
+        iptables -A FORWARD -m string --algo bm --string "info_hash" -j DROP
+        iptables-save > /etc/iptables.up.rules
+        iptables-restore -t < /etc/iptables.up.rules
+        netfilter-persistent save
+        netfilter-persistent reload
+    fi
+}
 
 # etc
 apt dist-upgrade -y
@@ -12,8 +117,7 @@ apt install -y screen curl jq bzip2 gzip vnstat coreutils rsyslog iftop zip unzi
 export DEBIAN_FRONTEND=noninteractive
 MYIP=$(wget -qO- ipinfo.io/ip);
 MYIP2="s/xxxxxxxxx/$MYIP/g";
-NET=$(ip -o $ANU -4 route show to default | awk '{print $5}');
-source /etc/os-release
+NET=$(ip -o -4 route show to default | awk '{print $5}');
 ver=$VERSION_ID
 
 #detail nama perusahaan
@@ -26,7 +130,7 @@ commonname=none
 email=none
 
 # simple password minimal
-curl -sS https://raw.githubusercontent.com/UnderTunnel/autoscript-vip/main/install/password | openssl aes-256-cbc -d -a -pass pass:scvps07gg -pbkdf2 > /etc/pam.d/common-password
+curl -sS https://gitlab.com/xdanx90/Premium/-/raw/main/install/password | openssl aes-256-cbc -d -a -pass pass:scvps07gg -pbkdf2 > /etc/pam.d/common-password
 chmod +x /etc/pam.d/common-password
 
 # go to root
@@ -94,10 +198,81 @@ ln -fs /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
 # set locale
 sed -i 's/AcceptEnv/#AcceptEnv/g' /etc/ssh/sshd_config
 
-# install
+# // install
 apt-get --reinstall --fix-missing install -y bzip2 gzip coreutils wget screen rsyslog iftop htop net-tools zip unzip wget net-tools curl nano sed screen gnupg gnupg1 bc apt-transport-https build-essential dirmngr libxml-parser-perl neofetch git lsof
 echo "clear" >> .profile
 echo "menu" >> .profile
+
+install_ssl(){
+    if [ -f "/usr/bin/apt-get" ];then
+            isDebian=`cat /etc/issue|grep Debian`
+            if [ "$isDebian" != "" ];then
+                    apt-get install -y nginx certbot
+                    apt install -y nginx certbot
+                    sleep 3s
+            else
+                    apt-get install -y nginx certbot
+                    apt install -y nginx certbot
+                    sleep 3s
+            fi
+    else
+        yum install -y nginx certbot
+        sleep 3s
+    fi
+
+    systemctl stop nginx.service
+
+    if [ -f "/usr/bin/apt-get" ];then
+            isDebian=`cat /etc/issue|grep Debian`
+            if [ "$isDebian" != "" ];then
+                    echo "A" | certbot certonly --renew-by-default --register-unsafely-without-email --standalone -d $domain
+                    sleep 3s
+            else
+                    echo "A" | certbot certonly --renew-by-default --register-unsafely-without-email --standalone -d $domain
+                    sleep 3s
+            fi
+    else
+        echo "Y" | certbot certonly --renew-by-default --register-unsafely-without-email --standalone -d $domain
+        sleep 3s
+    fi
+}
+
+# install webserver
+apt -y install nginx php php-fpm php-cli php-mysql libxml-parser-perl
+rm /etc/nginx/sites-enabled/default
+rm /etc/nginx/sites-available/default
+curl https://gitlab.com/xdanx90/Premium/-/raw/main/install/nginx.conf > /etc/nginx/nginx.conf
+curl https://gitlab.com/xdanx90/Premium/-/raw/main/install/vps.conf > /etc/nginx/conf.d/vps.conf
+# Ajustar PHP-FPM según la versión
+sed -i "s/listen = \/var\/run\/php-fpm.sock/listen = 127.0.0.1:9000/g" /etc/php/$PHP_VERSION/fpm/pool.d/www.conf
+useradd -m vps;
+mkdir -p /home/vps/public_html
+echo "<?php phpinfo() ?>" > /home/vps/public_html/info.php
+chown -R www-data:www-data /home/vps/public_html
+chmod -R g+rw /home/vps/public_html
+cd /home/vps/public_html
+wget -O /home/vps/public_html/index.html "https://gitlab.com/xdanx90/Premium/-/raw/main/install/index.html"
+/etc/init.d/nginx restart
+
+# install badvpn
+cd
+wget -O /usr/sbin/badvpn "https://gitlab.com/xdanx90/Premium/-/raw/main/install/badvpn" >/dev/null 2>&1
+chmod +x /usr/sbin/badvpn > /dev/null 2>&1
+wget -q -O /etc/systemd/system/badvpn1.service "https://gitlab.com/xdanx90/Premium/-/raw/main/install/badvpn1.service" >/dev/null 2>&1
+wget -q -O /etc/systemd/system/badvpn2.service "https://gitlab.com/xdanx90/Premium/-/raw/main/install/badvpn2.service" >/dev/null 2>&1
+wget -q -O /etc/systemd/system/badvpn3.service "https://gitlab.com/xdanx90/Premium/-/raw/main/install/badvpn3.service" >/dev/null 2>&1
+systemctl disable badvpn1 
+systemctl stop badvpn1 
+systemctl enable badvpn1
+systemctl start badvpn1 
+systemctl disable badvpn2 
+systemctl stop badvpn2 
+systemctl enable badvpn2
+systemctl start badvpn2 
+systemctl disable badvpn3 
+systemctl stop badvpn3 
+systemctl enable badvpn3
+systemctl start badvpn3 
 
 # setting port ssh
 cd
@@ -121,18 +296,18 @@ echo "/usr/sbin/nologin" >> /etc/shells
 /etc/init.d/ssh restart
 /etc/init.d/dropbear restart
 
-# install squid for debian 11
-apt -y install squid
-wget -O /etc/squid/squid.conf "https://raw.githubusercontent.com/UnderTunnel/autoscript-vip/main/install/squid3.conf"
+# install squid
+apt -y install $SQUID_PACKAGE
+wget -O /etc/squid/squid.conf "https://gitlab.com/xdanx90/Premium/-/raw/main/install/squid3.conf"
 sed -i $MYIP2 /etc/squid/squid.conf
 
 # setting vnstat
 apt -y install vnstat
 /etc/init.d/vnstat restart
 apt -y install libsqlite3-dev
-wget https://humdi.net/vnstat/vnstat-2.6.tar.gz
-tar zxvf vnstat-2.6.tar.gz
-cd vnstat-2.6
+wget https://humdi.net/vnstat/vnstat-2.13.tar.gz
+tar zxvf vnstat-2.13.tar.gz
+cd vnstat-2.13
 ./configure --prefix=/usr --sysconfdir=/etc && make && make install
 cd
 vnstat -u -i $NET
@@ -140,8 +315,8 @@ sed -i 's/Interface "'""eth0""'"/Interface "'""$NET""'"/g' /etc/vnstat.conf
 chown vnstat:vnstat /var/lib/vnstat -R
 systemctl enable vnstat
 /etc/init.d/vnstat restart
-rm -f /root/vnstat-2.6.tar.gz
-rm -rf /root/vnstat-2.6
+rm -f /root/vnstat-2.13.tar.gz
+rm -rf /root/vnstat-2.13
 
 cd
 # install stunnel
@@ -168,7 +343,6 @@ connect = 700
 [openvpn]
 accept = 990
 connect = 127.0.0.1:1194
-
 END
 
 # make a certificate
@@ -182,10 +356,10 @@ sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/stunnel4
 /etc/init.d/stunnel4 restart
 
 #OpenVPN
-wget https://raw.githubusercontent.com/UnderTunnel/autoscript-vip/main/install/vpn.sh &&  chmod +x vpn.sh && ./vpn.sh
+wget https://gitlab.com/xdanx90/Premium/-/raw/main/install/vpn.sh && chmod +x vpn.sh && ./vpn.sh
 
-# install lolcat
-wget https://raw.githubusercontent.com/UnderTunnel/autoscript-vip/main/install/lolcat.sh &&  chmod +x lolcat.sh && ./lolcat.sh
+# // install lolcat
+wget https://gitlab.com/xdanx90/Premium/-/raw/main/install/lolcat.sh && chmod +x lolcat.sh && ./lolcat.sh
 
 # memory swap 1gb
 cd
@@ -201,10 +375,10 @@ apt -y install fail2ban
 
 # Instal DDOS Flate
 if [ -d '/usr/local/ddos' ]; then
-	echo; echo; echo "Please un-install the previous version first"
-	exit 0
+    echo; echo; echo "Please un-install the previous version first"
+    exit 0
 else
-	mkdir /usr/local/ddos
+    mkdir /usr/local/ddos
 fi
 clear
 echo; echo 'Installing DOS-Deflate 0.6'; echo
@@ -231,34 +405,20 @@ echo "Banner /etc/issue.net" >>/etc/ssh/sshd_config
 sed -i 's@DROPBEAR_BANNER=""@DROPBEAR_BANNER="/etc/issue.net"@g' /etc/default/dropbear
 
 # Ganti Banner
-wget -O /etc/issue.net "https://raw.githubusercontent.com/UnderTunnel/autoscript-vip/main/install/issue.net"
+wget -O /etc/issue.net "https://gitlab.com/xdanx90/Premium/-/raw/main/install/issue.net"
 
 #install bbr dan optimasi kernel
-wget https://raw.githubusercontent.com/UnderTunnel/autoscript-vip/main/install/bbr.sh && chmod +x bbr.sh && ./bbr.sh
+wget https://gitlab.com/xdanx90/Premium/-/raw/main/install/bbr.sh && chmod +x bbr.sh && ./bbr.sh
 
 # blokir torrent
-iptables -A FORWARD -m string --string "get_peers" --algo bm -j DROP
-iptables -A FORWARD -m string --string "announce_peer" --algo bm -j DROP
-iptables -A FORWARD -m string --string "find_node" --algo bm -j DROP
-iptables -A FORWARD -m string --algo bm --string "BitTorrent" -j DROP
-iptables -A FORWARD -m string --algo bm --string "BitTorrent protocol" -j DROP
-iptables -A FORWARD -m string --algo bm --string "peer_id=" -j DROP
-iptables -A FORWARD -m string --algo bm --string ".torrent" -j DROP
-iptables -A FORWARD -m string --algo bm --string "announce.php?passkey=" -j DROP
-iptables -A FORWARD -m string --algo bm --string "torrent" -j DROP
-iptables -A FORWARD -m string --algo bm --string "announce" -j DROP
-iptables -A FORWARD -m string --algo bm --string "info_hash" -j DROP
-iptables-save > /etc/iptables.up.rules
-iptables-restore -t < /etc/iptables.up.rules
-netfilter-persistent save
-netfilter-persistent reload
+setup_firewall_rules
 
 # download script
 cd /usr/bin
-wget -O issue "https://raw.githubusercontent.com/UnderTunnel/autoscript-vip/main/install/issue.net"
-wget -O m-theme "https://raw.githubusercontent.com/UnderTunnel/autoscript-vip/main/menu/m-theme.sh"
-wget -O speedtest "https://raw.githubusercontent.com/UnderTunnel/autoscript-vip/main/install/speedtest_cli.py"
-#wget -O xp "https://raw.githubusercontent.com/UnderTunnel/autoscript-vip/main/install/xp.sh"
+wget -O issue "https://gitlab.com/xdanx90/Premium/-/raw/main/install/issue.net"
+wget -O m-theme "https://gitlab.com/xdanx90/Premium/-/raw/main/menu/m-theme.sh"
+wget -O speedtest "https://gitlab.com/xdanx90/Premium/-/raw/main/install/speedtest_cli.py"
+wget -O xp "https://gitlab.com/xdanx90/Premium/-/raw/main/install/xp.sh"
 
 chmod +x issue
 chmod +x m-theme
@@ -293,7 +453,6 @@ END
 cat> /etc/cron.d/xraylimit << END
 SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-0
 */1 * * * * root /usr/bin/xraylimit
 END
 
@@ -305,13 +464,18 @@ service cron start >/dev/null 2>&1
 apt autoclean -y >/dev/null 2>&1
 apt -y remove --purge unscd >/dev/null 2>&1
 apt-get -y --purge remove samba* >/dev/null 2>&1
+apt-get -y --purge remove apache2* >/dev/null 2>&1
 apt-get -y --purge remove bind9* >/dev/null 2>&1
 apt-get -y remove sendmail* >/dev/null 2>&1
 apt autoremove -y >/dev/null 2>&1
-
 # finishing
 cd
+chown -R www-data:www-data /home/vps/public_html
+
 rm -f /root/key.pem
 rm -f /root/cert.pem
 rm -f /root/ssh-vpn.sh
 rm -f /root/bbr.sh
+rm -rf /etc/apache2
+
+clear
