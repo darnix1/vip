@@ -1,17 +1,30 @@
 #!/bin/bash
+echo "=== Desinstalando Dropbear ==="
 
-clear
-purple() { echo -e "\\033[35;1m${*}\\033[0m"; }
-tyblue() { echo -e "\\033[36;1m${*}\\033[0m"; }
-yellow() { echo -e "\\033[33;1m${*}\\033[0m"; }
-green() { echo -e "\\033[32;1m${*}\\033[0m"; }
-red() { echo -e "\\033[31;1m${*}\\033[0m"; }
+# Detener el servicio
+systemctl stop dropbear
 
-CHATID=$(grep -E "^#bot# " "/etc/bot/.bot.db" | cut -d ' ' -f 3)
-KEY=$(grep -E "^#bot# " "/etc/bot/.bot.db" | cut -d ' ' -f 2)
-export TIME="10"
-export URL="https://api.telegram.org/bot$KEY/sendMessage"
-clear
+# Desinstalar el paquete
+apt purge dropbear -y
 
-echo ""
-menu
+# Eliminar archivos residuales
+find /etc -name '*dropbear*' -exec rm -rf {} +
+
+# Revertir cambios en /etc/shells (solo si no son necesarios)
+if ! grep -qE '/bin/false|/usr/sbin/nologin' /etc/passwd; then
+    sed -i '/\/bin\/false/d' /etc/shells
+    sed -i '/\/usr\/sbin\/nologin/d' /etc/shells
+fi
+
+# Limpiar dependencias
+apt autoremove -y
+
+# Reiniciar sshd
+systemctl restart ssh
+
+# Verificar
+if ! systemctl status dropbear >/dev/null 2>&1; then
+    echo "Dropbear desinstalado correctamente."
+else
+    echo "Error: Dropbear no se desinstaló correctamente. Revisa manualmente."
+fi
